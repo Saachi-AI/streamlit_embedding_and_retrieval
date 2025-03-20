@@ -28,8 +28,8 @@ def get_embedder(model_name: str, env_vars: Dict[str, str]):
     else:
         raise ValueError(f"Unsupported model: {model_name}. Supported models: 'openai', 'cohere'")
 
-def embed_documents(model_name: str, data_path: str, env_vars: Dict[str, str], batch_size: int = 20, save_locally: bool = False):
-    """Embed documents using the specified model and store in Pinecone in batches"""
+def embed_documents(model_name: str, data_path: str, env_vars: Dict[str, str], save_locally: bool = False, clear_existing: bool = False):
+    """Embed documents using the specified model and store in Pinecone"""
     # Initialize LangSmith client if available
     try:
         from langsmith import Client
@@ -57,82 +57,55 @@ def embed_documents(model_name: str, data_path: str, env_vars: Dict[str, str], b
     
     # Initialize Pinecone if not saving locally
     if not save_locally:
-        init_pinecone(env_vars, model_name)
+        pc = init_pinecone(env_vars, model_name)
         namespace = f"{model_name.lower().replace('-', '_')}_embeddings"
+        
+        # Clear existing vectors if requested
+        if clear_existing and pc:
+            print(f"Clearing all vectors in namespace '{namespace}'...")
+            try:
+                index_name = env_vars["pinecone_index_name"]
+                index = pc.Index(name=index_name)
+                # Get the current count before deletion
+                stats = index.describe_index_stats()
+                if namespace in stats.namespaces:
+                    count = stats.namespaces[namespace].vector_count
+                    print(f"Found {count} existing vectors in namespace '{namespace}'")
+                
+                # Delete all vectors in the namespace
+                index.delete(delete_all=True, namespace=namespace)
+                print(f"Successfully cleared namespace '{namespace}'")
+            except Exception as e:
+                print(f"Error clearing namespace: {str(e)}")
+        
         vector_store = get_vector_store(embedder.get_embeddings(), env_vars, namespace)
     else:
         vector_store = None
     
-    # Store all successfully embedded documents
-    all_embedded_data = {
-        "texts": [],
-        "embeddings": [],
-        "metadatas": []
-    }
+    # Process all documents at once (no batching)
+    print(f"Processing all {len(documents)} documents at once")
     
-    total_batches = (len(documents) + batch_size - 1) // batch_size
-    for i in range(0, len(documents), batch_size):
-        batch = documents[i:i+batch_size]
-        batch_num = i // batch_size + 1
+    try:
+        # Embed all documents
+        print(f"Embedding {len(documents)} texts with Cohere API...")
+        embedded_data = embedder.embed_documents(documents, langsmith_client)
         
-        print(f"Processing batch {batch_num}/{total_batches} ({len(batch)} documents)")
-        
-        try:
-            # Embed current batch
-            embedded_data = embedder.embed_documents(batch, langsmith_client)
+        # If saving locally, store the data
+        if save_locally:
+            with open(local_output_file, 'w') as f:
+                json.dump(embedded_data, f)
+            print(f"Saved {len(embedded_data['texts'])} embeddings to {local_output_file}")
+        else:
+            # Add documents to vector store
+            vector_store.add_texts(
+                texts=embedded_data["texts"],
+                metadatas=embedded_data["metadatas"]
+            )
+            print(f"Successfully embedded all {len(documents)} documents to Pinecone")
             
-            # If saving locally, store the data
-            if save_locally:
-                all_embedded_data["texts"].extend(embedded_data["texts"])
-                all_embedded_data["embeddings"].extend(embedded_data["embeddings"])
-                all_embedded_data["metadatas"].extend(embedded_data["metadatas"])
-                print(f"Added batch {batch_num} to local storage")
-            else:
-                # Add documents to vector store
-                vector_store.add_texts(
-                    texts=embedded_data["texts"],
-                    metadatas=embedded_data["metadatas"]
-                )
-                print(f"Successfully embedded batch {batch_num}/{total_batches} to Pinecone")
-            
-            # Add a delay between batches to avoid overwhelming APIs
-            if i + batch_size < len(documents):
-                print(f"Waiting before processing next batch...")
-                time.sleep(3)
-                
-        except Exception as e:
-            print(f"Error processing batch {batch_num}: {str(e)}")
-            print("Retrying with a smaller batch size...")
-            
-            # Try with a smaller batch size for this problematic batch
-            smaller_batch_size = max(1, batch_size // 2)
-            for j in range(0, len(batch), smaller_batch_size):
-                sub_batch = batch[j:j+smaller_batch_size]
-                try:
-                    embedded_sub_data = embedder.embed_documents(sub_batch, langsmith_client)
-                    
-                    if save_locally:
-                        all_embedded_data["texts"].extend(embedded_sub_data["texts"])
-                        all_embedded_data["embeddings"].extend(embedded_sub_data["embeddings"])
-                        all_embedded_data["metadatas"].extend(embedded_sub_data["metadatas"])
-                        print(f"Added sub-batch {j//smaller_batch_size + 1} to local storage")
-                    else:
-                        vector_store.add_texts(
-                            texts=embedded_sub_data["texts"],
-                            metadatas=embedded_sub_data["metadatas"]
-                        )
-                        print(f"Successfully embedded sub-batch {j//smaller_batch_size + 1}")
-                    
-                    time.sleep(2)
-                except Exception as sub_e:
-                    print(f"Error processing sub-batch: {str(sub_e)}")
-                    print(f"Skipping {len(sub_batch)} documents in problematic sub-batch")
-    
-    # Save embeddings locally if requested
-    if save_locally and all_embedded_data["texts"]:
-        with open(local_output_file, 'w') as f:
-            json.dump(all_embedded_data, f)
-        print(f"Saved {len(all_embedded_data['texts'])} embeddings to {local_output_file}")
+    except Exception as e:
+        print(f"Error processing documents: {str(e)}")
+        raise e
     
     if not save_locally:
         print(f"Finished embedding process with {model_name} in Pinecone namespace: {namespace}")
@@ -144,15 +117,15 @@ def main():
     parser = argparse.ArgumentParser(description='Embed documents using different models')
     parser.add_argument('--model', choices=['openai', 'cohere'], required=True, help='Embedding model to use')
     parser.add_argument('--data', default='profile_chunks.json', help='Path to the data file')
-    parser.add_argument('--batch-size', type=int, default=5, help='Number of documents to process in each batch')
     parser.add_argument('--save-locally', action='store_true', help='Save embeddings locally instead of uploading to Pinecone')
+    parser.add_argument('--clear-existing', action='store_true', help='Clear existing vectors in the namespace before embedding')
     args = parser.parse_args()
     
     # Load environment variables
     env_vars = load_environment()
     
     # Embed documents
-    embed_documents(args.model, args.data, env_vars, args.batch_size, args.save_locally)
+    embed_documents(args.model, args.data, env_vars, save_locally=args.save_locally, clear_existing=args.clear_existing)
 
 if __name__ == "__main__":
     main() 

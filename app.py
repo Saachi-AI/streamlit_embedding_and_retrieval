@@ -70,6 +70,9 @@ def retrieve_documents(query, model_name, top_k):
     # Perform similarity search
     results = vector_store.similarity_search_with_score(query, k=top_k)
     
+    # Sort results by relevance (higher percentage first)
+    results.sort(key=lambda x: x[1])
+    
     return results
 
 # Perform retrieval when query is provided
@@ -82,12 +85,47 @@ if query:
             st.subheader(f"Retrieved {len(results)} chunks")
             
             for i, (doc, score) in enumerate(results):
-                with st.expander(f"Result {i+1} - Relevance: {1 - score:.4f}"):
-                    st.markdown("### Content")
-                    st.write(doc.page_content)
+                # Calculate relevance score as percentage with 2 decimal points
+                relevance_percentage = (1 - score) * 100
+                
+                # Extract profile_id and section from metadata
+                profile_id = doc.metadata.get("profile_id", "N/A")
+                # Remove decimal point if it exists in profile_id
+                if isinstance(profile_id, (int, float)):
+                    profile_id = str(int(profile_id))
+                section = doc.metadata.get("section", "N/A")
+                
+                # Create header with score, profile_id, and section in the specified order
+                header_html = f"""
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                    <div style="background-color: #2196F3; color: white; padding: 5px 12px; border-radius: 15px; font-weight: bold; min-width: 75px; text-align: center;">
+                        {relevance_percentage:.2f}%
+                    </div>
+                    <div style="background-color: #ECEFF1; padding: 5px 12px; border-radius: 15px; font-weight: 500;">
+                        <span style="color: #546E7A;">Profile ID:</span> <span style="color: #263238;">{profile_id}</span>
+                    </div>
+                    <div style="background-color: #ECEFF1; padding: 5px 12px; border-radius: 15px; font-weight: 500;">
+                        <span style="color: #546E7A;">Section:</span> <span style="color: #263238;">{section}</span>
+                    </div>
+                </div>
+                """
+                
+                # Create expander with custom header
+                with st.expander(f"Result {i+1}", expanded=(i == 0)):
+                    # Display custom header
+                    st.markdown(header_html, unsafe_allow_html=True)
                     
-                    st.markdown("### Metadata")
+                    # Metadata section with improved styling (now displayed first)
+                    st.markdown("<h3 style='margin-top: 15px; margin-bottom: 8px; color: #37474F; font-size: 1.2em;'>Metadata</h3>", unsafe_allow_html=True)
+                    # Create a cleaner metadata display
                     st.json(doc.metadata)
+                    
+                    # Content section with improved styling (moved after metadata)
+                    st.markdown("<h3 style='margin-top: 20px; margin-bottom: 8px; color: #37474F; font-size: 1.2em;'>Content</h3>", unsafe_allow_html=True)
+                    st.markdown(f"""<div style="background-color: #FAFAFA; color: #37474F; padding: 15px; 
+                                border-radius: 5px; border-left: 4px solid #2196F3; line-height: 1.6; 
+                                font-family: 'Segoe UI', system-ui, sans-serif;">{doc.page_content}</div>""", 
+                                unsafe_allow_html=True)
         except Exception as e:
             st.error(f"Error during retrieval: {str(e)}")
             st.info("Make sure you've embedded documents with this model first. Run `python embedders/embed.py --model {model_choice}`")

@@ -103,25 +103,25 @@ def init_pinecone(env_vars: Dict[str, str], embedding_model_name: str):
 def get_vector_store(embedding, env_vars: Dict[str, str], namespace: str = None):
     """Get vector store for the given embedding model"""
     try:
-        # If we have host information, include it
-        if env_vars.get("pinecone_host"):
-            return PineconeVectorStore.from_existing_index(
-                index_name=env_vars["pinecone_index_name"],
-                embedding=embedding,
-                namespace=namespace,
-                pinecone_kwargs={
-                    "host": f"https://{env_vars['pinecone_host']}"
-                }
-            )
-        else:
-            return PineconeVectorStore.from_existing_index(
+        # Try a simpler approach that should work with multiple versions of the API
+        return PineconeVectorStore.from_existing_index(
+            index_name=env_vars["pinecone_index_name"],
+            embedding=embedding,
+            namespace=namespace
+        )
+    except Exception as e:
+        print(f"Error connecting to vector store: {str(e)}")
+        # Try an alternative approach
+        try:
+            pc = Pinecone(api_key=env_vars["pinecone_api_key"])
+            return PineconeVectorStore(
                 index_name=env_vars["pinecone_index_name"],
                 embedding=embedding,
                 namespace=namespace
             )
-    except Exception as e:
-        print(f"Error connecting to vector store: {str(e)}")
-        raise ValueError(f"Failed to connect to Pinecone vector store. Make sure your Pinecone configuration is correct.")
+        except Exception as e2:
+            print(f"Error with alternative approach: {str(e2)}")
+            raise ValueError(f"Failed to connect to Pinecone vector store. Make sure your Pinecone configuration is correct.")
 
 def load_data(file_path: str) -> List[Dict[str, Any]]:
     """Load data from a JSON file"""

@@ -24,10 +24,7 @@ class OpenAIEmbedder:
         """Convert complex metadata to formats acceptable by Pinecone"""
         sanitized = {}
         for key, value in metadata.items():
-            if key == "languages" and isinstance(value, dict):
-                # Convert languages dict to list of "language: level" strings
-                sanitized[key] = [f"{lang}: {level}" for lang, level in value.items()]
-            elif isinstance(value, (str, int, float, bool)):
+            if isinstance(value, (str, int, float, bool)):
                 # Simple types are allowed directly
                 sanitized[key] = value
             elif isinstance(value, list):
@@ -52,13 +49,25 @@ class OpenAIEmbedder:
         raw_metadatas = [doc.get("metadata", {}) for doc in documents]
         metadatas = [self._sanitize_metadata(metadata) for metadata in raw_metadatas]
         
+        # Embed texts
+        print(f"Embedding {len(texts)} texts with OpenAI API...")
+        try:
+            embeddings = self.embeddings.embed_documents(texts)
+        except Exception as e:
+            print(f"Error in embedding: {str(e)}")
+            raise e
+        
         # Return embeddings along with original texts and metadata
         return {
             "texts": texts,
-            "embeddings": self.embeddings.embed_documents(texts),
+            "embeddings": embeddings,
             "metadatas": metadatas
         }
         
     def embed_query(self, query: str):
         """Embed a query using OpenAI embeddings"""
-        return self.embeddings.embed_query(query) 
+        try:
+            return self.embeddings.embed_query(query)
+        except Exception as e:
+            print(f"Error embedding query: {str(e)}")
+            raise e 

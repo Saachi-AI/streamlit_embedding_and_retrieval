@@ -1,5 +1,6 @@
 # Environment variables
 .env
+.env.local
 
 # Python cache
 __pycache__/
@@ -27,15 +28,37 @@ var/
 venv/
 ENV/
 env/
+.venv/
 
 # IDE specific files
 .idea/
 .vscode/
 *.swp
 *.swo
+.project
+.pydevproject
+.settings/
 
 # Jupyter Notebook
 .ipynb_checkpoints
 
 # macOS
-.DS_Store 
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Log files
+*.log
+logs/
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Distribution
+wheels/ 

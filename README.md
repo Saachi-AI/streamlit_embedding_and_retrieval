@@ -8,6 +8,7 @@ A modular Python framework for building and deploying document retrieval systems
 - **Multiple Embedding Options**: Support for OpenAI and Cohere embedding models
 - **Structured Filtering**: Extract structured filters from natural language queries
 - **Vector Store Integration**: Ready-to-use integration with Pinecone
+- **Reranking Capability**: Enhance retrieval quality with Cohere's Rerank API
 - **High-Level Services**: Simplified interfaces for common retrieval tasks
 - **Configuration Management**: Centralized settings management with environment variable support
 - **Robust Error Handling**: Custom error types and automatic retries for reliability
@@ -25,6 +26,7 @@ from retrieval_framework.services import RetrievalService, EmbeddingService
 from retrieval_framework.core.embedders import OpenAIEmbedder
 from retrieval_framework.core.filters import FilterExtractor
 from retrieval_framework.core.vectorstores import PineconeStore
+from retrieval_framework.core.rerankers import CohereReranker
 
 # Initialize components
 embedder = OpenAIEmbedder(api_key="your-openai-api-key")
@@ -33,24 +35,43 @@ vector_store = PineconeStore(
     api_key="your-pinecone-api-key",
     index_name="your-index-name"
 )
+reranker = CohereReranker(api_key="your-cohere-api-key")
 
 # Create retrieval service
 retrieval_service = RetrievalService(
     embedder=embedder,
     vector_store=vector_store,
-    filter_extractor=filter_extractor
+    filter_extractor=filter_extractor,
+    reranker=reranker
 )
 
-# Search with natural language filtering
+# Search with natural language filtering and reranking
 results = retrieval_service.retrieve_documents(
     query="Find candidates who speak fluent Japanese with at least 5 years of experience",
-    top_k=5,
-    enable_metadata_filtering=True
+    top_k=10,
+    rerank_top_k=5,
+    enable_metadata_filtering=True,
+    enable_reranking=True
 )
 
 print(f"Found {len(results)} matching documents")
 for i, doc in enumerate(results):
     print(f"Result {i+1}: {doc.metadata.get('title')} - Score: {doc.score}")
+```
+
+## Environment Variables
+
+The framework supports configuration via environment variables:
+
+```
+OPENAI_API_KEY=your-openai-api-key
+COHERE_API_KEY=your-cohere-api-key
+PINECONE_API_KEY=your-pinecone-api-key
+PINECONE_INDEX_NAME=your-index-name
+GROQ_API_KEY=your-groq-api-key
+LANGCHAIN_API_KEY=your-langchain-api-key
+SEMANTIC_TOP_K=10  # Number of results to fetch from vector store
+RERANK_TOP_K=5     # Number of results to keep after reranking
 ```
 
 ## Architecture
@@ -61,6 +82,7 @@ The framework is organized into the following components:
   - `embedders`: Classes for generating vector embeddings from text
   - `filters`: Components for extracting structured filters from queries
   - `vectorstores`: Interfaces for vector database operations
+  - `rerankers`: Components for reranking retrieval results
   
 - **Services**:
   - `RetrievalService`: High-level API for document retrieval workflows
@@ -108,6 +130,33 @@ class CustomVectorStore(VectorStoreBase):
             filter=filters
         )
         return self._format_results(results)
+```
+
+### Adding a New Reranker
+
+```python
+from retrieval_framework.core.rerankers import RerankerInterface
+import your_reranking_library
+
+class CustomReranker(RerankerInterface):
+    def __init__(self, api_key, model_name="custom-reranker"):
+        self.client = your_reranking_library.Client(api_key)
+        self.model_name = model_name
+        
+    def rerank(self, query, documents, top_k=5):
+        document_texts = [doc.page_content for doc in documents]
+        reranked = self.client.rerank(
+            query=query,
+            documents=document_texts,
+            model=self.model_name,
+            top_n=top_k
+        )
+        
+        # Map reranked results back to original documents
+        return [
+            (documents[result.index], result.score)
+            for result in reranked.results
+        ]
 ```
 
 ## License

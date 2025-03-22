@@ -8,6 +8,7 @@ from utils import load_environment, get_vector_store
 from embedders.openai_embedder import OpenAIEmbedder
 from embedders.cohere_embedder import CohereEmbedder
 from filter_extractor import FilterExtractor
+from rerankers.cohere_reranker import CohereReranker
 from pinecone import Pinecone
 
 # Set page config
@@ -45,6 +46,13 @@ def get_filter_extractor():
 
 filter_extractor = get_filter_extractor()
 
+# Initialize Cohere reranker
+@st.cache_resource
+def get_cohere_reranker():
+    return CohereReranker(api_key=env_vars["cohere_api_key"])
+
+cohere_reranker = get_cohere_reranker()
+
 # Set up the Streamlit app
 st.title("RAG Retrieval Demo")
 st.subheader("Query your documents with different embedding models")
@@ -57,12 +65,50 @@ model_choice = st.sidebar.selectbox(
     index=0
 )
 
-num_results = st.sidebar.slider(
-    "Number of Results",
+# Get default values from environment variables
+default_semantic_top_k = int(os.getenv("SEMANTIC_TOP_K", 10))
+default_rerank_top_k = int(os.getenv("RERANK_TOP_K", 5))
+
+# Initialize sliders in session state if not already set
+if 'semantic_top_k' not in st.session_state:
+    st.session_state.semantic_top_k = default_semantic_top_k
+if 'rerank_top_k' not in st.session_state:
+    st.session_state.rerank_top_k = min(default_rerank_top_k, default_semantic_top_k)
+
+# Add sliders for semantic_top_k and rerank_top_k (using session state to persist values)
+semantic_top_k = st.sidebar.slider(
+    "Number of Retrieval Chunks",
     min_value=1,
     max_value=20,
-    value=5
+    value=st.session_state.semantic_top_k,
+    key='semantic_top_k_slider'
 )
+
+# Update the session state value
+st.session_state.semantic_top_k = semantic_top_k
+
+# Make rerank_top_k slider depend on semantic_top_k
+rerank_top_k = st.sidebar.slider(
+    "Number of Reranked Chunks",
+    min_value=1,
+    max_value=semantic_top_k,  # Limit to the number of retrieved chunks
+    value=min(st.session_state.rerank_top_k, semantic_top_k),  # Ensure default doesn't exceed semantic_top_k
+    key='rerank_top_k_slider'
+)
+
+# Update the session state value
+st.session_state.rerank_top_k = rerank_top_k
+
+# Set a fixed rerank model (always use English)
+rerank_model = os.getenv("RERANK_MODEL", "rerank-english-v3.0")
+st.session_state.rerank_model = rerank_model
+
+# Make sure we set the environment variable immediately
+os.environ["RERANK_MODEL"] = rerank_model
+
+# Override environment variables with the values from the UI
+os.environ["SEMANTIC_TOP_K"] = str(semantic_top_k)
+os.environ["RERANK_TOP_K"] = str(rerank_top_k)
 
 # Enable/disable metadata filtering
 enable_metadata_filtering = st.sidebar.checkbox("Enable Metadata Filtering", value=True)
@@ -246,7 +292,7 @@ if query and query_submitted:
             _, total_chunks = retrieve_documents("", model_choice, 1, None)
             
             # Get actual search results - if metadata filtering is enabled, it's applied first at the database level
-            results, _ = retrieve_documents(query, model_choice, num_results, metadata_filter)
+            results, _ = retrieve_documents(query, model_choice, semantic_top_k, metadata_filter)
             
             # Display results
             if results:
@@ -290,10 +336,12 @@ if query and query_submitted:
                             <li>Total corpus size: {total_chunks} vectors</li>
                             <li>After metadata filtering: {filtered_size} vectors (filtered out {filtered_out if isinstance(filtered_out, str) else total_chunks - filtered_size} vectors)</li>
                             <li>Top semantic matches: {len(results)} vectors</li>
+                            <li>After reranking: {rerank_top_k} vectors</li>
                         </ul>
                         <p style="margin-top: 8px; font-size: 0.9em;">
                             Metadata filtering mode: <span style="font-weight: bold;">Inclusive</span><br>
                             Metadata filters are applied first at the database level, then semantic search retrieves the most relevant matches.
+                            Finally, Cohere reranking re-scores documents based on semantic relevance.
                         </p>
                     </div>
                     """, unsafe_allow_html=True)
@@ -302,34 +350,63 @@ if query and query_submitted:
                 else:
                     st.subheader(f"Retrieved {len(results)} chunks (from {total_chunks} total vectors)")
                 
-                for i, (doc, score) in enumerate(results):
-                    # Calculate relevance score as percentage with 2 decimal points
-                    relevance_percentage = (1 - score) * 100
+                # Display a quick summary of the initial retrieval results
+                with st.expander("Initial Retrieval Results", expanded=True):
+                    # Create a quick summary table of the initial results
+                    st.markdown("<div style='margin-bottom: 15px;'>These are the initial semantic search results before reranking:</div>", unsafe_allow_html=True)
                     
-                    # Extract profile_id and section from metadata
-                    profile_id = doc.metadata.get("profile_id", "N/A")
-                    # Remove decimal point if it exists in profile_id
-                    if isinstance(profile_id, (int, float)):
-                        profile_id = str(int(profile_id))
-                    section = doc.metadata.get("section", "N/A")
+                    # Create columns for the table header
+                    cols = st.columns([0.15, 0.15, 0.25, 0.45])
+                    cols[0].markdown("<div style='font-weight: bold;'>Rank</div>", unsafe_allow_html=True)
+                    cols[1].markdown("<div style='font-weight: bold;'>Score</div>", unsafe_allow_html=True)
+                    cols[2].markdown("<div style='font-weight: bold;'>Profile ID</div>", unsafe_allow_html=True)
+                    cols[3].markdown("<div style='font-weight: bold;'>Section</div>", unsafe_allow_html=True)
                     
-                    # Create header with score, profile_id, and section in the specified order
-                    header_html = f"""
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
-                        <div style="background-color: #2196F3; color: white; padding: 5px 12px; border-radius: 15px; font-weight: bold; min-width: 75px; text-align: center;">
-                            {relevance_percentage:.2f}%
+                    # Display summary of each result
+                    for i, (doc, score) in enumerate(results):
+                        relevance_percentage = (1 - score) * 100
+                        profile_id = doc.metadata.get("profile_id", "N/A")
+                        if isinstance(profile_id, (int, float)):
+                            profile_id = str(int(profile_id))
+                        section = doc.metadata.get("section", "N/A")
+                        
+                        cols = st.columns([0.15, 0.15, 0.25, 0.45])
+                        cols[0].markdown(f"{i+1}")
+                        cols[1].markdown(f"{relevance_percentage:.2f}%")
+                        cols[2].markdown(f"{profile_id}")
+                        cols[3].markdown(f"{section}")
+                
+                # Display detailed results for each document separately (not inside an expander)
+                st.subheader("Detailed Initial Results")
+                detailed_tabs = st.tabs([f"Result {i+1}" for i in range(len(results))])
+
+                for i, (tab, (doc, score)) in enumerate(zip(detailed_tabs, results)):
+                    with tab:
+                        # Calculate relevance score as percentage with 2 decimal points
+                        relevance_percentage = (1 - score) * 100
+                        
+                        # Extract profile_id and section from metadata
+                        profile_id = doc.metadata.get("profile_id", "N/A")
+                        # Remove decimal point if it exists in profile_id
+                        if isinstance(profile_id, (int, float)):
+                            profile_id = str(int(profile_id))
+                        section = doc.metadata.get("section", "N/A")
+                        
+                        # Create header with score, profile_id, and section in the specified order
+                        header_html = f"""
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                            <div style="background-color: #2196F3; color: white; padding: 5px 12px; border-radius: 15px; font-weight: bold; min-width: 75px; text-align: center;">
+                                {relevance_percentage:.2f}%
+                            </div>
+                            <div style="background-color: #ECEFF1; padding: 5px 12px; border-radius: 15px; font-weight: 500;">
+                                <span style="color: #546E7A;">Profile ID:</span> <span style="color: #263238;">{profile_id}</span>
+                            </div>
+                            <div style="background-color: #ECEFF1; padding: 5px 12px; border-radius: 15px; font-weight: 500;">
+                                <span style="color: #546E7A;">Section:</span> <span style="color: #263238;">{section}</span>
+                            </div>
                         </div>
-                        <div style="background-color: #ECEFF1; padding: 5px 12px; border-radius: 15px; font-weight: 500;">
-                            <span style="color: #546E7A;">Profile ID:</span> <span style="color: #263238;">{profile_id}</span>
-                        </div>
-                        <div style="background-color: #ECEFF1; padding: 5px 12px; border-radius: 15px; font-weight: 500;">
-                            <span style="color: #546E7A;">Section:</span> <span style="color: #263238;">{section}</span>
-                        </div>
-                    </div>
-                    """
-                    
-                    # Create expander with custom header
-                    with st.expander(f"Result {i+1} - Profile: {profile_id}, Section: {section}", expanded=(i == 0)):
+                        """
+                        
                         # Display custom header
                         st.markdown(header_html, unsafe_allow_html=True)
                         
@@ -344,6 +421,180 @@ if query and query_submitted:
                                     border-radius: 5px; border-left: 4px solid #2196F3; line-height: 1.6; 
                                     font-family: 'Segoe UI', system-ui, sans-serif;">{doc.page_content}</div>""", 
                                     unsafe_allow_html=True)
+
+                # Add spacing between sections
+                st.markdown("<div style='margin: 40px 0;'></div>", unsafe_allow_html=True)
+                st.markdown("<hr style='margin: 30px 0; border-top: 1px solid #555;'>", unsafe_allow_html=True)
+
+                # Perform reranking
+                with st.spinner("Reranking results with Cohere..."):
+                    # No need to pass model explicitly since it will use the environment variable
+                    reranked_results = cohere_reranker.rerank(
+                        query, 
+                        results, 
+                        rerank_top_k
+                    )
+                
+                # Display reranked results
+                if reranked_results:
+                    # Enhanced title for reranked results with better styling
+                    st.markdown(f"""
+                    <div style="background-color: #1E3A5F; color: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <h2 style="margin: 0; font-size: 1.5em;">Top {len(reranked_results)} Reranked Results</h2>
+                        <p style="margin: 5px 0 0 0; font-size: 0.9em;">Reranked using Cohere's rerank-english-v3.0 model</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Create a summary table for reranked results
+                    st.markdown("<div style='margin-bottom: 15px;'>These are the reranked results after applying Cohere's reranking:</div>", unsafe_allow_html=True)
+                    
+                    # Create columns for the table header
+                    cols = st.columns([0.15, 0.15, 0.25, 0.45])
+                    cols[0].markdown("<div style='font-weight: bold;'>Rank</div>", unsafe_allow_html=True)
+                    cols[1].markdown("<div style='font-weight: bold;'>Score</div>", unsafe_allow_html=True)
+                    cols[2].markdown("<div style='font-weight: bold;'>Profile ID</div>", unsafe_allow_html=True)
+                    cols[3].markdown("<div style='font-weight: bold;'>Section</div>", unsafe_allow_html=True)
+                    
+                    # Display summary of each reranked result
+                    for i, (doc, score) in enumerate(reranked_results):
+                        relevance_percentage = score * 100
+                        profile_id = doc.metadata.get("profile_id", "N/A")
+                        if isinstance(profile_id, (int, float)):
+                            profile_id = str(int(profile_id))
+                        section = doc.metadata.get("section", "N/A")
+                        
+                        cols = st.columns([0.15, 0.15, 0.25, 0.45])
+                        cols[0].markdown(f"{i+1}")
+                        cols[1].markdown(f"{relevance_percentage:.2f}%")
+                        cols[2].markdown(f"{profile_id}")
+                        cols[3].markdown(f"{section}")
+                    
+                    # Create tabs for reranked results
+                    reranked_tabs = st.tabs([f"Result {i+1}" for i in range(len(reranked_results))])
+                    
+                    # Display each reranked result in a tab
+                    for i, (tab, (doc, score)) in enumerate(zip(reranked_tabs, reranked_results)):
+                        with tab:
+                            # Calculate relevance score as percentage with 2 decimal points
+                            relevance_percentage = score * 100
+                            
+                            # Extract profile_id and section from metadata
+                            profile_id = doc.metadata.get("profile_id", "N/A")
+                            # Remove decimal point if it exists in profile_id
+                            if isinstance(profile_id, (int, float)):
+                                profile_id = str(int(profile_id))
+                            section = doc.metadata.get("section", "N/A")
+                            
+                            # Create header with score, profile_id, and section in the specified order
+                            header_html = f"""
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <div style="background-color: #2196F3; color: white; padding: 5px 12px; border-radius: 15px; font-weight: bold; min-width: 75px; text-align: center;">
+                                    {relevance_percentage:.2f}%
+                                </div>
+                                <div style="background-color: #ECEFF1; padding: 5px 12px; border-radius: 15px; font-weight: 500;">
+                                    <span style="color: #546E7A;">Profile ID:</span> <span style="color: #263238;">{profile_id}</span>
+                                </div>
+                                <div style="background-color: #ECEFF1; padding: 5px 12px; border-radius: 15px; font-weight: 500;">
+                                    <span style="color: #546E7A;">Section:</span> <span style="color: #263238;">{section}</span>
+                                </div>
+                            </div>
+                            """
+                            
+                            # Display custom header
+                            st.markdown(header_html, unsafe_allow_html=True)
+                            
+                            # Metadata section with improved styling (now displayed first)
+                            st.markdown("<h3 style='margin-top: 15px; margin-bottom: 8px; color: #37474F; font-size: 1.2em;'>Metadata</h3>", unsafe_allow_html=True)
+                            # Create a cleaner metadata display
+                            st.json(doc.metadata)
+                            
+                            # Content section with improved styling (moved after metadata)
+                            st.markdown("<h3 style='margin-top: 20px; margin-bottom: 8px; color: #37474F; font-size: 1.2em;'>Content</h3>", unsafe_allow_html=True)
+                            st.markdown(f"""<div style="background-color: #FAFAFA; color: #37474F; padding: 15px; 
+                                        border-radius: 5px; border-left: 4px solid #2196F3; line-height: 1.6; 
+                                        font-family: 'Segoe UI', system-ui, sans-serif;">{doc.page_content}</div>""", 
+                                        unsafe_allow_html=True)
+                else:
+                    st.warning("Reranking failed. Displaying original results.")
+                    # Fall back to original display code if reranking fails
+                    
+                    # Enhanced title for fallback results with styling similar to reranked results
+                    st.markdown(f"""
+                    <div style="background-color: #6D4C41; color: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <h2 style="margin: 0; font-size: 1.5em;">Top {min(rerank_top_k, len(results))} Results (Fallback)</h2>
+                        <p style="margin: 5px 0 0 0; font-size: 0.9em;">Using original retrieval results as fallback because reranking failed</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Create a summary table for fallback results
+                    st.markdown("<div style='margin-bottom: 15px;'>Showing top results from initial retrieval (reranking failed):</div>", unsafe_allow_html=True)
+                    
+                    # Create columns for the table header
+                    cols = st.columns([0.15, 0.15, 0.25, 0.45])
+                    cols[0].markdown("<div style='font-weight: bold;'>Rank</div>", unsafe_allow_html=True)
+                    cols[1].markdown("<div style='font-weight: bold;'>Score</div>", unsafe_allow_html=True)
+                    cols[2].markdown("<div style='font-weight: bold;'>Profile ID</div>", unsafe_allow_html=True)
+                    cols[3].markdown("<div style='font-weight: bold;'>Section</div>", unsafe_allow_html=True)
+                    
+                    # Display summary of each fallback result
+                    for i, (doc, score) in enumerate(results[:rerank_top_k]):
+                        relevance_percentage = (1 - score) * 100
+                        profile_id = doc.metadata.get("profile_id", "N/A")
+                        if isinstance(profile_id, (int, float)):
+                            profile_id = str(int(profile_id))
+                        section = doc.metadata.get("section", "N/A")
+                        
+                        cols = st.columns([0.15, 0.15, 0.25, 0.45])
+                        cols[0].markdown(f"{i+1}")
+                        cols[1].markdown(f"{relevance_percentage:.2f}%")
+                        cols[2].markdown(f"{profile_id}")
+                        cols[3].markdown(f"{section}")
+                    
+                    # Create tabs for fallback results
+                    fallback_tabs = st.tabs([f"Result {i+1}" for i in range(min(rerank_top_k, len(results)))])
+                    
+                    # Display each fallback result in a tab
+                    for i, (tab, (doc, score)) in enumerate(zip(fallback_tabs, results[:rerank_top_k])):
+                        with tab:
+                            # Calculate relevance score as percentage with 2 decimal points
+                            relevance_percentage = (1 - score) * 100
+                            
+                            # Extract profile_id and section from metadata
+                            profile_id = doc.metadata.get("profile_id", "N/A")
+                            # Remove decimal point if it exists in profile_id
+                            if isinstance(profile_id, (int, float)):
+                                profile_id = str(int(profile_id))
+                            section = doc.metadata.get("section", "N/A")
+                            
+                            # Create header with score, profile_id, and section in the specified order
+                            header_html = f"""
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <div style="background-color: #2196F3; color: white; padding: 5px 12px; border-radius: 15px; font-weight: bold; min-width: 75px; text-align: center;">
+                                    {relevance_percentage:.2f}%
+                                </div>
+                                <div style="background-color: #ECEFF1; padding: 5px 12px; border-radius: 15px; font-weight: 500;">
+                                    <span style="color: #546E7A;">Profile ID:</span> <span style="color: #263238;">{profile_id}</span>
+                                </div>
+                                <div style="background-color: #ECEFF1; padding: 5px 12px; border-radius: 15px; font-weight: 500;">
+                                    <span style="color: #546E7A;">Section:</span> <span style="color: #263238;">{section}</span>
+                                </div>
+                            </div>
+                            """
+                            
+                            # Display custom header
+                            st.markdown(header_html, unsafe_allow_html=True)
+                            
+                            # Metadata section with improved styling (now displayed first)
+                            st.markdown("<h3 style='margin-top: 15px; margin-bottom: 8px; color: #37474F; font-size: 1.2em;'>Metadata</h3>", unsafe_allow_html=True)
+                            # Create a cleaner metadata display
+                            st.json(doc.metadata)
+                            
+                            # Content section with improved styling (moved after metadata)
+                            st.markdown("<h3 style='margin-top: 20px; margin-bottom: 8px; color: #37474F; font-size: 1.2em;'>Content</h3>", unsafe_allow_html=True)
+                            st.markdown(f"""<div style="background-color: #FAFAFA; color: #37474F; padding: 15px; 
+                                        border-radius: 5px; border-left: 4px solid #2196F3; line-height: 1.6; 
+                                        font-family: 'Segoe UI', system-ui, sans-serif;">{doc.page_content}</div>""", 
+                                        unsafe_allow_html=True)
             else:
                 st.info("No results found. Try adjusting your query or filters.")
         except Exception as e:
@@ -352,4 +603,5 @@ if query and query_submitted:
 
 # Footer
 st.sidebar.markdown("---")
-st.sidebar.markdown("Built with LangChain, Pinecone, Groq, and LangSmith")
+st.sidebar.markdown(f"Using {semantic_top_k} retrieval chunks, {rerank_top_k} reranked chunks")
+st.sidebar.markdown("Built with LangChain, Pinecone, Groq, Cohere, and LangSmith")

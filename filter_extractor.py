@@ -44,9 +44,15 @@ Rules:
    - "business-level", "professional", "fluent" -> "Professional working proficiency"
    - "conversational", "intermediate" -> "Limited working proficiency"
    - "basic", "elementary", "beginner" -> "Elementary Proficiency"
-8. Return languages as an object with language names as keys and proficiency levels as values
-9. If proficiency level is not specified for a language, assume "Professional working proficiency"
-10. Only include human/natural languages like English, French, Japanese, etc. Do not include programming languages.
+8. For Japanese language specifically, also map JLPT certification levels:
+   - "N1" -> "Native or Bilingual proficiency"
+   - "N2" -> "Full professional proficiency" 
+   - "N3" -> "Professional working proficiency"
+   - "N4" -> "Limited working proficiency"
+   - "N5" -> "Elementary Proficiency"
+9. Return languages as an object with language names as keys and proficiency levels as values
+10. If proficiency level is not specified for a language, assume "Professional working proficiency"
+11. Only include human/natural languages like English, French, Japanese, etc. Do not include programming languages.
 
 USER QUERY: "{query}"
 
@@ -66,6 +72,22 @@ Return a JSON object with only the fields that were EXPLICITLY mentioned in the 
                 if start_idx >= 0 and end_idx > start_idx:
                     json_str = response[start_idx:end_idx]
                     extracted_filters = json.loads(json_str)
+                    
+                    # Post-process to map Japanese language levels if needed
+                    if "languages" in extracted_filters and "Japanese" in extracted_filters["languages"]:
+                        japanese_level = extracted_filters["languages"]["Japanese"]
+                        # Check if the level contains N1-N5 notation but wasn't properly mapped
+                        if "N1" in japanese_level:
+                            extracted_filters["languages"]["Japanese"] = "Native or Bilingual proficiency"
+                        elif "N2" in japanese_level:
+                            extracted_filters["languages"]["Japanese"] = "Full professional proficiency"
+                        elif "N3" in japanese_level:
+                            extracted_filters["languages"]["Japanese"] = "Professional working proficiency"
+                        elif "N4" in japanese_level:
+                            extracted_filters["languages"]["Japanese"] = "Limited working proficiency"
+                        elif "N5" in japanese_level:
+                            extracted_filters["languages"]["Japanese"] = "Elementary Proficiency"
+                    
                     return extracted_filters
                 else:
                     st.warning("LLM response did not contain valid JSON. Using empty filter.")
@@ -187,24 +209,25 @@ Return a JSON object with only the fields that were EXPLICITLY mentioned in the 
         """
         for language, level in language_filters.items():
             language_key = language.capitalize()  # Ensure proper capitalization
+            level = level.lower() if isinstance(level, str) else ""
             
             # Map proficiency level terms to standard values
-            if level.lower() in ["native", "native-level", "native or bilingual proficiency", "mother tongue", "native speaker"]:
+            if level in ["native", "native-level", "native or bilingual proficiency", "mother tongue", "native speaker", "n1"]:
                 proficiency_values = ["Native or Bilingual proficiency"]
-            elif level.lower() in ["business", "business-level", "professional", "fluent", "professional working proficiency"]:
+            elif level in ["business", "business-level", "professional", "fluent", "professional working proficiency", "n3", "full professional proficiency", "n2"]:
                 proficiency_values = [
                     "Professional working proficiency",
                     "Full professional proficiency",
                     "Native or Bilingual proficiency"
                 ]
-            elif level.lower() in ["conversational", "intermediate", "limited working proficiency"]:
+            elif level in ["conversational", "intermediate", "limited working proficiency", "n4"]:
                 proficiency_values = [
                     "Limited working proficiency",
                     "Professional working proficiency",
                     "Full professional proficiency",
                     "Native or Bilingual proficiency"
                 ]
-            elif level.lower() in ["basic", "elementary", "beginner", "elementary proficiency"]:
+            elif level in ["basic", "elementary", "beginner", "elementary proficiency", "n5"]:
                 proficiency_values = [
                     "Elementary Proficiency",
                     "Limited working proficiency",

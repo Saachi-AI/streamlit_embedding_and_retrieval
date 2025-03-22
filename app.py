@@ -67,15 +67,6 @@ num_results = st.sidebar.slider(
 # Enable/disable metadata filtering
 enable_metadata_filtering = st.sidebar.checkbox("Enable Metadata Filtering", value=True)
 
-# Strict filtering mode (only if metadata filtering is enabled)
-strict_filtering = False
-if enable_metadata_filtering:
-    strict_filtering = st.sidebar.checkbox(
-        "Strict Filtering Mode", 
-        value=False,
-        help="When enabled, only documents with exact metadata matches will be returned. When disabled, documents with missing metadata fields will still be included."
-    )
-
 # Main query input
 st.text_area(
     "Enter your query:", 
@@ -166,13 +157,9 @@ if query and query_submitted:
     if enable_metadata_filtering:
         with st.spinner("Extracting metadata filters..."):
             try:
-                filter_result = filter_extractor.process_query(query, strict_mode=strict_filtering)
+                filter_result = filter_extractor.process_query(query, strict_mode=False)
                 metadata_filter = filter_result["pinecone_filter"]
                 extracted_filters = filter_result["extracted_filters"]
-                
-                # Display strict mode indicator if enabled
-                if strict_filtering:
-                    st.warning("⚠️ Strict filtering mode is enabled. Only documents with exact metadata matches will be returned.")
             except Exception as e:
                 st.error(f"Error extracting metadata filters: {str(e)}")
     
@@ -182,44 +169,57 @@ if query and query_submitted:
         
         # Create a visually appealing filter display
         filter_cols = st.columns(3)
+        col_index = 0  # Keep track of which column we're using
         
-        with filter_cols[0]:
-            if "gender" in extracted_filters:
-                st.markdown(f"""
-                <div style="background-color: #263e5a; padding: 10px; border-radius: 5px; margin-bottom: 10px; color: white;">
-                    <span style="font-weight: bold;">Gender:</span> {extracted_filters["gender"]}
-                </div>
-                """, unsafe_allow_html=True)
-                
-            if "years_of_experience" in extracted_filters:
+        # Experience filter
+        if "years_of_experience" in extracted_filters:
+            with filter_cols[col_index % 3]:
                 st.markdown(f"""
                 <div style="background-color: #2a4d3e; padding: 10px; border-radius: 5px; margin-bottom: 10px; color: white;">
                     <span style="font-weight: bold;">Experience:</span> {extracted_filters["years_of_experience"]}+ years
                 </div>
                 """, unsafe_allow_html=True)
+                col_index += 1
+                
+        # Gender filter
+        if "gender" in extracted_filters:
+            with filter_cols[col_index % 3]:
+                st.markdown(f"""
+                <div style="background-color: #263e5a; padding: 10px; border-radius: 5px; margin-bottom: 10px; color: white;">
+                    <span style="font-weight: bold;">Gender:</span> {extracted_filters["gender"]}
+                </div>
+                """, unsafe_allow_html=True)
+                col_index += 1
         
-        with filter_cols[1]:
-            if "last_contacted" in extracted_filters:
+        # Last contacted filter
+        if "last_contacted" in extracted_filters:
+            with filter_cols[col_index % 3]:
                 st.markdown(f"""
                 <div style="background-color: #554927; padding: 10px; border-radius: 5px; margin-bottom: 10px; color: white;">
                     <span style="font-weight: bold;">Last Contacted:</span> Within {extracted_filters["last_contacted"]} years
                 </div>
                 """, unsafe_allow_html=True)
+                col_index += 1
                 
-            if "is_candidate" in extracted_filters:
+        # Is candidate filter - only if explicitly mentioned
+        if "is_candidate" in extracted_filters:
+            with filter_cols[col_index % 3]:
                 st.markdown(f"""
                 <div style="background-color: #44304d; padding: 10px; border-radius: 5px; margin-bottom: 10px; color: white;">
                     <span style="font-weight: bold;">Is Candidate:</span> {extracted_filters["is_candidate"]}
                 </div>
                 """, unsafe_allow_html=True)
+                col_index += 1
         
-        with filter_cols[2]:
-            if "placed" in extracted_filters:
+        # Placed filter - only if explicitly mentioned
+        if "placed" in extracted_filters:
+            with filter_cols[col_index % 3]:
                 st.markdown(f"""
                 <div style="background-color: #4d2e2a; padding: 10px; border-radius: 5px; margin-bottom: 10px; color: white;">
                     <span style="font-weight: bold;">Placed:</span> {extracted_filters["placed"]}
                 </div>
                 """, unsafe_allow_html=True)
+                col_index += 1
         
         # Display language requirements
         if "languages" in extracted_filters and isinstance(extracted_filters["languages"], dict):
@@ -264,7 +264,7 @@ if query and query_submitted:
                             namespace=namespace,
                             vector=[0] * (1536 if model_choice == "openai" else 1024),  # Dummy vector
                             filter=metadata_filter,
-                            top_k=100,  # Request more results to get a better estimate
+                            top_k=1000,  # Request more results to get a better estimate
                             include_metadata=False
                         )
                         # Get approximate filtered count based on returned results
@@ -283,8 +283,6 @@ if query and query_submitted:
                         filtered_out = "Unknown"
                     
                     # Display statistics about the filtering process
-                    filtering_mode = "strict (requires exact metadata matches)" if strict_filtering else "inclusive (includes documents with missing metadata fields)"
-                    
                     st.markdown(f"""
                     <div style="background-color: #37474F; color: white; padding: 10px; border-radius: 5px; margin: 15px 0;">
                         <div style="font-weight: bold; margin-bottom: 5px;">Vector Retrieval Pipeline:</div>
@@ -294,7 +292,7 @@ if query and query_submitted:
                             <li>Top semantic matches: {len(results)} vectors</li>
                         </ul>
                         <p style="margin-top: 8px; font-size: 0.9em;">
-                            Metadata filtering mode: <span style="font-weight: bold;">{filtering_mode}</span><br>
+                            Metadata filtering mode: <span style="font-weight: bold;">Inclusive</span><br>
                             Metadata filters are applied first at the database level, then semantic search retrieves the most relevant matches.
                         </p>
                     </div>

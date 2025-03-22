@@ -25,30 +25,38 @@ class FilterExtractor:
         # Define the prompt template
         prompt = f"""You are a metadata extraction assistant. Extract the following fields from the user's candidate search query:
 
-- gender: Extract if user specifies "male" or "female"
+- gender: Extract if user EXPLICITLY specifies "male" or "female"
 - years_of_experience: Extract numeric value if the user mentions years of experience
 - last_contacted: Extract time period in years if user mentions when candidates were last contacted
-- is_candidate: Extract boolean if user explicitly mentions active candidate status
-- placed: Extract boolean if user explicitly mentions placement status
+- is_candidate: Extract boolean ONLY if user EXPLICITLY mentions active candidate status
+- placed: Extract boolean ONLY if user EXPLICITLY mentions placement status
 - languages: Extract any natural/human language requirements (like English, Japanese, Spanish) with their proficiency levels
 
 Rules:
-1. Leave a field empty if not mentioned in the query
-2. For gender, note if the query indicates "only male/female" or if it could include unspecified
+1. Leave a field empty if not explicitly mentioned in the query
+2. For gender, only extract if specifically mentioned
 3. For experience, extract the minimum years as a number
 4. For last_contacted, extract the time period in years
-5. For language proficiency levels, map to standard values:
+5. For is_candidate and placed, ONLY include these if EXPLICITLY mentioned in the query
+6. DO NOT make assumptions about fields that are not mentioned
+7. For language proficiency levels, map to standard values:
    - "native-level", "mother tongue", "native speaker" -> "Native or Bilingual proficiency"
    - "business-level", "professional", "fluent" -> "Professional working proficiency"
    - "conversational", "intermediate" -> "Limited working proficiency"
    - "basic", "elementary", "beginner" -> "Elementary Proficiency"
-6. Return languages as an object with language names as keys and proficiency levels as values
-7. If proficiency level is not specified for a language, assume "Professional working proficiency"
-8. Only include human/natural languages like English, French, Japanese, etc. Do not include programming languages.
+8. For Japanese language specifically, also map JLPT certification levels:
+   - "N1" -> "Native or Bilingual proficiency"
+   - "N2" -> "Full professional proficiency" 
+   - "N3" -> "Professional working proficiency"
+   - "N4" -> "Limited working proficiency"
+   - "N5" -> "Elementary Proficiency"
+9. Return languages as an object with language names as keys and proficiency levels as values
+10. If proficiency level is not specified for a language, assume "Professional working proficiency"
+11. Only include human/natural languages like English, French, Japanese, etc. Do not include programming languages.
 
 USER QUERY: "{query}"
 
-Return a JSON object with only the fields that were mentioned in the query.
+Return a JSON object with only the fields that were EXPLICITLY mentioned in the query. DO NOT include fields that are not mentioned.
 """
         
         # Get response from LLM
@@ -64,6 +72,22 @@ Return a JSON object with only the fields that were mentioned in the query.
                 if start_idx >= 0 and end_idx > start_idx:
                     json_str = response[start_idx:end_idx]
                     extracted_filters = json.loads(json_str)
+                    
+                    # Post-process to map Japanese language levels if needed
+                    if "languages" in extracted_filters and "Japanese" in extracted_filters["languages"]:
+                        japanese_level = extracted_filters["languages"]["Japanese"]
+                        # Check if the level contains N1-N5 notation but wasn't properly mapped
+                        if "N1" in japanese_level:
+                            extracted_filters["languages"]["Japanese"] = "Native or Bilingual proficiency"
+                        elif "N2" in japanese_level:
+                            extracted_filters["languages"]["Japanese"] = "Full professional proficiency"
+                        elif "N3" in japanese_level:
+                            extracted_filters["languages"]["Japanese"] = "Professional working proficiency"
+                        elif "N4" in japanese_level:
+                            extracted_filters["languages"]["Japanese"] = "Limited working proficiency"
+                        elif "N5" in japanese_level:
+                            extracted_filters["languages"]["Japanese"] = "Elementary Proficiency"
+                    
                     return extracted_filters
                 else:
                     st.warning("LLM response did not contain valid JSON. Using empty filter.")
@@ -117,14 +141,11 @@ Return a JSON object with only the fields that were mentioned in the query.
                 min_years = 0
                 
             if min_years > 0:
+                # Include both profiles with minimum years AND profiles with unknown years (0)
                 exp_filter = {"$or": [
-                    {"years_of_experience": {"$gte": min_years}}
+                    {"years_of_experience": {"$gte": min_years}},
+                    {"years_of_experience": {"$eq": 0}}  # Include profiles with unknown years
                 ]}
-                # Include unknown (0) values or missing fields unless in strict mode
-                if not strict_mode:
-                    exp_filter["$or"].append({"years_of_experience": {"$eq": 0}})
-                    exp_filter["$or"].append({"years_of_experience": {"$exists": False}})
-                    
                 pinecone_filter["$and"].append(exp_filter)
         
         # Process last_contacted filter
@@ -138,10 +159,7 @@ Return a JSON object with only the fields that were mentioned in the query.
                 contact_filter = {"$or": [
                     {"last_contacted": {"$gte": cutoff_timestamp}}
                 ]}
-                # In non-strict mode, also include docs where this field is missing
-                if not strict_mode:
-                    contact_filter["$or"].append({"last_contacted": {"$exists": False}})
-                    
+                # Removed the condition for missing fields for non-language metadata
                 pinecone_filter["$and"].append(contact_filter)
             except (ValueError, TypeError):
                 pass  # Skip if not a valid number
@@ -153,10 +171,7 @@ Return a JSON object with only the fields that were mentioned in the query.
                 candidate_filter = {"$or": [
                     {"is_candidate": {"$eq": is_candidate_value}}
                 ]}
-                # In non-strict mode, also include docs where this field is missing
-                if not strict_mode:
-                    candidate_filter["$or"].append({"is_candidate": {"$exists": False}})
-                    
+                # Removed the condition for missing fields for non-language metadata
                 pinecone_filter["$and"].append(candidate_filter)
             except (ValueError, TypeError):
                 pass
@@ -168,10 +183,7 @@ Return a JSON object with only the fields that were mentioned in the query.
                 placed_filter = {"$or": [
                     {"placed": {"$eq": placed_value}}
                 ]}
-                # In non-strict mode, also include docs where this field is missing
-                if not strict_mode:
-                    placed_filter["$or"].append({"placed": {"$exists": False}})
-                    
+                # Removed the condition for missing fields for non-language metadata
                 pinecone_filter["$and"].append(placed_filter)
             except (ValueError, TypeError):
                 pass
@@ -197,24 +209,25 @@ Return a JSON object with only the fields that were mentioned in the query.
         """
         for language, level in language_filters.items():
             language_key = language.capitalize()  # Ensure proper capitalization
+            level = level.lower() if isinstance(level, str) else ""
             
             # Map proficiency level terms to standard values
-            if level.lower() in ["native", "native-level", "native or bilingual proficiency", "mother tongue", "native speaker"]:
+            if level in ["native", "native-level", "native or bilingual proficiency", "mother tongue", "native speaker", "n1"]:
                 proficiency_values = ["Native or Bilingual proficiency"]
-            elif level.lower() in ["business", "business-level", "professional", "fluent", "professional working proficiency"]:
+            elif level in ["business", "business-level", "professional", "fluent", "professional working proficiency", "n3", "full professional proficiency", "n2"]:
                 proficiency_values = [
                     "Professional working proficiency",
                     "Full professional proficiency",
                     "Native or Bilingual proficiency"
                 ]
-            elif level.lower() in ["conversational", "intermediate", "limited working proficiency"]:
+            elif level in ["conversational", "intermediate", "limited working proficiency", "n4"]:
                 proficiency_values = [
                     "Limited working proficiency",
                     "Professional working proficiency",
                     "Full professional proficiency",
                     "Native or Bilingual proficiency"
                 ]
-            elif level.lower() in ["basic", "elementary", "beginner", "elementary proficiency"]:
+            elif level in ["basic", "elementary", "beginner", "elementary proficiency", "n5"]:
                 proficiency_values = [
                     "Elementary Proficiency",
                     "Limited working proficiency",

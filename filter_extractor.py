@@ -25,30 +25,32 @@ class FilterExtractor:
         # Define the prompt template
         prompt = f"""You are a metadata extraction assistant. Extract the following fields from the user's candidate search query:
 
-- gender: Extract if user specifies "male" or "female"
+- gender: Extract if user EXPLICITLY specifies "male" or "female"
 - years_of_experience: Extract numeric value if the user mentions years of experience
 - last_contacted: Extract time period in years if user mentions when candidates were last contacted
-- is_candidate: Extract boolean if user explicitly mentions active candidate status
-- placed: Extract boolean if user explicitly mentions placement status
+- is_candidate: Extract boolean ONLY if user EXPLICITLY mentions active candidate status
+- placed: Extract boolean ONLY if user EXPLICITLY mentions placement status
 - languages: Extract any natural/human language requirements (like English, Japanese, Spanish) with their proficiency levels
 
 Rules:
-1. Leave a field empty if not mentioned in the query
-2. For gender, note if the query indicates "only male/female" or if it could include unspecified
+1. Leave a field empty if not explicitly mentioned in the query
+2. For gender, only extract if specifically mentioned
 3. For experience, extract the minimum years as a number
 4. For last_contacted, extract the time period in years
-5. For language proficiency levels, map to standard values:
+5. For is_candidate and placed, ONLY include these if EXPLICITLY mentioned in the query
+6. DO NOT make assumptions about fields that are not mentioned
+7. For language proficiency levels, map to standard values:
    - "native-level", "mother tongue", "native speaker" -> "Native or Bilingual proficiency"
    - "business-level", "professional", "fluent" -> "Professional working proficiency"
    - "conversational", "intermediate" -> "Limited working proficiency"
    - "basic", "elementary", "beginner" -> "Elementary Proficiency"
-6. Return languages as an object with language names as keys and proficiency levels as values
-7. If proficiency level is not specified for a language, assume "Professional working proficiency"
-8. Only include human/natural languages like English, French, Japanese, etc. Do not include programming languages.
+8. Return languages as an object with language names as keys and proficiency levels as values
+9. If proficiency level is not specified for a language, assume "Professional working proficiency"
+10. Only include human/natural languages like English, French, Japanese, etc. Do not include programming languages.
 
 USER QUERY: "{query}"
 
-Return a JSON object with only the fields that were mentioned in the query.
+Return a JSON object with only the fields that were EXPLICITLY mentioned in the query. DO NOT include fields that are not mentioned.
 """
         
         # Get response from LLM
@@ -117,14 +119,11 @@ Return a JSON object with only the fields that were mentioned in the query.
                 min_years = 0
                 
             if min_years > 0:
+                # Include both profiles with minimum years AND profiles with unknown years (0)
                 exp_filter = {"$or": [
-                    {"years_of_experience": {"$gte": min_years}}
+                    {"years_of_experience": {"$gte": min_years}},
+                    {"years_of_experience": {"$eq": 0}}  # Include profiles with unknown years
                 ]}
-                # Include unknown (0) values or missing fields unless in strict mode
-                if not strict_mode:
-                    exp_filter["$or"].append({"years_of_experience": {"$eq": 0}})
-                    exp_filter["$or"].append({"years_of_experience": {"$exists": False}})
-                    
                 pinecone_filter["$and"].append(exp_filter)
         
         # Process last_contacted filter
@@ -138,10 +137,7 @@ Return a JSON object with only the fields that were mentioned in the query.
                 contact_filter = {"$or": [
                     {"last_contacted": {"$gte": cutoff_timestamp}}
                 ]}
-                # In non-strict mode, also include docs where this field is missing
-                if not strict_mode:
-                    contact_filter["$or"].append({"last_contacted": {"$exists": False}})
-                    
+                # Removed the condition for missing fields for non-language metadata
                 pinecone_filter["$and"].append(contact_filter)
             except (ValueError, TypeError):
                 pass  # Skip if not a valid number
@@ -153,10 +149,7 @@ Return a JSON object with only the fields that were mentioned in the query.
                 candidate_filter = {"$or": [
                     {"is_candidate": {"$eq": is_candidate_value}}
                 ]}
-                # In non-strict mode, also include docs where this field is missing
-                if not strict_mode:
-                    candidate_filter["$or"].append({"is_candidate": {"$exists": False}})
-                    
+                # Removed the condition for missing fields for non-language metadata
                 pinecone_filter["$and"].append(candidate_filter)
             except (ValueError, TypeError):
                 pass
@@ -168,10 +161,7 @@ Return a JSON object with only the fields that were mentioned in the query.
                 placed_filter = {"$or": [
                     {"placed": {"$eq": placed_value}}
                 ]}
-                # In non-strict mode, also include docs where this field is missing
-                if not strict_mode:
-                    placed_filter["$or"].append({"placed": {"$exists": False}})
-                    
+                # Removed the condition for missing fields for non-language metadata
                 pinecone_filter["$and"].append(placed_filter)
             except (ValueError, TypeError):
                 pass

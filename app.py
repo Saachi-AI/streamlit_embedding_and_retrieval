@@ -9,6 +9,7 @@ from embedders.openai_embedder import OpenAIEmbedder
 from embedders.cohere_embedder import CohereEmbedder
 from filter_extractor import FilterExtractor
 from rerankers.cohere_reranker import CohereReranker
+from post_rerank_aggregator import ProfileAggregator
 from pinecone import Pinecone
 
 # Set page config
@@ -53,6 +54,13 @@ def get_cohere_reranker():
 
 cohere_reranker = get_cohere_reranker()
 
+# Initialize Profile Aggregator
+@st.cache_resource
+def get_profile_aggregator():
+    return ProfileAggregator()
+
+profile_aggregator = get_profile_aggregator()
+
 # Set up the Streamlit app
 st.title("RAG Retrieval Demo")
 st.subheader("Query your documents with different embedding models")
@@ -68,12 +76,15 @@ model_choice = st.sidebar.selectbox(
 # Get default values from environment variables
 default_semantic_top_k = int(os.getenv("SEMANTIC_TOP_K", 10))
 default_rerank_top_k = int(os.getenv("RERANK_TOP_K", 5))
+default_top_k_profiles = int(os.getenv("TOP_K_PROFILES", 5))
 
 # Initialize sliders in session state if not already set
 if 'semantic_top_k' not in st.session_state:
     st.session_state.semantic_top_k = default_semantic_top_k
 if 'rerank_top_k' not in st.session_state:
     st.session_state.rerank_top_k = min(default_rerank_top_k, default_semantic_top_k)
+if 'top_k_profiles' not in st.session_state:
+    st.session_state.top_k_profiles = default_top_k_profiles
 
 # Add sliders for semantic_top_k and rerank_top_k (using session state to persist values)
 semantic_top_k = st.sidebar.slider(
@@ -99,6 +110,18 @@ rerank_top_k = st.sidebar.slider(
 # Update the session state value
 st.session_state.rerank_top_k = rerank_top_k
 
+# Add input for number of profiles to show
+top_k_profiles = st.sidebar.number_input(
+    "Number of Top Profiles to Show",
+    min_value=1,
+    max_value=20,
+    value=st.session_state.top_k_profiles,
+    key='top_k_profiles_input'
+)
+
+# Update the session state value
+st.session_state.top_k_profiles = top_k_profiles
+
 # Set a fixed rerank model (always use English)
 rerank_model = os.getenv("RERANK_MODEL", "rerank-english-v3.0")
 st.session_state.rerank_model = rerank_model
@@ -109,6 +132,7 @@ os.environ["RERANK_MODEL"] = rerank_model
 # Override environment variables with the values from the UI
 os.environ["SEMANTIC_TOP_K"] = str(semantic_top_k)
 os.environ["RERANK_TOP_K"] = str(rerank_top_k)
+os.environ["TOP_K_PROFILES"] = str(top_k_profiles)
 
 # Enable/disable metadata filtering
 enable_metadata_filtering = st.sidebar.checkbox("Enable Metadata Filtering", value=True)
@@ -417,10 +441,15 @@ if query and query_submitted:
                         
                         # Content section with improved styling (moved after metadata)
                         st.markdown("<h3 style='margin-top: 20px; margin-bottom: 8px; color: #37474F; font-size: 1.2em;'>Content</h3>", unsafe_allow_html=True)
-                        st.markdown(f"""<div style="background-color: #FAFAFA; color: #37474F; padding: 15px; 
-                                    border-radius: 5px; border-left: 4px solid #2196F3; line-height: 1.6; 
-                                    font-family: 'Segoe UI', system-ui, sans-serif;">{doc.page_content}</div>""", 
-                                    unsafe_allow_html=True)
+                        
+                        # Display content in a scrollable text area for better readability
+                        st.text_area(
+                            label="",
+                            value=doc.page_content,
+                            height=200,
+                            disabled=True,
+                            key=f"initial_result_{i}"
+                        )
 
                 # Add spacing between sections
                 st.markdown("<div style='margin: 40px 0;'></div>", unsafe_allow_html=True)
@@ -510,10 +539,142 @@ if query and query_submitted:
                             
                             # Content section with improved styling (moved after metadata)
                             st.markdown("<h3 style='margin-top: 20px; margin-bottom: 8px; color: #37474F; font-size: 1.2em;'>Content</h3>", unsafe_allow_html=True)
-                            st.markdown(f"""<div style="background-color: #FAFAFA; color: #37474F; padding: 15px; 
-                                        border-radius: 5px; border-left: 4px solid #2196F3; line-height: 1.6; 
-                                        font-family: 'Segoe UI', system-ui, sans-serif;">{doc.page_content}</div>""", 
-                                        unsafe_allow_html=True)
+                            
+                            # Display content in a scrollable text area for better readability
+                            st.text_area(
+                                label="",
+                                value=doc.page_content,
+                                height=200,
+                                disabled=True,
+                                key=f"reranked_result_{i}"
+                            )
+                    
+                    # Add spacing between sections
+                    st.markdown("<div style='margin: 40px 0;'></div>", unsafe_allow_html=True)
+                    st.markdown("<hr style='margin: 30px 0; border-top: 1px solid #555;'>", unsafe_allow_html=True)
+                    
+                    # Perform profile aggregation
+                    with st.spinner("Aggregating profiles..."):
+                        profile_scores = profile_aggregator.aggregate_profiles(
+                            reranked_results,
+                            top_k=top_k_profiles
+                        )
+                    
+                    # Display profile-level results
+                    if profile_scores:
+                        # Enhanced title for profile results
+                        st.markdown(f"""
+                        <div style="background-color: #1B5E20; color: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                            <h2 style="margin: 0; font-size: 1.5em;">Top {len(profile_scores)} Profile Results</h2>
+                            <p style="margin: 5px 0 0 0; font-size: 0.9em;">Using Max + Bonus aggregation formula</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Create profile results tabs
+                        profile_tabs = st.tabs([f"#{i+1} Profile {score.profile_id}" for i, score in enumerate(profile_scores)])
+                        
+                        # Display each profile result in a tab
+                        for i, (tab, profile_score) in enumerate(zip(profile_tabs, profile_scores)):
+                            with tab:
+                                # Format the score as percentage for display
+                                score_percentage = profile_score.final_score * 100
+                                best_chunk_percentage = profile_score.best_chunk_score * 100
+                                
+                                # Create header with profile info
+                                st.markdown(f"""
+                                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                                    <div style="background-color: #4CAF50; color: white; padding: 8px 16px; border-radius: 15px; font-weight: bold; min-width: 100px; text-align: center; font-size: 1.2em;">
+                                        {score_percentage:.2f}%
+                                    </div>
+                                    <div style="background-color: #E8F5E9; padding: 8px 16px; border-radius: 15px; font-weight: 500; font-size: 1.1em;">
+                                        <span style="color: #2E7D32;">Profile:</span> <span style="color: #1B5E20;">{profile_score.profile_id}</span>
+                                    </div>
+                                </div>
+                                """, unsafe_allow_html=True)
+                                
+                                # Score explanation section
+                                st.markdown(f"""
+                                <div style="background-color: #F1F8E9; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #8BC34A;">
+                                    <h3 style="margin-top: 0; margin-bottom: 10px; color: #33691E; font-size: 1.1em;">Score Explanation</h3>
+                                    <p style="margin: 0; color: #33691E;">
+                                        <span style="font-weight: bold;">Best chunk score:</span> {best_chunk_percentage:.2f}%<br>
+                                        <span style="font-weight: bold;">Chunks above threshold ({profile_aggregator.threshold*100:.0f}%):</span> {profile_score.above_threshold_count}<br>
+                                        <span style="font-weight: bold;">Bonus factor (α):</span> {profile_aggregator.alpha}<br>
+                                        <span style="font-weight: bold;">Bonus amount:</span> {profile_aggregator.alpha * profile_score.above_threshold_count:.3f}<br>
+                                        <span style="font-weight: bold; font-size: 1.1em;">Final score = {best_chunk_percentage:.2f}% + {profile_aggregator.alpha * profile_score.above_threshold_count:.3f} = {score_percentage:.2f}%</span>
+                                    </p>
+                                </div>
+                                """, unsafe_allow_html=True)
+                                
+                                # Relevant chunks
+                                st.markdown(f"<h3 style='margin-top: 25px; margin-bottom: 15px; color: #33691E;'>Top chunks for this profile ({len(profile_score.chunks)})</h3>", unsafe_allow_html=True)
+                                
+                                # Display each relevant chunk with its score
+                                for j, (doc, chunk_score) in enumerate(profile_score.chunks):
+                                    chunk_score_percentage = chunk_score * 100
+                                    section = doc.metadata.get("section", "N/A")
+                                    
+                                    # Determine if this chunk contributed to the bonus (above threshold)
+                                    is_above_threshold = chunk_score >= profile_aggregator.threshold
+                                    threshold_badge = ""
+                                    if is_above_threshold:
+                                        threshold_badge = f"""<div style="background-color: #689F38; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.8em; display: inline-block; margin-left: 10px;">
+                                            Above threshold
+                                        </div>"""
+                                    
+                                    # Sanitize page content to avoid raw HTML display
+                                    content = doc.page_content
+                                    # Remove any HTML tags
+                                    content = content.replace("<", "&lt;").replace(">", "&gt;")
+                                    
+                                    # Create the chunk header with score and section info, but NOT the content
+                                    st.markdown(f"""
+                                    <div style="background-color: #FAFAFA; padding: 15px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #E0E0E0;">
+                                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                            <div style="background-color: {'#689F38' if is_above_threshold else '#9E9E9E'}; color: white; padding: 5px 10px; border-radius: 15px; font-weight: bold; min-width: 70px; text-align: center; margin-right: 10px;">
+                                                {chunk_score_percentage:.2f}%
+                                            </div>
+                                            <div style="color: #424242; font-weight: 500;">
+                                                Chunk #{j+1} | Section: {section}
+                                            </div>
+                                            {threshold_badge}
+                                        </div>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # Display content in a scrollable text area for better readability
+                                    st.text_area(
+                                        label="",
+                                        value=doc.page_content[:1000] + ('...' if len(doc.page_content) > 1000 else ''),
+                                        height=150,
+                                        disabled=True,
+                                        key=f"profile_{profile_score.profile_id}_chunk_{j}"
+                                    )
+                        
+                        # Add a summary table for quick reference
+                        st.subheader("Profile Score Summary")
+                        
+                        # Create columns for the table header
+                        cols = st.columns([0.1, 0.2, 0.25, 0.25, 0.2])
+                        cols[0].markdown("<div style='font-weight: bold;'>Rank</div>", unsafe_allow_html=True)
+                        cols[1].markdown("<div style='font-weight: bold;'>Profile ID</div>", unsafe_allow_html=True)
+                        cols[2].markdown("<div style='font-weight: bold;'>Best Chunk Score</div>", unsafe_allow_html=True)
+                        cols[3].markdown("<div style='font-weight: bold;'>Chunks Above Threshold</div>", unsafe_allow_html=True)
+                        cols[4].markdown("<div style='font-weight: bold;'>Final Score</div>", unsafe_allow_html=True)
+                        
+                        # Display summary of each profile score
+                        for i, profile_score in enumerate(profile_scores):
+                            best_chunk_percentage = profile_score.best_chunk_score * 100
+                            final_score_percentage = profile_score.final_score * 100
+                            
+                            cols = st.columns([0.1, 0.2, 0.25, 0.25, 0.2])
+                            cols[0].markdown(f"#{i+1}")
+                            cols[1].markdown(f"{profile_score.profile_id}")
+                            cols[2].markdown(f"{best_chunk_percentage:.2f}%")
+                            cols[3].markdown(f"{profile_score.above_threshold_count}")
+                            cols[4].markdown(f"{final_score_percentage:.2f}%")
+                    else:
+                        st.warning("No profiles could be aggregated from the reranked results.")
                 else:
                     st.warning("Reranking failed. Displaying original results.")
                     # Fall back to original display code if reranking fails
@@ -591,10 +752,15 @@ if query and query_submitted:
                             
                             # Content section with improved styling (moved after metadata)
                             st.markdown("<h3 style='margin-top: 20px; margin-bottom: 8px; color: #37474F; font-size: 1.2em;'>Content</h3>", unsafe_allow_html=True)
-                            st.markdown(f"""<div style="background-color: #FAFAFA; color: #37474F; padding: 15px; 
-                                        border-radius: 5px; border-left: 4px solid #2196F3; line-height: 1.6; 
-                                        font-family: 'Segoe UI', system-ui, sans-serif;">{doc.page_content}</div>""", 
-                                        unsafe_allow_html=True)
+                            
+                            # Display content in a scrollable text area for better readability
+                            st.text_area(
+                                label="",
+                                value=doc.page_content,
+                                height=200,
+                                disabled=True,
+                                key=f"fallback_result_{i}"
+                            )
             else:
                 st.info("No results found. Try adjusting your query or filters.")
         except Exception as e:

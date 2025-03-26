@@ -161,4 +161,31 @@ class CustomReranker(RerankerInterface):
 
 ## License
 
-MIT License 
+MIT License
+
+# Job Description Parser and Semantic Search
+
+## New Features
+
+### Job Description Parser
+The application now includes a document parser that:
+- Accepts uploaded job description files (PDF, DOC, DOCX)
+- Uses Upstage AI's document digitization API to extract text
+- Processes the extracted text with GROQ's DeepSeek R1 Distill Llama 70B model
+- Automatically generates optimized prompts for semantic candidate search
+- Extracts key skills, experience requirements, and language proficiency needs
+- Creates a structured representation of the job requirements
+
+### How to Use the Job Description Parser
+1. Go to the "Job Description Parser" tab
+2. Upload a job description document (PDF, DOC, DOCX)
+3. Click "Parse Document" to process it
+4. View the extracted information and generated search prompt
+5. Click "Use this prompt for candidate search" to use it in the search tab
+
+### Required API Keys
+You'll need to add these API keys to your .env file:
+- `UPSTAGE_API_KEY`: For document parsing via Upstage AI
+- `GROQ_API_KEY`: For LLM processing using DeepSeek R1 Distill Llama 70B
+
+## Retrieval Framework Documentation 

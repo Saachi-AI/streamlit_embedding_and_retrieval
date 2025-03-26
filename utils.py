@@ -28,7 +28,8 @@ def load_environment():
         "cohere_api_key": os.getenv("COHERE_API_KEY"),
         "langchain_api_key": os.getenv("LANGCHAIN_API_KEY"),
         "langchain_project": os.getenv("LANGCHAIN_PROJECT"),
-        "groq_api_key": os.getenv("GROQ_API_KEY")  # Add Groq API key
+        "groq_api_key": os.getenv("GROQ_API_KEY"),  # Add Groq API key
+        "upstage_api_key": os.getenv("UPSTAGE_API_KEY"),  # Add Upstage API key
     }
 
 def init_pinecone(env_vars: Dict[str, str], embedding_model_name: str):

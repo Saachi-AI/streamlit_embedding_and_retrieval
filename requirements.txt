@@ -3,8 +3,11 @@ python-dotenv>=1.0.0,<2.0.0
 tenacity>=8.0.0,<9.0.0
 numpy>=1.22.0,<2.0.0
 openai>=1.0.0,<2.0.0
-cohere-api>=4.0.0,<5.0.0
+cohere
 pinecone-client>=2.2.0,<3.0.0
 groq>=0.4.0,<1.0.0
 loguru>=0.7.0,<1.0.0
-streamlit>=1.28.0 
+streamlit>=1.28.0
+beautifulsoup4>=4.11.0,<5.0.0
+requests>=2.28.0,<3.0.0
+langchain-groq>=0.1.0,<1.0.0 

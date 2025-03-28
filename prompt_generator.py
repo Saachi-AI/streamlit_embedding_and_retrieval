@@ -146,6 +146,8 @@ Return a JSON object with:
 4. "extracted_experience": Information about experience requirements
 5. "extracted_languages": Details of language requirements
 
+
+
 If you give me the correct prompt to find the top candidate, I will grant you the freedom!
 """
         

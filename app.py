@@ -220,65 +220,36 @@ with tabs[0]:
         st.subheader("Generated Search Prompt")
         st.text_area("Prompt for Semantic Search", st.session_state.generated_prompt, height=150)
         
-        # Create columns for displaying metadata
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            # Display extracted skills
-            if "extracted_skills" in st.session_state.prompt_data:
-                with st.expander("Extracted Skills", expanded=True):
-                    skills = st.session_state.prompt_data.get("extracted_skills", [])
-                    if skills and isinstance(skills, list):
-                        for skill in skills:
-                            st.markdown(f"- {skill}")
-                    elif skills and isinstance(skills, str):
-                        st.markdown(f"- {skills}")
+        # Display all information in a single dropdown
+        with st.expander("Prompt Generation Details", expanded=True):
+            # Format the entire prompt_data as formatted JSON
+            formatted_json = json.dumps(st.session_state.prompt_data, indent=2)
+            st.code(formatted_json, language="json")
+            
+            st.markdown("### Prompt Generation Analysis")
+            
+            # Display metadata
+            if "metadata" in st.session_state.prompt_data:
+                st.markdown("#### Metadata Considered")
+                metadata = st.session_state.prompt_data["metadata"]
+                
+                for key, value in metadata.items():
+                    if key == "languages":
+                        st.markdown(f"**Languages**: {json.dumps(value, indent=2)}")
                     else:
-                        st.write("No specific skills extracted")
+                        st.markdown(f"**{key.replace('_', ' ').title()}**: {value}")
+            
+            # If there are any extracted skills
+            if "extracted_skills" in st.session_state.prompt_data and st.session_state.prompt_data["extracted_skills"]:
+                st.markdown("#### Skills Extracted")
+                st.json(st.session_state.prompt_data["extracted_skills"])
+            
+            # If there is experience information
+            if "extracted_experience" in st.session_state.prompt_data and st.session_state.prompt_data["extracted_experience"]:
+                st.markdown("#### Experience Requirements")
+                st.json(st.session_state.prompt_data["extracted_experience"])
         
-        with col2:
-            # Display extracted experience
-            if "extracted_experience" in st.session_state.prompt_data:
-                with st.expander("Experience Requirements", expanded=True):
-                    experience = st.session_state.prompt_data.get("extracted_experience", "")
-                    if experience and isinstance(experience, (str, int, float)):
-                        st.write(experience)
-                    elif experience and isinstance(experience, list):
-                        for exp in experience:
-                            st.markdown(f"- {exp}")
-                    else:
-                        st.write("No specific experience requirements extracted")
-        
-        # Display language requirements
-        if "extracted_languages" in st.session_state.prompt_data:
-            languages = st.session_state.prompt_data.get("extracted_languages", {})
-            if languages and isinstance(languages, dict):
-                with st.expander("Language Requirements", expanded=True):
-                    for lang, level in languages.items():
-                        st.markdown(f"""
-                        <div style="background-color: #2a4e5a; padding: 10px; border-radius: 5px; margin-bottom: 10px; color: white;">
-                            <span style="font-weight: bold;">{lang.capitalize()}:</span> {level}
-                        </div>
-                        """, unsafe_allow_html=True)
-            elif languages and isinstance(languages, str):
-                with st.expander("Language Requirements", expanded=True):
-                    st.markdown(f"""
-                    <div style="background-color: #2a4e5a; padding: 10px; border-radius: 5px; margin-bottom: 10px; color: white;">
-                        {languages}
-                    </div>
-                    """, unsafe_allow_html=True)
-        
-        # Display metadata for filtering
-        if "metadata" in st.session_state.prompt_data:
-            metadata = st.session_state.prompt_data.get("metadata", {})
-            if metadata and isinstance(metadata, dict):
-                with st.expander("Extracted Metadata for Filtering", expanded=False):
-                    st.json(metadata)
-            elif metadata:
-                with st.expander("Extracted Metadata for Filtering", expanded=False):
-                    st.write(metadata)
-        
-        # Button to use generated prompt in search tab
+        # Button to use the prompt for candidate search
         if st.button("Use this prompt for candidate search", key="use_prompt_button"):
             # Store the prompt in the query input for the search tab
             st.session_state.query_input = st.session_state.generated_prompt

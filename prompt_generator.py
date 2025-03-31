@@ -29,49 +29,13 @@ class PromptGenerator:
         Returns:
             Normalized data with consistent structure
         """
-        # Ensure all required fields are present with correct types
-        normalized = {
-            "prompt": "",
-            "metadata": {
-                "min_years_experience": None,
-                "languages": []
-            },
-            "extracted_skills": [],
-            "extracted_experience": "",
-            "extracted_languages": {}
-        }
+        normalized = {}
         
-        # Process prompt field
         if "prompt" in data:
-            if isinstance(data["prompt"], str):
-                normalized["prompt"] = data["prompt"]
-            else:
-                normalized["prompt"] = str(data["prompt"]) if data["prompt"] is not None else ""
+            normalized["prompt"] = data["prompt"]
         
-        # Process metadata field
-        if "metadata" in data and isinstance(data["metadata"], dict):
-            # For min_years_experience
-            if "min_years_experience" in data["metadata"]:
-                normalized["metadata"]["min_years_experience"] = data["metadata"]["min_years_experience"]
-            
-            # For languages array
-            if "languages" in data["metadata"] and isinstance(data["metadata"]["languages"], list):
-                normalized["metadata"]["languages"] = data["metadata"]["languages"]
-            
-            # Copy any other metadata fields that might be present
-            for key, value in data["metadata"].items():
-                if key not in ["min_years_experience", "languages"]:
-                    normalized["metadata"][key] = value
-        
-        # For backward compatibility with the old format
-        if "extracted_skills" in data:
-            normalized["extracted_skills"] = data["extracted_skills"]
-        
-        if "extracted_experience" in data:
-            normalized["extracted_experience"] = data["extracted_experience"]
-        
-        if "extracted_languages" in data:
-            normalized["extracted_languages"] = data["extracted_languages"]
+        if "metadata" in data:
+            normalized["metadata"] = data["metadata"]
         
         return normalized
 
@@ -164,9 +128,14 @@ Return a valid JSON object in the following format:
                     json_str = response[start_idx:end_idx]
                     prompt_data = json.loads(json_str)
                     
-                    # Normalize the data to ensure consistent structure
-                    normalized_data = self._normalize_response_data(prompt_data)
-                    return normalized_data
+                    # Instead of passing the entire response_data to _normalize_response_data
+                    # or returning it directly, create a clean version with only desired fields
+                    clean_response = {
+                        "prompt": prompt_data.get("prompt", ""),
+                        "metadata": prompt_data.get("metadata", {})
+                    }
+                    
+                    return clean_response
                 else:
                     st.warning("LLM response did not contain valid JSON data.")
                     # Return a basic structure with just the raw text if parsing failed

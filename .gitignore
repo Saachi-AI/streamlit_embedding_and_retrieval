@@ -64,3 +64,4 @@ htmlcov/
 wheels/ 
 
 stream-test/
+output/

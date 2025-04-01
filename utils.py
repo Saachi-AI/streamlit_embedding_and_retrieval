@@ -2,8 +2,7 @@ import os
 from typing import Dict, List, Any
 from dotenv import load_dotenv
 from langchain_pinecone import PineconeVectorStore
-import pinecone
-from pinecone import Pinecone, ServerlessSpec
+from pinecone import Pinecone
 
 def load_environment():
     """Load environment variables from .env file"""
@@ -47,9 +46,7 @@ def init_pinecone(env_vars: Dict[str, str], embedding_model_name: str):
             
             # Try to connect directly to the index using the host
             try:
-                index = pc.Index(
-                    host=f"https://{env_vars['pinecone_host']}"
-                )
+                index = pc.Index(env_vars["pinecone_index_name"])
                 print(f"Successfully connected to existing index '{index_name}'")
                 return pc
             except Exception as e:
@@ -86,10 +83,6 @@ def init_pinecone(env_vars: Dict[str, str], embedding_model_name: str):
                     name=index_name,
                     dimension=dimension,
                     metric="cosine",
-                    spec=ServerlessSpec(
-                        cloud="aws",
-                        region=region
-                    )
                 )
                 print(f"Successfully created index '{index_name}'")
             except Exception as e:
@@ -105,25 +98,20 @@ def init_pinecone(env_vars: Dict[str, str], embedding_model_name: str):
 def get_vector_store(embedding, env_vars: Dict[str, str], namespace: str = None):
     """Get vector store for the given embedding model"""
     try:
-        # Try a simpler approach that should work with multiple versions of the API
-        return PineconeVectorStore.from_existing_index(
-            index_name=env_vars["pinecone_index_name"],
+        # Initialize Pinecone
+        pc = Pinecone(api_key=env_vars["pinecone_api_key"])
+        index = pc.Index(env_vars["pinecone_index_name"])
+        
+        # Create vector store using langchain-pinecone integration
+        return PineconeVectorStore(
+            index=index,
             embedding=embedding,
+            text_key="text",
             namespace=namespace
         )
     except Exception as e:
         print(f"Error connecting to vector store: {str(e)}")
-        # Try an alternative approach
-        try:
-            pc = Pinecone(api_key=env_vars["pinecone_api_key"])
-            return PineconeVectorStore(
-                index_name=env_vars["pinecone_index_name"],
-                embedding=embedding,
-                namespace=namespace
-            )
-        except Exception as e2:
-            print(f"Error with alternative approach: {str(e2)}")
-            raise ValueError(f"Failed to connect to Pinecone vector store. Make sure your Pinecone configuration is correct.")
+        raise ValueError(f"Failed to connect to Pinecone vector store. Make sure your Pinecone configuration is correct. Error: {str(e)}")
 
 def load_data(file_path: str) -> List[Dict[str, Any]]:
     """Load data from a JSON file"""

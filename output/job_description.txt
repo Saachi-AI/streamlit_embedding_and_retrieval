@@ -1,173 +1,137 @@
-3/24/25,8:53 PM
+Senior Data Scientist, GG11
 
 
-Squad Analyst (P2/P3) - Emma, Digital Customers, Transversal Solutions (PnC)| アクサ生命保険株式会社
+Position Overview:
 
 
-AKA
+The Senior Data Scientist will drive innovative approaches to understanding, interacting, and
+optimizing customer engagement by leveraging advanced analytics to derive actionable
+business insights. The successful candidate will work closely with business stakeholders,
+primarily in Japanese, to understand their requirements and the broader business context. This
+role entails leading data analytics initiatives from conception through implementation to delivery.
 
 
-アクサ生命保険株式会社
+Responsibilities:
 
 
-$$|\Gamma\mid\sim\mathcal{D}\mathcal{+}\supset\Sigma>\underline{{{\Rightarrow}}}>\ \stackrel{\star}{\mathcal{D}}\mathcal{U}\subseteq\mathcal{N}$$
+· Collaborate with business stakeholders to gather requirements, understand business
+context, and derive data-driven solutions.
 
 
-Squad Analyst (P2/P3) - Emma, Digital Customers, Transversal
-Solutions (PnC)
+· Oversee data analytics initiatives, including planning, execution, and delivery of high-
+quality analytical solutions.
 
 
-職務内容
-Job description
+· Work closely with the data platform team and other IT teams, identifying dependencies,
+and resolving blockers to ensure smooth development processes.
 
 
-▼職務の目的 :
+· Develop, deploy, and manage machine learning models and analytics projects, ensuring
+alignment with business objectives.
 
 
-· オペレーションチームと協働し、 ビジネスプロセスを定義、 顧客体験を最適化していく
-· プロダクトオーナーと密接に働き、 Squadで実施されるべき責務を完了する
-· システム開発やインテナンスの調整を行いとした対応のオンーションが円滑に行われる
-ことを確実にする
+· Utilize CI/CD, MLOps, Azure or similar cloud platforms, and DevOps to streamline
+development and deployment processes.
 
 
-【オペレーションチームと協働し、 ビジネスプロセスを定義、 最適化していく】
+· Apply hands-on expertise with SQL, Python, Pandas, PySpark, AzureML, and PowerBI to
+develop and implement data models and analytics.
 
 
-· 担当するプロダクトに関して、 ビジネスプロセスやワークフロー、 ユースケースについ
+· Leverage domain expertise in financial or insurance sectors, especially in distribution,
+operations and marketing, to ensure successful project outcomes.
 
 
-ての知識を維持する
+· Prepare detailed documentation for analytics and ML initiatives, including project
+deliverables and technical specifications.
 
 
-· 担当するプロダクトについて、 コアとなるケイパビリティや機能、 また制限事項につい
-て理解する
+· Communicate effectively with team members and leadership through presentations and
+reports detailing analytics and machine learning requirements, progress, and outcomes.
 
 
-· プロセスの自動化や標準化をサポートする
-· 新しいニーズを引き出し、 業務及びシステム要件定義をおこなう
-· 新たなテクノロジーや機能を探求し、 会社の戦略にアラインすることを評価し提案する
-· 既存のアセットを確実に活用していく
+· Ensure the responsible use of AI practices, adhering to ethical guidelines and compliance
+standards.
 
 
-【プロダクトオーナーと密接に働き、 Squad で実施されるべき責務を完了する】
-· 必要なガバナンスプロセスに準拠する
-· 導入のアプローチを立案する
+· Employ best practices and methodologies from other markets to improve analytics and
+data solutions.
 
 
-【システム開発やメンテナンスの調整を行い、 Squad 内のオペレーション が円滑に行わ
-れること確実にする】
+· Proactively propose new solutions and enhancements based on emerging technologies
+and business needs.
 
 
-https://www.com/pring.nologsainjini/int_(pdi29
+Requirements:
 
 
-1/3
+· 3+ years of experience in advanced analytics roles, delivering successful business
+outcomes.
 
 
-3/24/25,8:53 PM
+· Proven experience in managing data science or analytics projects.
 
 
-Squad Analyst (P2/P3) - Emma, Digital Customers, Transversal Solutions (PnC)1アクサ生命保険株式会社
+Technical Skills:
 
 
-· リリース準備 (例 : Release Managememへの承認を得たドキュメントの提出、 レビ
-ュー実施等) と夜間もしくは早朝リリース作業
-· (ビジネスに対する窓口 ; Single Point of Contactとして) インシデント (障害) の優
-先順位付けを行い対応し、 根本原因の特定および問題解決のためにデベロッパー (開発者)
-をサポートする
+· Proficiency in quantitative methods and business analytics with strong problem-solving
+skills.
 
 
-求めるスキル · 経験
-Job qualification
+Expertise in building and applying data models using machine learning techniques such as
+classification, regression, clustering, time-series analysis, and dimensionality reduction.
 
 
-■コミュニケーション能力および調整能力
+Competent programming skills with Python and SQL.
 
 
-· マルチタスク (複数のタスクを同時に実行する) 能力、 および新しい物事を速く学び、
-幅広いタスクを実行することが出来る能力
-· Squad がその目標を達成するために必要なことに対して積極的に取り組むマインドセッ
-トとリーダーシップ
+Strong understanding of data visualization tools, particularly PowerBI.
 
 
-■主要なビジネス知識:
+· Experience with CI/CD, MLOps, and cloud platforms such as Azure for deploying analytics
+and ML solutions.
 
 
-· お客様の確保で業務局険会社の関連ポータルに関するプロジクトがどもあるべきが理解
-している、 または理解できる
+· Hands-on experience with data analytics tools and libraries such as Pandas, PySpark, and
+AzureML.
 
 
-· 当社の商品知識を理解し、 最適なユーザエクスペリエンスを業務部門と企画できる
-· 開発チームやビジネスのステークホルダーとONE Teamとして働くことができるチーム
-プレーヤーであること
+· Background in financial or insurance domains, particularly in distribution, operations and
+marketing.
 
 
-■技術的な知識:
+· Continuous learning of new tools and technologies, such as Generative AI (GenAI), to stay
+ahead of industry trends and enhance analytics capabilities.
 
 
-· クラウド上でのオープンアプリケーション構築に関する知識 ・経験
-· 問題解決や分析における、 ログやコードの分析スキルや経験
+Education:
 
 
-■ソフトスキル
+· Bachelor's degree in a quantitative modeling-focused discipline such as Statistics,
+Marketing Science, Operations Research, Econometrics, Machine Learning, or a related
+field.
 
 
-· ビジネス要件にチャレンジすることができるコミュニケーション能力、 説得力
-· 多国籍な環境で働く能力: ビジネス日本語+ビジネス英語
-(最低限のコミュニケーションが英語でおこなえること)
+· An advanced degree in similar disciplines is a plus. Courses or specialization in data &
+analytics.
 
 
-· 問題解決力
+· Azure certifications, especially Azure Data Scientist, Azure Enterprise Data Analyst, Azure
+Data Engineer.
 
 
-待遇
-Condition
+Language Requirements:
 
 
-https://www.com/phing.nologsang/ing/andint_co.k299i
+· Japanese: Advanced.
+· English: Intermediate.
 
 
-2/3
+Additional Information:
 
 
-3/24/25,8:53 PM
-
-
-Squad Analyst (P2/P3)  Emma, Digital Customers, Transversal Solutions (PnC) I アクサ生命保険株式会社
-
-
-【賃金】 現年収、 能力、 経験に応じて当社規定により優遇
-
-
-【勤務時間】
-
-
-9:00~17:00 (休憩 1 2:00~13:00)
-
-
-フレックスタイムあり
-
-
-勤務地
-Place
-
-
-雇入れ直後) 白金本社
-
-
-(変更の範囲) 会社の定める就業場所へ異動を命じることがある。
-
-
-この職種へ登録 / Entry
-
-
-←職種一覧へ/Open Positions
-
-
-https://www.com/pring.oflygoologyinghtmlind_(29
-
-
-Copyright Ⓒ AXA Life Insurance Co.,Ltd. All Rights Reserved.
-
-
-3/3
+The role requires a proactive individual with a strong analytical background, capable of driving
+data initiatives while collaborating effectively with cross-functional teams. The ideal candidate
+will have financial or insurance expertise, technical prowess with relevant tools, and the ability to
+navigate complex business environments to deliver impactful analytics solutions.

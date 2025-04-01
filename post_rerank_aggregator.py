@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import List, Dict, Tuple, Any, Optional
 
 # Configure logging
-logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
+logging.basicConfig(level=os.getenv("LOG_LEVEL") if os.getenv("LOG_LEVEL") in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] else "INFO")
 logger = logging.getLogger(__name__)
 
 @dataclass

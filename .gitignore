@@ -62,3 +62,5 @@ htmlcov/
 
 # Distribution
 wheels/ 
+
+stream-test/

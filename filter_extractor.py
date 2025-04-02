@@ -119,15 +119,13 @@ Return a JSON object with only the fields that were EXPLICITLY mentioned in the 
             
             if gender_value == "male":
                 gender_filter["$or"].append({"gender": {"$eq": "male"}})
-                # Also include "not_mentioned" unless explicitly specified as "only male"
-                if not "only" in extracted_filters.get("gender_strict", ""):
-                    gender_filter["$or"].append({"gender": {"$eq": "not_mentioned"}})
+                # Also include "not_mentioned"
+                gender_filter["$or"].append({"gender": {"$eq": "not_mentioned"}})
                     
             elif gender_value == "female":
                 gender_filter["$or"].append({"gender": {"$eq": "female"}})
-                # Also include "not_mentioned" unless explicitly specified as "only female"
-                if not "only" in extracted_filters.get("gender_strict", ""):
-                    gender_filter["$or"].append({"gender": {"$eq": "not_mentioned"}})
+                # Also include "not_mentioned"
+                gender_filter["$or"].append({"gender": {"$eq": "not_mentioned"}})
             
             if gender_filter["$or"]:
                 pinecone_filter["$and"].append(gender_filter)

@@ -694,33 +694,24 @@ with tabs[0]:
                                         chunk_score_percentage = chunk_score * 100
                                         section = doc.metadata.get("section", "N/A")
                                         
-                                        # Determine if this chunk contributed to the bonus (above threshold)
-                                        is_above_threshold = chunk_score >= profile_aggregator.threshold
-                                        threshold_badge = ""
-                                        if is_above_threshold:
-                                            threshold_badge = f"""<div style="background-color: #689F38; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.8em; display: inline-block; margin-left: 10px;">
-                                                Above threshold
-                                            </div>"""
+                                        # Create a simpler layout with columns instead of complex HTML
+                                        cols = st.columns([0.2, 0.5, 0.3])
+                                        
+                                        # Score column with color based on threshold
+                                        bg_color = "#689F38" if chunk_score >= profile_aggregator.threshold else "#9E9E9E" 
+                                        cols[0].markdown(f"<div style='background-color: {bg_color}; color: white; padding: 5px 10px; border-radius: 15px; font-weight: bold; text-align: center;'>{chunk_score_percentage:.2f}%</div>", unsafe_allow_html=True)
+                                        
+                                        # Section info column
+                                        cols[1].markdown(f"<div style='padding: 5px 0px;'>Chunk #{j+1} | Section: {section}</div>", unsafe_allow_html=True)
+                                        
+                                        # Threshold badge column (only if above threshold)
+                                        if chunk_score >= profile_aggregator.threshold:
+                                            cols[2].markdown("<div style='background-color: #689F38; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.8em; display: inline-block;'>Above threshold</div>", unsafe_allow_html=True)
                                         
                                         # Sanitize page content to avoid raw HTML display
                                         content = doc.page_content
                                         # Remove any HTML tags
                                         content = content.replace("<", "&lt;").replace(">", "&gt;")
-                                        
-                                        # Create the chunk header with score and section info, but NOT the content
-                                        st.markdown(f"""
-                                        <div style="background-color: #FAFAFA; padding: 15px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #E0E0E0;">
-                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                                <div style="background-color: {'#689F38' if is_above_threshold else '#9E9E9E'}; color: white; padding: 5px 10px; border-radius: 15px; font-weight: bold; min-width: 70px; text-align: center; margin-right: 10px;">
-                                                    {chunk_score_percentage:.2f}%
-                                                </div>
-                                                <div style="color: #424242; font-weight: 500;">
-                                                    Chunk #{j+1} | Section: {section}
-                                                </div>
-                                                {threshold_badge}
-                                            </div>
-                                        </div>
-                                        """, unsafe_allow_html=True)
                                         
                                         # Display content in a scrollable text area for better readability
                                         st.text_area(
@@ -1257,33 +1248,24 @@ with tabs[1]:
                                         chunk_score_percentage = chunk_score * 100
                                         section = doc.metadata.get("section", "N/A")
                                         
-                                        # Determine if this chunk contributed to the bonus (above threshold)
-                                        is_above_threshold = chunk_score >= profile_aggregator.threshold
-                                        threshold_badge = ""
-                                        if is_above_threshold:
-                                            threshold_badge = f"""<div style="background-color: #689F38; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.8em; display: inline-block; margin-left: 10px;">
-                                                Above threshold
-                                            </div>"""
+                                        # Create a simpler layout with columns instead of complex HTML
+                                        cols = st.columns([0.2, 0.5, 0.3])
+                                        
+                                        # Score column with color based on threshold
+                                        bg_color = "#689F38" if chunk_score >= profile_aggregator.threshold else "#9E9E9E" 
+                                        cols[0].markdown(f"<div style='background-color: {bg_color}; color: white; padding: 5px 10px; border-radius: 15px; font-weight: bold; text-align: center;'>{chunk_score_percentage:.2f}%</div>", unsafe_allow_html=True)
+                                        
+                                        # Section info column
+                                        cols[1].markdown(f"<div style='padding: 5px 0px;'>Chunk #{j+1} | Section: {section}</div>", unsafe_allow_html=True)
+                                        
+                                        # Threshold badge column (only if above threshold)
+                                        if chunk_score >= profile_aggregator.threshold:
+                                            cols[2].markdown("<div style='background-color: #689F38; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.8em; display: inline-block;'>Above threshold</div>", unsafe_allow_html=True)
                                         
                                         # Sanitize page content to avoid raw HTML display
                                         content = doc.page_content
                                         # Remove any HTML tags
                                         content = content.replace("<", "&lt;").replace(">", "&gt;")
-                                        
-                                        # Create the chunk header with score and section info, but NOT the content
-                                        st.markdown(f"""
-                                        <div style="background-color: #FAFAFA; padding: 15px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #E0E0E0;">
-                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                                                <div style="background-color: {'#689F38' if is_above_threshold else '#9E9E9E'}; color: white; padding: 5px 10px; border-radius: 15px; font-weight: bold; min-width: 70px; text-align: center; margin-right: 10px;">
-                                                    {chunk_score_percentage:.2f}%
-                                                </div>
-                                                <div style="color: #424242; font-weight: 500;">
-                                                    Chunk #{j+1} | Section: {section}
-                                                </div>
-                                                {threshold_badge}
-                                            </div>
-                                        </div>
-                                        """, unsafe_allow_html=True)
                                         
                                         # Display content in a scrollable text area for better readability
                                         st.text_area(

@@ -302,8 +302,6 @@ def create_tab_specific_sidebar(active_tab_index):
     # Get default values from session state
     semantic_top_k = st.session_state.get(f"{tab_name}_semantic_top_k", 10)
     rerank_top_k = min(st.session_state.get(f"{tab_name}_rerank_top_k", 5), semantic_top_k)
-    top_k_profiles = st.session_state.get(f"{tab_name}_top_k_profiles", 5)
-    enable_metadata_filtering = st.session_state.get(f"{tab_name}_enable_metadata_filtering", True)
     
     # Add a header for the active tab
     st.sidebar.markdown(f"**Settings for {tab_title}**")
@@ -328,30 +326,10 @@ def create_tab_specific_sidebar(active_tab_index):
     )
     st.session_state[f"{tab_name}_rerank_top_k"] = rerank_top_k
     
-    # Number of profiles to show
-    top_k_profiles = st.sidebar.number_input(
-        "Number of Top Profiles to Show",
-        min_value=1,
-        max_value=20,
-        value=top_k_profiles,
-        key=f'top_k_profiles_input_{tab_name}'
-    )
-    st.session_state[f"{tab_name}_top_k_profiles"] = top_k_profiles
-    
-    # Enable/disable metadata filtering
-    enable_metadata_filtering = st.sidebar.checkbox(
-        "Enable Metadata Filtering",
-        value=enable_metadata_filtering,
-        key=f"enable_filtering_{tab_name}"
-    )
-    st.session_state[f"{tab_name}_enable_metadata_filtering"] = enable_metadata_filtering
-    
     # Return configuration for the active tab
     return {
         "semantic_top_k": semantic_top_k,
-        "rerank_top_k": rerank_top_k,
-        "top_k_profiles": top_k_profiles,
-        "enable_metadata_filtering": enable_metadata_filtering
+        "rerank_top_k": rerank_top_k
     }
 
 def create_sidebar_configuration(tab_name):
@@ -361,9 +339,7 @@ def create_sidebar_configuration(tab_name):
     """
     return {
         "semantic_top_k": st.session_state.get(f"{tab_name}_semantic_top_k", 10),
-        "rerank_top_k": st.session_state.get(f"{tab_name}_rerank_top_k", 5),
-        "top_k_profiles": st.session_state.get(f"{tab_name}_top_k_profiles", 5),
-        "enable_metadata_filtering": st.session_state.get(f"{tab_name}_enable_metadata_filtering", True)
+        "rerank_top_k": st.session_state.get(f"{tab_name}_rerank_top_k", 5)
     }
 
 def add_section_separator():

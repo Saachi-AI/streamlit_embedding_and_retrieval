@@ -28,7 +28,7 @@ class ProfileAggregator:
         # Load parameters from environment variables with defaults
         self.alpha = float(os.getenv("PROFILE_BONUS_ALPHA", "0.05"))
         self.threshold = float(os.getenv("PROFILE_SCORE_THRESHOLD", "0.70"))
-        self.top_k_profiles = int(os.getenv("TOP_K_PROFILES", "5"))
+        self.top_k_profiles = int(os.getenv("TOP_K_PROFILES", "20"))
         
         logger.debug(
             f"ProfileAggregator initialized with: "

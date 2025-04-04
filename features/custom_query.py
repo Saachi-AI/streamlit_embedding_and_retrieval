@@ -21,7 +21,6 @@ def initialize_custom_query_state():
     defaults = {
         "semantic_top_k": int(os.getenv("SEMANTIC_TOP_K", 10)),
         "rerank_top_k": min(int(os.getenv("RERANK_TOP_K", 5)), int(os.getenv("SEMANTIC_TOP_K", 10))),
-        "top_k_profiles": int(os.getenv("TOP_K_PROFILES", 5)),
         "enable_metadata_filtering": True,
         "query_executed": False,
         "query": None
@@ -44,24 +43,21 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
     # Unpack settings
     semantic_top_k = settings["semantic_top_k"] 
     rerank_top_k = settings["rerank_top_k"]
-    top_k_profiles = settings["top_k_profiles"]
-    enable_metadata_filtering = settings["enable_metadata_filtering"]
     
     # Fixed model choice for custom query tab
     model_choice = "cohere"
     
-    # Process the query
+    # Always extract metadata filters
     metadata_filter = None
     extracted_filters = None
     
-    if enable_metadata_filtering:
-        with st.spinner("Extracting metadata filters..."):
-            try:
-                filter_result = filter_extractor.process_query(query, strict_mode=False)
-                metadata_filter = filter_result["pinecone_filter"]
-                extracted_filters = filter_result["extracted_filters"]
-            except Exception as e:
-                st.error(f"Error extracting metadata filters: {str(e)}")
+    with st.spinner("Extracting metadata filters..."):
+        try:
+            filter_result = filter_extractor.process_query(query, strict_mode=False)
+            metadata_filter = filter_result["pinecone_filter"]
+            extracted_filters = filter_result["extracted_filters"]
+        except Exception as e:
+            st.error(f"Error extracting metadata filters: {str(e)}")
     
     # Perform document retrieval
     with st.spinner(f"Retrieving with {model_choice} embeddings..."):
@@ -161,8 +157,7 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
                     # Perform profile aggregation
                     with st.spinner("Aggregating profiles..."):
                         profile_scores = profile_aggregator.aggregate_profiles(
-                            reranked_results,
-                            top_k=top_k_profiles
+                            reranked_results
                         )
                     
                     # Display profile-level results

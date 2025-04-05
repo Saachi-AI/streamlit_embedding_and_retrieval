@@ -18,9 +18,10 @@ from core.state_management import initialize_tab_state, get_tab_state, set_tab_s
 
 def initialize_custom_query_state():
     """Initialize custom query tab-specific state variables."""
+    # Use hardcoded defaults instead of environment variables
     defaults = {
-        "semantic_top_k": int(os.getenv("SEMANTIC_TOP_K", 10)),
-        "rerank_top_k": min(int(os.getenv("RERANK_TOP_K", 5)), int(os.getenv("SEMANTIC_TOP_K", 10))),
+        "semantic_top_k": 15,
+        "rerank_top_k": 10,
         "enable_metadata_filtering": True,
         "query_executed": False,
         "query": None
@@ -40,9 +41,9 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
     if not query:
         return
     
-    # Unpack settings
-    semantic_top_k = settings["semantic_top_k"] 
-    rerank_top_k = settings["rerank_top_k"]
+    # Get values directly from session state (highest priority)
+    semantic_top_k = st.session_state.get("tab1_semantic_top_k", 15)  # Use our new default value
+    rerank_top_k = st.session_state.get("tab1_rerank_top_k", 10)  # Use our new default value
     
     # Fixed model choice for custom query tab
     model_choice = "cohere"
@@ -65,7 +66,10 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
             # Get the total vector count first
             _, total_chunks = retrieve_documents("", model_choice, 1, None)
             
-            # Get actual search results
+            # Get actual search results - directly use session state value
+            st.info(f"**DEBUG - Before retrieve_documents call:**")
+            st.info(f"- Passing semantic_top_k = {semantic_top_k}")
+            
             results, _ = retrieve_documents(query, model_choice, semantic_top_k, metadata_filter)
             
             # Display results
@@ -131,9 +135,9 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
                 # Add spacing between sections
                 add_section_separator()
 
-                # Perform reranking
+                # Perform reranking - use session state value directly
                 with st.spinner("Reranking results with Cohere..."):
-                    # No need to pass model explicitly since it will use the environment variable
+                    # Pass rerank_top_k directly
                     reranked_results = cohere_reranker.rerank(
                         query, 
                         results, 
@@ -185,10 +189,6 @@ def render_custom_query_tab(filter_extractor, embedders, retrieve_documents, coh
     """Render the custom query tab content."""
     # Initialize tab state if not already initialized
     initialize_custom_query_state()
-    
-    # Set the active tab in session state
-    if "active_tab_index" in st.session_state:
-        st.session_state.active_tab_index = 1
     
     # Tab header
     st.subheader("Custom Search")

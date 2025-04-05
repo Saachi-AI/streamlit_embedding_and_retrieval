@@ -1,137 +1,82 @@
-Senior Data Scientist, GG11
-
-
-Position Overview:
-
-
-The Senior Data Scientist will drive innovative approaches to understanding, interacting, and
-optimizing customer engagement by leveraging advanced analytics to derive actionable
-business insights. The successful candidate will work closely with business stakeholders,
-primarily in Japanese, to understand their requirements and the broader business context. This
-role entails leading data analytics initiatives from conception through implementation to delivery.
-
-
-Responsibilities:
-
-
-· Collaborate with business stakeholders to gather requirements, understand business
-context, and derive data-driven solutions.
-
-
-· Oversee data analytics initiatives, including planning, execution, and delivery of high-
-quality analytical solutions.
-
-
-· Work closely with the data platform team and other IT teams, identifying dependencies,
-and resolving blockers to ensure smooth development processes.
-
-
-· Develop, deploy, and manage machine learning models and analytics projects, ensuring
-alignment with business objectives.
-
-
-· Utilize CI/CD, MLOps, Azure or similar cloud platforms, and DevOps to streamline
-development and deployment processes.
-
-
-· Apply hands-on expertise with SQL, Python, Pandas, PySpark, AzureML, and PowerBI to
-develop and implement data models and analytics.
-
-
-· Leverage domain expertise in financial or insurance sectors, especially in distribution,
-operations and marketing, to ensure successful project outcomes.
-
-
-· Prepare detailed documentation for analytics and ML initiatives, including project
-deliverables and technical specifications.
-
-
-· Communicate effectively with team members and leadership through presentations and
-reports detailing analytics and machine learning requirements, progress, and outcomes.
-
-
-· Ensure the responsible use of AI practices, adhering to ethical guidelines and compliance
-standards.
-
-
-· Employ best practices and methodologies from other markets to improve analytics and
-data solutions.
-
-
-· Proactively propose new solutions and enhancements based on emerging technologies
-and business needs.
-
-
-Requirements:
-
-
-· 3+ years of experience in advanced analytics roles, delivering successful business
-outcomes.
-
-
-· Proven experience in managing data science or analytics projects.
-
-
-Technical Skills:
-
-
-· Proficiency in quantitative methods and business analytics with strong problem-solving
-skills.
-
-
-Expertise in building and applying data models using machine learning techniques such as
-classification, regression, clustering, time-series analysis, and dimensionality reduction.
-
-
-Competent programming skills with Python and SQL.
-
-
-Strong understanding of data visualization tools, particularly PowerBI.
-
-
-· Experience with CI/CD, MLOps, and cloud platforms such as Azure for deploying analytics
-and ML solutions.
-
-
-· Hands-on experience with data analytics tools and libraries such as Pandas, PySpark, and
-AzureML.
-
-
-· Background in financial or insurance domains, particularly in distribution, operations and
-marketing.
-
-
-· Continuous learning of new tools and technologies, such as Generative AI (GenAI), to stay
-ahead of industry trends and enhance analytics capabilities.
-
-
-Education:
-
-
-· Bachelor's degree in a quantitative modeling-focused discipline such as Statistics,
-Marketing Science, Operations Research, Econometrics, Machine Learning, or a related
-field.
-
-
-· An advanced degree in similar disciplines is a plus. Courses or specialization in data &
-analytics.
-
-
-· Azure certifications, especially Azure Data Scientist, Azure Enterprise Data Analyst, Azure
-Data Engineer.
-
-
-Language Requirements:
-
-
-· Japanese: Advanced.
-· English: Intermediate.
-
-
-Additional Information:
-
-
-The role requires a proactive individual with a strong analytical background, capable of driving
-data initiatives while collaborating effectively with cross-functional teams. The ideal candidate
-will have financial or insurance expertise, technical prowess with relevant tools, and the ability to
-navigate complex business environments to deliver impactful analytics solutions.
+AI and Data Governance Manager
+
+
+We are seeking an experience and strategic AI and Data Governance Manager to lead the
+development and implementation of sustainable governance practices within our fast
+paced, innovative and global environment. The ideal candidate would bring at least 5
+years of proven experience in managing AI and Data governance in a large organization.
+If you have demonstrated experience in creating and adapting AI and Data related
+frameworks in collaboration with key stakeholders worldwide, and turning them into
+successful operations, we would be delighted to talk to you.
+
+
+This role requires native level proficiency in Japanese and business proficiency in English
+as well as excellent visual communication skills to effectively communicate with a variety
+of audiences from executives to technical teams. The ideal candidate will be a proactive
+fact finder, effective and efficient project manager, able to analyze simple data in Excel,
+highly proficient in visual presentation tools such as Power Point and creation of artifacts
+in multiple formats. Familiarity with data, analytics, artificial intelligence and IT
+environments is valued.
+
+
+Key Responsibilities:
+
+
+-
+
+
+Governance Framework Development: Design and implement effective AI and
+Data governance frameworks by effectively utilizing available versions where
+possible. Ensure that they meet organizational goals and regulatory requirements.
+Create evaluation and tracking mechanisms and collaborate with IT organization
+colleagues for any process implementation or tool adoption.
+Stakeholder Collaboration: Partner with existing risk management structures and
+global stakeholders to align governance strategies with business objectives, local
+regulations. Foster collaboration across diverse teams and stakeholders.
+Communication and Presentation: Articulate complex governance concepts
+clearly though visual presentations and report to senior management and global
+stakeholders to drive buy-in.
+Agile Problem Solving: Address and resolve governance challenges swiftly and
+effectively, adapting strategies as needed to respond to evolving needs and
+technologies.
+Awareness and Influence: Participate in a variety of relevant forums to develop
+
+
+-
+
+
+awareness of global trends, inform & influence key stakeholders when new
+developments could impact our governance policies and practices.
+- Proactively reach out to different teams to find people who are key stakeholders
+or hold relevant information for our goals
+- Follow through on commitments and manage governance related project
+schedules for deliverables effectively
+- Lead in the planning, coordination, budget acquisition of governance related
+initiatives
+- Create virtual teams by bringing together relevant people and communicate
+expectations clearly
+- Set up and conduct effective meetings with clear agendas, goals and follow
+through items
+- Communicate effectively with team members to provide updates on project
+progress and address any issues or obstacles
+- Proactively identify potential risks and develop mitigation strategies to address
+them
+
+
+Qualifications
+
+
+- Native level fluency in Japanese and business level proficiency in English
+- Bachelor's Degree in Computer Science, Data Science, Information Systems or a
+related field.
+- Minimum five years of experience working with AI and Data in a similar role
+- Strong communication skills with the ability to present complex concepts clearly
+and persuasively
+- Proven collaboration skills, with a track record of working effectively with global
+teams
+- Excellent organizational and time management skills with a keen attention to
+detail
+
+
+If you are a motivated and adaptable individual looing for a dynamic role in a global
+environment, we encourage you to apply.

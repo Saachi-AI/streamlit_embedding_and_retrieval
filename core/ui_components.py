@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+import os
 
 def display_retrieval_stats(total_chunks, filtered_size=None, results_count=None, metadata_filter=None, filtered_out=None):
     """Display statistics about the retrieval process."""
@@ -11,7 +12,7 @@ def display_retrieval_stats(total_chunks, filtered_size=None, results_count=None
             <ul style="margin: 0; padding-left: 20px;">
                 <li>Total corpus size: {total_chunks} vectors</li>
                 <li>After metadata filtering: {filtered_size} vectors (filtered out {filtered_out if isinstance(filtered_out, str) else total_chunks - filtered_size} vectors)</li>
-                <li>Top semantic matches: {results_count} vectors</li>
+                <li>Retrieved results: <strong>{results_count}</strong> vectors</li>
             </ul>
             <p style="margin-top: 8px; font-size: 0.9em;">
                 Metadata filtering mode: <span style="font-weight: bold;">Inclusive</span><br>
@@ -22,6 +23,7 @@ def display_retrieval_stats(total_chunks, filtered_size=None, results_count=None
         
         st.subheader(f"Retrieved {results_count} chunks (filtered from {total_chunks} total vectors)")
     else:
+        # Make results_count more prominent
         st.subheader(f"Retrieved {results_count} chunks (from {total_chunks} total vectors)")
 
 def display_initial_results_summary(results):
@@ -289,6 +291,11 @@ def create_tab_specific_sidebar(active_tab_index):
     Returns:
         dict: Configuration settings for the active tab
     """
+    # Ensure we're using the most up-to-date active tab index from session state
+    # This helps ensure consistency when the sidebar is rendered
+    if "active_tab_index" in st.session_state:
+        active_tab_index = st.session_state.active_tab_index
+    
     # Map tab index to tab name for session state keys
     tab_name = f"tab{active_tab_index}"
     tab_title = "Upload Job Description" if active_tab_index == 0 else "Custom Search"
@@ -299,37 +306,62 @@ def create_tab_specific_sidebar(active_tab_index):
     # Show the fixed embedding model
     st.sidebar.markdown("**Embedding Model:** Cohere")
     
-    # Get default values from session state
-    semantic_top_k = st.session_state.get(f"{tab_name}_semantic_top_k", 10)
-    rerank_top_k = min(st.session_state.get(f"{tab_name}_rerank_top_k", 5), semantic_top_k)
+    # Get current values from session state with hardcoded defaults
+    semantic_top_k_key = f"{tab_name}_semantic_top_k"
+    rerank_top_k_key = f"{tab_name}_rerank_top_k"
+    
+    # Initialize session state values if they don't exist yet
+    if semantic_top_k_key not in st.session_state:
+        st.session_state[semantic_top_k_key] = 15
+    if rerank_top_k_key not in st.session_state:
+        st.session_state[rerank_top_k_key] = 10
+    
+    # Read current values from session state
+    semantic_top_k = st.session_state[semantic_top_k_key]
+    rerank_top_k = st.session_state[rerank_top_k_key]
+    
+    # Ensure rerank_top_k <= semantic_top_k
+    rerank_top_k = min(rerank_top_k, semantic_top_k)
+    if rerank_top_k != st.session_state[rerank_top_k_key]:
+        st.session_state[rerank_top_k_key] = rerank_top_k
     
     # Add a header for the active tab
     st.sidebar.markdown(f"**Settings for {tab_title}**")
     
-    # Number of retrieval chunks
-    semantic_top_k = st.sidebar.slider(
+    # Define callback functions to update session state
+    def on_semantic_change():
+        # Also update rerank if needed to maintain constraint
+        if st.session_state[f"{tab_name}_semantic_slider"] < st.session_state[rerank_top_k_key]:
+            st.session_state[rerank_top_k_key] = st.session_state[f"{tab_name}_semantic_slider"]
+        st.session_state[semantic_top_k_key] = st.session_state[f"{tab_name}_semantic_slider"]
+    
+    def on_rerank_change():
+        st.session_state[rerank_top_k_key] = st.session_state[f"{tab_name}_rerank_slider"]
+    
+    # Number of retrieval chunks with different widget key and callback
+    st.sidebar.slider(
         "Number of Retrieval Chunks",
         min_value=1,
         max_value=20,
         value=semantic_top_k,
-        key=f'semantic_top_k_slider_{tab_name}'
+        key=f"{tab_name}_semantic_slider",  # Different key for the widget
+        on_change=on_semantic_change
     )
-    st.session_state[f"{tab_name}_semantic_top_k"] = semantic_top_k
     
-    # Number of reranked chunks (limited by semantic_top_k)
-    rerank_top_k = st.sidebar.slider(
+    # Number of reranked chunks with different widget key and callback
+    st.sidebar.slider(
         "Number of Reranked Chunks",
         min_value=1,
-        max_value=semantic_top_k,
-        value=min(rerank_top_k, semantic_top_k),
-        key=f'rerank_top_k_slider_{tab_name}'
+        max_value=semantic_top_k,  # Use current semantic_top_k as max
+        value=rerank_top_k,
+        key=f"{tab_name}_rerank_slider",  # Different key for the widget
+        on_change=on_rerank_change
     )
-    st.session_state[f"{tab_name}_rerank_top_k"] = rerank_top_k
     
-    # Return configuration for the active tab
+    # Return configuration using session state values
     return {
-        "semantic_top_k": semantic_top_k,
-        "rerank_top_k": rerank_top_k
+        "semantic_top_k": st.session_state[semantic_top_k_key],
+        "rerank_top_k": st.session_state[rerank_top_k_key]
     }
 
 def create_sidebar_configuration(tab_name):
@@ -337,9 +369,13 @@ def create_sidebar_configuration(tab_name):
     Get the sidebar configuration for a specific tab without rendering UI elements.
     This function is used by feature modules to get their configuration.
     """
+    # Use session state values with hardcoded defaults instead of environment variables
+    semantic_top_k = st.session_state.get(f"{tab_name}_semantic_top_k", 15)
+    rerank_top_k = st.session_state.get(f"{tab_name}_rerank_top_k", 10)
+    
     return {
-        "semantic_top_k": st.session_state.get(f"{tab_name}_semantic_top_k", 10),
-        "rerank_top_k": st.session_state.get(f"{tab_name}_rerank_top_k", 5)
+        "semantic_top_k": semantic_top_k,
+        "rerank_top_k": rerank_top_k
     }
 
 def add_section_separator():

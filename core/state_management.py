@@ -10,6 +10,7 @@ def initialize_tab_state(tab_name, defaults):
     """
     for key, default_value in defaults.items():
         state_key = f"{tab_name}_{key}"
+        # Only set if not already in session state (preserves UI settings)
         if state_key not in st.session_state:
             st.session_state[state_key] = default_value
 

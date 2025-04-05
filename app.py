@@ -1,4 +1,7 @@
 import os
+# Don't hardcode the environment variable - we'll use session state directly
+# os.environ["SEMANTIC_TOP_K"] = "20"  # Force this to use a higher value
+
 import streamlit as st
 from langsmith import Client
 from langsmith.run_helpers import traceable
@@ -126,6 +129,10 @@ def retrieve_documents(query, model_name, top_k, metadata_filter=None):
         results: List of (document, score) tuples
         total_chunks: Total number of vectors in the namespace
     """
+    # Use the top_k parameter passed from the UI slider
+    # Ensure top_k is an integer
+    k = int(top_k)
+    
     # Get the embedder
     embedder = embedders[model_name]
     
@@ -160,58 +167,69 @@ def retrieve_documents(query, model_name, top_k, metadata_filter=None):
     if metadata_filter:
         results = vector_store.similarity_search_with_score(
             query, 
-            k=top_k,
+            k=k,  # Use the passed top_k parameter
             filter=metadata_filter
         )
     else:
-        results = vector_store.similarity_search_with_score(query, k=top_k)
+        results = vector_store.similarity_search_with_score(query, k=k)  # Use the passed top_k parameter
+    
+    # Explicitly limit results to k just to be sure
+    results = results[:k]
     
     # Sort results by relevance (higher percentage first)
     results.sort(key=lambda x: x[1])
     
     return results, total_chunks
 
-# Create tab-specific sidebar based on active tab
+# Set up a simple mechanism to track the active tab
+# Use a radio button with the same options as the tabs
+active_tab = st.radio(
+    "Select Tab",
+    ["Upload Job Description", "Custom Search"],
+    horizontal=True,
+    label_visibility="collapsed",  # Hide the label
+    key="tab_selector"
+)
+
+# Set active_tab_index based on the selected radio button
+if active_tab == "Upload Job Description":
+    st.session_state.active_tab_index = 0
+else:  # Custom Search
+    st.session_state.active_tab_index = 1
+
+# Now create the sidebar with the correct tab index
 config = create_tab_specific_sidebar(st.session_state.active_tab_index)
 
 # Set a fixed rerank model (always use English)
 rerank_model = os.getenv("RERANK_MODEL", "rerank-english-v3.0")
 os.environ["RERANK_MODEL"] = rerank_model
 
-# Create tabs
+# Create tabs that match the radio button selection
 tab_names = ["Upload Job Description", "Custom Search"]
 tabs = st.tabs(tab_names)
 
 # With Tab 0 (Upload Job Description)
 with tabs[0]:
-    # Update active tab index if needed
-    if st.session_state.active_tab_index != 0:
-        st.session_state.active_tab_index = 0
-        # Don't use experimental_rerun or rerun here
-    
-    # Render the job description tab
-    render_job_description_tab(
-        document_parser=document_parser,
-        prompt_generator=prompt_generator,
-        filter_extractor=filter_extractor,
-        embedders=embedders,
-        retrieve_documents=retrieve_documents,
-        cohere_reranker=cohere_reranker,
-        profile_aggregator=profile_aggregator
-    )
+    # Render the job description tab if this tab is active
+    if active_tab == "Upload Job Description":
+        render_job_description_tab(
+            document_parser=document_parser,
+            prompt_generator=prompt_generator,
+            filter_extractor=filter_extractor,
+            embedders=embedders,
+            retrieve_documents=retrieve_documents,
+            cohere_reranker=cohere_reranker,
+            profile_aggregator=profile_aggregator
+        )
 
 # With Tab 1 (Custom Query)
 with tabs[1]:
-    # Update active tab index if needed
-    if st.session_state.active_tab_index != 1:
-        st.session_state.active_tab_index = 1
-        # Don't use experimental_rerun or rerun here
-    
-    # Render the custom query tab
-    render_custom_query_tab(
-        filter_extractor=filter_extractor,
-        embedders=embedders,
-        retrieve_documents=retrieve_documents,
-        cohere_reranker=cohere_reranker,
-        profile_aggregator=profile_aggregator
-    )
+    # Render the custom query tab if this tab is active
+    if active_tab == "Custom Search":
+        render_custom_query_tab(
+            filter_extractor=filter_extractor,
+            embedders=embedders,
+            retrieve_documents=retrieve_documents,
+            cohere_reranker=cohere_reranker,
+            profile_aggregator=profile_aggregator
+        )

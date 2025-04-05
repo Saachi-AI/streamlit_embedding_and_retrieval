@@ -64,4 +64,6 @@ htmlcov/
 wheels/ 
 
 stream-test/
-output/job_description.txt
+output/*
+profile_retrieved_output.json
+profile_chunks.json

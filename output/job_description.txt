@@ -1,137 +1,94 @@
-Senior Data Scientist, GG11
-
-
-Position Overview:
-
-
-The Senior Data Scientist will drive innovative approaches to understanding, interacting, and
-optimizing customer engagement by leveraging advanced analytics to derive actionable
-business insights. The successful candidate will work closely with business stakeholders,
-primarily in Japanese, to understand their requirements and the broader business context. This
-role entails leading data analytics initiatives from conception through implementation to delivery.
-
-
-Responsibilities:
-
-
-· Collaborate with business stakeholders to gather requirements, understand business
-context, and derive data-driven solutions.
-
-
-· Oversee data analytics initiatives, including planning, execution, and delivery of high-
-quality analytical solutions.
-
-
-· Work closely with the data platform team and other IT teams, identifying dependencies,
-and resolving blockers to ensure smooth development processes.
-
-
-· Develop, deploy, and manage machine learning models and analytics projects, ensuring
-alignment with business objectives.
-
-
-· Utilize CI/CD, MLOps, Azure or similar cloud platforms, and DevOps to streamline
-development and deployment processes.
-
-
-· Apply hands-on expertise with SQL, Python, Pandas, PySpark, AzureML, and PowerBI to
-develop and implement data models and analytics.
-
-
-· Leverage domain expertise in financial or insurance sectors, especially in distribution,
-operations and marketing, to ensure successful project outcomes.
-
-
-· Prepare detailed documentation for analytics and ML initiatives, including project
-deliverables and technical specifications.
-
-
-· Communicate effectively with team members and leadership through presentations and
-reports detailing analytics and machine learning requirements, progress, and outcomes.
-
-
-· Ensure the responsible use of AI practices, adhering to ethical guidelines and compliance
-standards.
-
-
-· Employ best practices and methodologies from other markets to improve analytics and
-data solutions.
-
-
-· Proactively propose new solutions and enhancements based on emerging technologies
-and business needs.
-
-
-Requirements:
-
-
-· 3+ years of experience in advanced analytics roles, delivering successful business
-outcomes.
-
-
-· Proven experience in managing data science or analytics projects.
-
-
-Technical Skills:
-
-
-· Proficiency in quantitative methods and business analytics with strong problem-solving
-skills.
-
-
-Expertise in building and applying data models using machine learning techniques such as
-classification, regression, clustering, time-series analysis, and dimensionality reduction.
-
-
-Competent programming skills with Python and SQL.
-
-
-Strong understanding of data visualization tools, particularly PowerBI.
-
-
-· Experience with CI/CD, MLOps, and cloud platforms such as Azure for deploying analytics
-and ML solutions.
-
-
-· Hands-on experience with data analytics tools and libraries such as Pandas, PySpark, and
-AzureML.
-
-
-· Background in financial or insurance domains, particularly in distribution, operations and
-marketing.
-
-
-· Continuous learning of new tools and technologies, such as Generative AI (GenAI), to stay
-ahead of industry trends and enhance analytics capabilities.
-
-
-Education:
-
-
-· Bachelor's degree in a quantitative modeling-focused discipline such as Statistics,
-Marketing Science, Operations Research, Econometrics, Machine Learning, or a related
-field.
-
-
-· An advanced degree in similar disciplines is a plus. Courses or specialization in data &
-analytics.
-
-
-· Azure certifications, especially Azure Data Scientist, Azure Enterprise Data Analyst, Azure
-Data Engineer.
-
-
-Language Requirements:
-
-
-· Japanese: Advanced.
-· English: Intermediate.
-
-
-Additional Information:
-
-
-The role requires a proactive individual with a strong analytical background, capable of driving
-data initiatives while collaborating effectively with cross-functional teams. The ideal candidate
-will have financial or insurance expertise, technical prowess with relevant tools, and the ability to
-navigate complex business environments to deliver impactful analytics solutions.
+Job description and Required specification
+
+
+Date:
+2025.03.03
+Prepared by:
+Yusuke Aoki
+Dept. / Section
+Core Insurance Group / Corporate systems Team
+Position
+Lead Full Stack Software Engineer
+Report line
+including sets,
+Expected Global Grade
+GG11
+Location
+Tokyo - OLINAS
+Target Start Date
+4/1/2024
+No. of positions
+2025-R-003
+Headcount
+Yes
+Replacement of
+Click or tap here to enter text.
+Job Description: Please describe the job, role and responsibilities to be assigned.
+Job Summary: Responsible for a team that monitors, analyzes, design and develops applications. In charge of maintaining, supporting, and upgrading existing systems and applications needed to keep business running. Managing development projects to ensure they meet the company's business requirements and goals, as well as working with other departments to establish their software needs. Responsibilities: 1.Creates and executes project work plans and revises as appropriate to meet changing needs and requirements 2.Leading complex projects that require a deep understanding of Java, Azure, and cloud-native applications. 3. Excellent work experience in relevant areas and ability to visualize a solution and possible issues 4.Communicating with stakeholders, business, and development teams to enable quality deliverables 5.Experience managing effective software development methodologies & tools 6.Experience managing both internal & 3rd party development/delivery teams, onsite & offshore. 7.Experience delivering multi-channel customer experience initiatives on the PaaS platform. 8.Ability and willingness to engage in all phases and levels of the delivery process 9.Familiarity with leveraging Agile methodologies for development and delivery 10.Strong problem-solving skills with the ability to cross-functionally in a fast-paced and rapidly changing work environment 11.Identifies resources needed and assigns individual responsibilities 12.Review deliverables prepared by the team before passing them to other teams 13.Prepares for engagement reviews and quality assurance procedures 14.Identifies and manages project risks and issues. Requirements:
+Please describe the skill
+
+
+required competencies, experience,
+etc.
+
+
+· Bilingual with strong communication skills to interact with all relevant stakeholders. Native-
+level Japanese and Business level Japanese
+· 10+ years' experience in Project Management and application development
+·5+ years managing Java & Microservice projects
+· Min 5+ years of experience leading a development team
+· Strong customer-facing and communication skills
+· Experience working within an established PMO process
+· Experience managing 3rd party implementation vendors
+· Have a thorough understanding of OOP, design patterns, and enterprise application integration,
+having a very strong Service Oriented Architecture and integration background
+· Excellent analysis and problem-solving skills and ability to think through problems creatively
+· Experience in design and development of highly scalable APIs and services that are used by
+web and mobile clients
+· Able to handle multiple projects simultaneously
+· Experience with Cloud services like Azure
+· Strong understanding of UX/UI, Microservices, Spring boot, JavaScript, ReactJS and NodeJS
+etc.
+· Experience and understanding of Agile Project Methodologies
+· Experience working both with onshore and offshore development teams and vendor
+management.
+Preferable
+Past experience in Life Insurance domain.
+Others Qualification
+BS or MS in Computer Science or a related field Language
+□ English (ⓧ Advanced □ Intermediate □ Basic)
+□ Japanese (ⓧ Advanced □ Intermediate □ Basic) □ Not Required"
+
+
+Terms of Employment:
+
+
+◇Annual Salary : Commensurate with experience and skills.
+◇Wage Payment : Monthly
+
+
+◇Working Hours
+09:00~17:00 7 Working hour per day ※1 hour break
+·Overtime work Yes
+
+
+◇Holiday
+
+
+· 121 days (Saturday, Sunday, and National holiday、 Year-end and New Year holidays 5 days)
+·Paid Leave: 5 or 10 days (it depends by starting date)
+·Other: Funeral leaves、 Special Leaves 5 consecutives days
+
+
+◇Working Location : Kinshicho / Kioicho / Otemachi
+
+
+◇Commuting Allowance : According with the provisions fully guaranteed
+◇Retirement Allowance : Yes ※Confirmed by "Other" as below.
+◇Dormitory/Company owned house : Depend on the hiring conditions
+◇Social Insurance : Health Insurance、 Welfare Pension、 Employment Insurance、 Industrial
+
+
+Accident Insurance
+◇Other : Defined-Contribution Pension (Cash Balance Plan) 、 Defined-Benefit
+Pension、 Property Accumulation Savings

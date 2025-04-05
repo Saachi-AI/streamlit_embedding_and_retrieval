@@ -29,10 +29,12 @@ class ProfileAggregator:
         self.alpha = float(os.getenv("PROFILE_BONUS_ALPHA", "0.05"))
         self.threshold = float(os.getenv("PROFILE_SCORE_THRESHOLD", "0.70"))
         self.top_k_profiles = int(os.getenv("TOP_K_PROFILES", "20"))
+        self.min_score_threshold = float(os.getenv("MIN_PROFILE_SCORE", "0.80"))
         
         logger.debug(
             f"ProfileAggregator initialized with: "
-            f"alpha={self.alpha}, threshold={self.threshold}, top_k_profiles={self.top_k_profiles}"
+            f"alpha={self.alpha}, threshold={self.threshold}, top_k_profiles={self.top_k_profiles}, "
+            f"min_score_threshold={self.min_score_threshold}"
         )
     
     def aggregate_profiles(
@@ -54,6 +56,7 @@ class ProfileAggregator:
             
         Returns:
             List of ProfileScore objects for the top profiles, sorted by final_score descending
+            Only profiles with final_score or best_chunk_score above min_score_threshold are included
         """
         if not reranked_results:
             logger.warning("No reranked results provided for profile aggregation")
@@ -112,8 +115,19 @@ class ProfileAggregator:
         # Sort profiles by final score in descending order
         profile_scores.sort(key=lambda x: x.final_score, reverse=True)
         
-        # Return top K profiles
-        return profile_scores[:top_k]
+        # Filter profiles by minimum score threshold
+        filtered_profiles = [
+            profile for profile in profile_scores 
+            if profile.final_score >= self.min_score_threshold or profile.best_chunk_score >= self.min_score_threshold
+        ]
+        
+        logger.debug(f"Filtered {len(profile_scores) - len(filtered_profiles)} profiles below score threshold of {self.min_score_threshold}")
+        
+        if not filtered_profiles:
+            logger.warning(f"No profiles met the minimum score threshold of {self.min_score_threshold}")
+        
+        # Return top K profiles from filtered list
+        return filtered_profiles[:top_k]
     
     def get_explanation(self, profile_score: ProfileScore) -> str:
         """

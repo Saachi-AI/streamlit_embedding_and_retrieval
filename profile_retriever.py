@@ -2,7 +2,7 @@ import os
 import json
 import logging
 import boto3
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 
@@ -12,6 +12,14 @@ load_dotenv()
 # Configure logging
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
 logger = logging.getLogger(__name__)
+
+# Import preprocessor module (for integration)
+try:
+    from profile_preprocessor import preprocess_profiles
+    PREPROCESSOR_AVAILABLE = True
+except ImportError:
+    logger.warning("Profile preprocessor module not available. Preprocessing will be skipped.")
+    PREPROCESSOR_AVAILABLE = False
 
 class ProfileRetriever:
     """
@@ -115,7 +123,12 @@ class ProfileRetriever:
             logger.error(f"Error retrieving LinkedIn profile for {person_id}: {str(e)}")
             return None
     
-    def retrieve_profile_data(self, profile_entries: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    def retrieve_profile_data(
+        self, 
+        profile_entries: List[Dict[str, Any]], 
+        preprocess: bool = False,
+        comparison_date: str = "2025-03-20"
+    ) -> Union[Dict[str, Dict[str, Any]], List[Dict[str, Any]]]:
         """
         Retrieve profile data from both DynamoDB tables for a list of profile entries.
         
@@ -123,16 +136,21 @@ class ProfileRetriever:
             profile_entries: List of dictionaries containing:
                 - 'profile_id': ID to retrieve from DynamoDB
                 - 'metadata': Metadata about the profile from the relevant chunk
+            preprocess: Whether to preprocess the retrieved data for LLM (default: False)
+            comparison_date: Date string to compare with updated_at for preprocessing (default: "2025-03-20")
                 
         Returns:
-            Dictionary mapping each profile ID to its merged data with keys:
-            - 'metadata': Metadata from the input
-            - 'tamago_data': Data from tamago_profiles table (always expected)
-            - 'linkedin_data': Data from linkedin_profiles table (optional)
+            If preprocess=False:
+                Dictionary mapping each profile ID to its merged data with keys:
+                - 'metadata': Metadata from the input
+                - 'tamago_data': Data from tamago_profiles table (always expected)
+                - 'linkedin_data': Data from linkedin_profiles table (optional)
+            If preprocess=True:
+                List of processed profile objects ready for LLM processing
         """
         if not profile_entries:
             logger.warning("No profile entries provided for retrieval")
-            return {}
+            return {} if not preprocess else []
             
         logger.info(f"Retrieving data for {len(profile_entries)} profiles")
         
@@ -164,6 +182,13 @@ class ProfileRetriever:
             else:
                 logger.warning(f"Profile {profile_id} not found in tamago_profiles table - skipping")
         
+        # Apply preprocessing if requested and available
+        if preprocess and PREPROCESSOR_AVAILABLE:
+            logger.info("Preprocessing profile data for LLM")
+            return preprocess_profiles(results, comparison_date)
+        elif preprocess and not PREPROCESSOR_AVAILABLE:
+            logger.warning("Preprocessing requested but preprocessor module not available. Returning raw data.")
+            
         return results
 
 # For direct testing of this module
@@ -183,14 +208,22 @@ if __name__ == "__main__":
         # Initialize the retriever
         retriever = ProfileRetriever()
         
-        # Retrieve profile data
-        profile_data = retriever.retrieve_profile_data(test_profile_entries)
+        # Check whether to preprocess data
+        preprocess_data = os.getenv("PREPROCESS_DATA", "false").lower() == "true"
+        
+        # Retrieve profile data (with optional preprocessing)
+        profile_data = retriever.retrieve_profile_data(
+            test_profile_entries, 
+            preprocess=preprocess_data
+        )
+        
+        # Determine output filename based on preprocessing
+        output_file = 'processed_profiles.json' if preprocess_data else 'profile_retrieved_output.json'
         
         # Output results for debugging
         print(json.dumps(profile_data, indent=2))
         
         # Save results to a JSON file
-        output_file = 'profile_retrieved_output.json'
         with open(output_file, 'w') as f:
             json.dump(profile_data, f, indent=2)
             

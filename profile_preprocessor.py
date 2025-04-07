@@ -1,10 +1,67 @@
 import json
 import logging
+import re
 from typing import List, Dict, Any, Optional
+
+# Try to import BeautifulSoup for HTML cleaning
+try:
+    from bs4 import BeautifulSoup
+    BEAUTIFULSOUP_AVAILABLE = True
+except ImportError:
+    BEAUTIFULSOUP_AVAILABLE = False
+    logging.warning("BeautifulSoup is not installed. HTML tags will be removed using regex instead.")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def clean_html(html_text: str) -> str:
+    """
+    Remove HTML tags from text while preserving content.
+    
+    Args:
+        html_text: Text containing HTML markup
+        
+    Returns:
+        Cleaned text with HTML tags removed
+    """
+    if not html_text:
+        return ""
+    
+    # Use BeautifulSoup if available for better HTML parsing
+    if BEAUTIFULSOUP_AVAILABLE:
+        try:
+            soup = BeautifulSoup(html_text, "html.parser")
+            text = soup.get_text(" ", strip=True)  # Join text with spaces
+            return text
+        except Exception as e:
+            logger.warning(f"Error using BeautifulSoup for HTML cleaning: {str(e)}. Falling back to regex.")
+    
+    # Fallback to regex-based cleaning if BeautifulSoup is not available
+    text = re.sub(r"<[^>]+>", " ", html_text)  # Replace tags with spaces
+    return clean_text(text)  # Apply further text cleaning
+
+def clean_text(text: str) -> str:
+    """
+    Clean text by normalizing whitespace and removing escape characters.
+    
+    Args:
+        text: Text to clean
+        
+    Returns:
+        Cleaned text
+    """
+    if not text:
+        return ""
+    
+    # Replace escape sequences with spaces
+    text = re.sub(r"\\r|\\n|\r|\n", " ", text)
+    
+    # Normalize spaces (replace multiple spaces with single space)
+    text = re.sub(r"\s+", " ", text)
+    
+    # Strip leading/trailing whitespace
+    return text.strip()
 
 def preprocess_profiles(profile_data: Dict[str, Dict[str, Any]], comparison_date: str = "2025-03-20") -> List[Dict[str, Any]]:
     """
@@ -40,7 +97,9 @@ def preprocess_profiles(profile_data: Dict[str, Dict[str, Any]], comparison_date
             
             # 2. Consultant description (only if exists)
             if tamago_data.get("description"):
-                processed_profile["consultant_description"] = tamago_data["description"]
+                # Clean HTML and normalize text
+                cleaned_description = clean_html(tamago_data["description"])
+                processed_profile["consultant_description"] = cleaned_description
             
             # 3. Created at
             if tamago_data.get("created_at"):
@@ -57,9 +116,9 @@ def preprocess_profiles(profile_data: Dict[str, Dict[str, Any]], comparison_date
             
             # 5. Headline
             if linkedin_data and linkedin_data.get("headline"):
-                processed_profile["headline"] = linkedin_data["headline"]
+                processed_profile["headline"] = clean_text(linkedin_data["headline"])
             elif tamago_data.get("headline"):
-                processed_profile["headline"] = tamago_data["headline"]
+                processed_profile["headline"] = clean_text(tamago_data["headline"])
             
             # 6. Nationality (only if not null)
             if tamago_data.get("nationality"):
@@ -72,9 +131,15 @@ def preprocess_profiles(profile_data: Dict[str, Dict[str, Any]], comparison_date
             
             # 8. Notes
             if tamago_data.get("notes"):
-                notes = [{"message": note.get("message"), "created_at": note.get("created_at")} 
-                        for note in tamago_data["notes"] 
-                        if note.get("message") and note.get("created_at")]
+                notes = []
+                for note in tamago_data["notes"]:
+                    if note.get("message") and note.get("created_at"):
+                        # Clean message text
+                        clean_message = clean_text(note["message"])
+                        notes.append({
+                            "message": clean_message,
+                            "created_at": note["created_at"]
+                        })
                 if notes:
                     processed_profile["notes"] = notes
             
@@ -99,7 +164,7 @@ def preprocess_profiles(profile_data: Dict[str, Dict[str, Any]], comparison_date
             
             # 12. Certifications
             if linkedin_data and linkedin_data.get("certifications"):
-                certifications = [{"name": cert.get("name")} 
+                certifications = [{"name": clean_text(cert.get("name"))} 
                                 for cert in linkedin_data["certifications"] 
                                 if cert.get("name")]
                 if certifications:
@@ -107,7 +172,7 @@ def preprocess_profiles(profile_data: Dict[str, Dict[str, Any]], comparison_date
             
             # 13. LinkedIn description
             if linkedin_data and linkedin_data.get("summary"):
-                processed_profile["linkedin_description"] = linkedin_data["summary"]
+                processed_profile["linkedin_description"] = clean_text(linkedin_data["summary"])
             
             processed_profiles.append(processed_profile)
             logger.debug(f"Successfully processed profile {profile_id}")
@@ -139,6 +204,11 @@ def process_employments(profile: Dict[str, Any]) -> List[Dict[str, Any]]:
         for work in linkedin_data["work_experience"]:
             # Create a new employment entry without company_id and location
             employment = {k: v for k, v in work.items() if k not in ["company_id", "location"]}
+            
+            # Clean description if present
+            if employment.get("description"):
+                employment["description"] = clean_text(employment["description"])
+                
             employments.append(employment)
     
     # Handle case where only Tamago data exists
@@ -152,7 +222,7 @@ def process_employments(profile: Dict[str, Any]) -> List[Dict[str, Any]]:
             employment = {
                 "position": emp.get("position"),
                 "company_name": emp.get("company_name"),
-                "description": emp.get("description"),
+                "description": clean_html(emp.get("description")) if emp.get("description") else None,
                 "start_date": emp.get("start_date"),
                 "end_date": emp.get("end_date")
             }
@@ -188,7 +258,7 @@ def extract_languages(metadata: Dict[str, Any]) -> Dict[str, str]:
 if __name__ == "__main__":
     try:
         # Read raw profile data from file
-        with open('profile_retrieved_output.json', 'r') as f:
+        with open('profile_retrieved_output.json', 'r', encoding='utf-8') as f:
             raw_profiles = json.load(f)
             
         # Preprocess profiles
@@ -196,8 +266,8 @@ if __name__ == "__main__":
         
         # Output results for debugging
         output_file = 'processed_profiles.json'
-        with open(output_file, 'w') as f:
-            json.dump(processed_profiles, f, indent=2)
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(processed_profiles, f, indent=2, ensure_ascii=False)
             
         logger.info(f"Processed profiles saved to {output_file}")
         

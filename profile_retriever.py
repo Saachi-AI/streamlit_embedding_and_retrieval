@@ -221,11 +221,11 @@ if __name__ == "__main__":
         output_file = 'processed_profiles.json' if preprocess_data else 'profile_retrieved_output.json'
         
         # Output results for debugging
-        print(json.dumps(profile_data, indent=2))
+        print(json.dumps(profile_data, indent=2, ensure_ascii=False))
         
         # Save results to a JSON file
-        with open(output_file, 'w') as f:
-            json.dump(profile_data, f, indent=2)
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(profile_data, f, indent=2, ensure_ascii=False)
             
         logger.info(f"Successfully retrieved data for {len(profile_data)} profiles")
         logger.info(f"Results saved to {output_file}")

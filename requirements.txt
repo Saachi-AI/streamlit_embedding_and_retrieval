@@ -17,3 +17,4 @@ langchain-openai
 langchain-pinecone
 boto3
 python-dotenv
+beautifulsoup4

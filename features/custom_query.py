@@ -15,10 +15,12 @@ from core.ui_components import (
     add_section_separator,
     display_fallback_results_header,
     display_fallback_results,
-    display_profile_retrieval_and_preprocessing
+    display_profile_retrieval_and_preprocessing,
+    display_ranked_candidates
 )
 from core.state_management import initialize_tab_state, get_tab_state, set_tab_state
 from llm_profile_ranking import LLMProfileRanker
+from profile_rank_processor import ProfileRankProcessor
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -222,6 +224,18 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
                             processed_profiles=processed_profiles,
                             custom_query=custom_query_text
                         )
+                        
+                        # Process ranked profiles for display
+                        if llm_ranking_results:
+                            profile_rank_processor = ProfileRankProcessor()
+                            processed_candidates = profile_rank_processor.process_ranked_profiles(
+                                llm_ranking_results=llm_ranking_results,
+                                profile_data=profile_data
+                            )
+                            
+                            # Display ranked candidates
+                            add_section_separator()
+                            display_ranked_candidates(processed_candidates)
                         
                         logger.info("LLM Profile Ranking completed")
                     except Exception as e:

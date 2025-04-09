@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import re
 from typing import List, Dict, Any, Optional
 from openai import OpenAI
 
@@ -279,10 +280,29 @@ class LLMProfileRanker:
             
             # Extract and parse response
             llm_response = response.choices[0].message.content
-            logger.info("Profile ranking response from LLM:")
+            logger.info("LLM Profile Ranking response from LLM:")
             logger.info(llm_response)
             
-            return llm_response
+            # Extract JSON from the response by removing <think>...</think> tags
+            try:
+                # Remove thinking part
+                cleaned_response = re.sub(r"<think>.*?</think>", "", llm_response, flags=re.DOTALL)
+                
+                # Try to find JSON in code blocks
+                json_match = re.search(r"```(?:json)?\s*([\s\S]*?)```", cleaned_response)
+                if json_match:
+                    json_str = json_match.group(1).strip()
+                else:
+                    # If no code blocks, use the cleaned response
+                    json_str = cleaned_response.strip()
+                
+                # Parse the JSON
+                parsed_response = json.loads(json_str)
+                return parsed_response
+            except Exception as e:
+                logger.error(f"Error extracting or parsing JSON from LLM response: {str(e)}")
+                logger.debug(f"Original response: {llm_response[:1000]}")
+                return llm_response  # Return original response as fallback
             
         except Exception as e:
             logger.error(f"Error in LLM profile ranking for job description: {str(e)}")
@@ -343,10 +363,29 @@ class LLMProfileRanker:
             
             # Extract and parse response
             llm_response = response.choices[0].message.content
-            logger.info("Profile ranking response from LLM:")
+            logger.info("LLM Profile Ranking response from LLM:")
             logger.info(llm_response)
             
-            return llm_response
+            # Extract JSON from the response by removing <think>...</think> tags
+            try:
+                # Remove thinking part
+                cleaned_response = re.sub(r"<think>.*?</think>", "", llm_response, flags=re.DOTALL)
+                
+                # Try to find JSON in code blocks
+                json_match = re.search(r"```(?:json)?\s*([\s\S]*?)```", cleaned_response)
+                if json_match:
+                    json_str = json_match.group(1).strip()
+                else:
+                    # If no code blocks, use the cleaned response
+                    json_str = cleaned_response.strip()
+                
+                # Parse the JSON
+                parsed_response = json.loads(json_str)
+                return parsed_response
+            except Exception as e:
+                logger.error(f"Error extracting or parsing JSON from LLM response: {str(e)}")
+                logger.debug(f"Original response: {llm_response[:1000]}")
+                return llm_response  # Return original response as fallback
             
         except Exception as e:
             logger.error(f"Error in LLM profile ranking for custom query: {str(e)}")

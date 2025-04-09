@@ -522,3 +522,29 @@ def display_profile_retrieval_and_preprocessing(profile_data, processed_profiles
     # Show processed profile data in an expander
     with st.expander("View Processed Profile Data", expanded=False):
         st.json(processed_profiles)
+
+def display_ranked_candidates(processed_candidates):
+    """
+    Display ranked candidates in expandable sections.
+    
+    Args:
+        processed_candidates: List of processed candidate objects from ProfileRankProcessor
+    """
+    st.header("Our AI carefully reviewed the Job Description and matched the most relevant profiles from Saachi's database.")
+    
+    if not processed_candidates:
+        st.info("No ranked candidates to display")
+        return
+    
+    # Display each candidate in an expandable section
+    for candidate in processed_candidates:
+        # Create expander title with rank, placeholder for name, and short phrase
+        expander_title = f"{candidate['rank_display']} — [Profile Name] - {candidate['short_phrase']}"
+        
+        # Create expandable section
+        with st.expander(expander_title, expanded=candidate['rank'] == 1):  # Auto-expand first result
+            # Placeholder for future detailed content
+            st.info("Detailed profile information will be displayed here")
+            
+            # Display profile ID for debugging
+            st.caption(f"Profile ID: {candidate['profile_id']}")

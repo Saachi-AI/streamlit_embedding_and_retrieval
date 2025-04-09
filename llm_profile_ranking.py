@@ -30,7 +30,7 @@ class LLMProfileRanker:
         1. A single job description (JD) with explicit or implicit weighting priorities (domain expertise, technical skills, language proficiency, etc.).  
         2. An array of JSON candidate profiles.
 
-        You will produce a ranked evaluation for each candidate, returning a single JSON object containing structured results.
+        You will produce a ranked evaluation for EVERY candidate profile provided, without exception. You must analyze and rank ALL profiles in the input, even those that seem less relevant. The number of profiles in your output MUST match exactly the number of profiles in the input.
 
         ======================
         1. Data You Receive
@@ -71,6 +71,7 @@ class LLMProfileRanker:
         1. Ranking
            - Assign each candidate a rank (1 = highest match, 2 = second-best, etc.).
            - No ties; each candidate must have a distinct rank.
+           - CRITICAL: You must rank EVERY profile provided in the input. The number of ranked profiles in your output MUST match exactly the number of profiles in the input. Do not skip or omit any profiles.
 
         2. Skills Handling
            - Look for synonyms or tangential references to required skills. For example, if the JD says "Azure" but the candidate mentions "Microsoft Cloud or AWS" treat that as partial or potentially "has," depending on context.
@@ -113,6 +114,8 @@ class LLMProfileRanker:
 
         10. Single JD Only
            - You will be given one JD at a time.
+
+        Before providing your final response, verify that you have ranked exactly the same number of profiles as were provided in the input. Count the profiles in your JSON output and ensure none were omitted.
 
         =========================
         3. Output Format
@@ -211,6 +214,11 @@ class LLMProfileRanker:
              - "has" for skills that are present
              - "missing" for skills that are not present
              - "partial" for skills that are partially present or have equivalent experience
+
+        10. Complete Analysis
+           - You MUST include ALL profiles from the input in your output.
+           - Count the number of profiles in your response and verify it matches the input count.
+           - Never exclude any profile, regardless of relevance or match quality.
 
         This completes your instructions. Follow them closely, parse the JD and candidate data, then output the final JSON with one key per profile and the global "_disclaimer".
         """

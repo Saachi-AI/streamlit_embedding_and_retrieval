@@ -32,10 +32,22 @@ class ProfileRankProcessor:
             emoji = "🥈"  # Silver medal
         elif rank == 3:
             emoji = "🥉"  # Bronze medal
-        elif 4 <= rank <= 10:
-            emoji = "🔟"  # Numeric emoji
+        elif rank == 4:
+            emoji = "4️⃣"  # Keycap digit four
+        elif rank == 5:
+            emoji = "5️⃣"  # Keycap digit five
+        elif rank == 6:
+            emoji = "6️⃣"  # Keycap digit six
+        elif rank == 7:
+            emoji = "7️⃣"  # Keycap digit seven
+        elif rank == 8:
+            emoji = "8️⃣"  # Keycap digit eight
+        elif rank == 9:
+            emoji = "9️⃣"  # Keycap digit nine
+        elif rank == 10:
+            emoji = "🔟"  # Keycap: 10
         else:
-            emoji = ""  # No emoji for ranks 11+
+            emoji = str(rank)  # No emoji for ranks 11+
         
         return f"{emoji} Rank #{rank}"
     

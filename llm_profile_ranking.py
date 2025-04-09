@@ -72,7 +72,7 @@ class LLMProfileRanker:
            - No ties; each candidate must have a distinct rank.
 
         2. Skills Handling
-           - Look for synonyms or tangential references to required skills. For example, if the JD says "Azure" but the candidate mentions "Microsoft Cloud," treat that as partial or potentially "has," depending on context.
+           - Look for synonyms or tangential references to required skills. For example, if the JD says "Azure" but the candidate mentions "Microsoft Cloud or AWS" treat that as partial or potentially "has," depending on context.
            - If a profile clearly lacks a required skill, label it "missing."
            - If the data is ambiguous, you may say "insufficient data," though for scoring it's effectively like missing—unless context strongly suggests adjacency.
            - Do not overly penalize "partial" if it's close to the required skill (e.g., AWS vs Azure).
@@ -124,9 +124,9 @@ class LLMProfileRanker:
 
           1. "rank": integer
           2. "shortPhrase": ~5-6 words about the candidate
-          3. "whyGoodFit": short textual explanation (include mention of education relevance here)
+          3. "whyGoodFit": array of strings with bullet points (include mention of education relevance here)
           4. "overallScore": integer (e.g., 0-100)
-          5. "skillsMatch": sub-object with each key JD requirement → "has", "partial", "missing", or "insufficient data"
+          5. "skillsMatch": sub-object with each key JD requirement → emoji value
           6. "contradictionsOrWarnings": array of strings if any contradictions exist
           7. "weighting": object showing your domain vs. technical vs. language ratio
 
@@ -137,16 +137,22 @@ class LLMProfileRanker:
         Example skeleton:
 
         {
-          "profile_id_1234": {
+          "1234": {
             "rank": 1,
             "shortPhrase": "5-6 words about them",
-            "whyGoodFit": "Short paragraph or bullet points about strengths and education relevance",
+            "whyGoodFit": [
+              "✅ Strong technical skills in required areas",
+              "🏢 Relevant experience at major companies",
+              "🎓 Advanced degree in relevant field",
+              "💬 Native proficiency in required languages",
+              "⚠️ Some gaps in specific domain knowledge"
+            ],
             "overallScore": 90,
             "skillsMatch": {
-              "Azure": "partial",
+              "Azure": "has",
               "Python": "has",
               "DomainKnowledge": "missing",
-              "LanguageJP": "full_proficiency"
+              "Machine Learning": "partial"
             },
             "contradictionsOrWarnings": [],
             "weighting": {
@@ -155,7 +161,7 @@ class LLMProfileRanker:
               "languageProficiency": 20
             }
           },
-          "profile_id_5678": {
+          "5678": {
             "rank": 2,
             ...
           },
@@ -174,7 +180,7 @@ class LLMProfileRanker:
 
         3. Short Phrases & Summaries
            - Keep "shortPhrase" at ~5-6 words.
-           - Keep "whyGoodFit" to a short paragraph or bullet points. Mention if the candidate's education is relevant to the JD or not.
+           - Keep "whyGoodFit" as an array of strings with bullet points. Mention if the candidate's education is relevant to the JD or not.
 
         4. Missing Skills
            - If the candidate's data has no mention (or direct synonym) of a required skill, mark "missing."
@@ -184,6 +190,26 @@ class LLMProfileRanker:
 
         6. Contradictions
            - If older notes conflict with the resume, favor the more recent info but add a warning in "contradictionsOrWarnings".
+
+        7. Profile ID Format
+           - Use only the numeric ID as the key (e.g., "1234" instead of "profile_id_1234")
+
+        8. whyGoodFit Format
+           - Must be an array of strings
+           - Each string should start with an appropriate emoji:
+             - ✅ for positive aspects
+             - ⚠️ for warnings/concerns
+             - 🎓 for education-related points
+             - 💬 for language-related points
+             - 🏢 for company/role experience
+           - List positive points first, followed by concerns
+           - Provide as much detail as necessary for each point
+
+        9. skillsMatch Format
+           - Use plain text values:
+             - "has" for skills that are present
+             - "missing" for skills that are not present
+             - "partial" for skills that are partially present or have equivalent experience
 
         This completes your instructions. Follow them closely, parse the JD and candidate data, then output the final JSON with one key per profile and the global "_disclaimer".
         """

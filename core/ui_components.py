@@ -478,3 +478,47 @@ def display_fallback_results(results, rerank_top_k, tab_prefix=""):
                 disabled=True,
                 key=f"{tab_prefix}fallback_result_{i}"
             )
+
+def display_profile_retrieval_and_preprocessing(profile_data, processed_profiles):
+    """
+    Display profile retrieval and preprocessing results for debugging purposes.
+    
+    Args:
+        profile_data: Raw profile data from ProfileRetriever (dictionary)
+        processed_profiles: Processed profile data from preprocess_profiles (list)
+    """
+    # Add some spacing before this section
+    add_section_separator()
+    
+    # Profile Retrieval Results
+    st.markdown(f"""
+    <div style="background-color: #5D4037; color: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <h2 style="margin: 0; font-size: 1.5em;">Profile Retrieval Results</h2>
+        <p style="margin: 5px 0 0 0; font-size: 0.9em;">Raw profile data retrieved from DynamoDB</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Show profile retrieval count
+    st.success(f"✅ Successfully retrieved raw data for {len(profile_data)} profiles")
+    
+    # Show raw profile data in an expander
+    with st.expander("View Raw Profile Data", expanded=False):
+        st.json(profile_data)
+    
+    # Add some separation between sections
+    st.markdown("<div style='margin: 20px 0;'></div>", unsafe_allow_html=True)
+    
+    # Profile Preprocessing Results
+    st.markdown(f"""
+    <div style="background-color: #00695C; color: white; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <h2 style="margin: 0; font-size: 1.5em;">Profile Preprocessing Results</h2>
+        <p style="margin: 5px 0 0 0; font-size: 0.9em;">Processed profile data ready for LLM processing</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Show processed profile count
+    st.success(f"✅ Successfully processed {len(processed_profiles)} profiles")
+    
+    # Show processed profile data in an expander
+    with st.expander("View Processed Profile Data", expanded=False):
+        st.json(processed_profiles)

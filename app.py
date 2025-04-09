@@ -14,6 +14,8 @@ from embedders.cohere_embedder import CohereEmbedder
 from filter_extractor import FilterExtractor
 from rerankers.cohere_reranker import CohereReranker
 from post_rerank_aggregator import ProfileAggregator
+from profile_retriever import ProfileRetriever
+from profile_preprocessor import preprocess_profiles
 from pinecone import Pinecone
 from document_parser import DocumentParser
 from prompt_generator import PromptGenerator
@@ -85,6 +87,13 @@ def get_profile_aggregator():
     return ProfileAggregator()
 
 profile_aggregator = get_profile_aggregator()
+
+# Initialize Profile Retriever
+@st.cache_resource
+def get_profile_retriever():
+    return ProfileRetriever()
+
+profile_retriever = get_profile_retriever()
 
 # Initialize Document Parser
 @st.cache_resource
@@ -219,7 +228,8 @@ with tabs[0]:
             embedders=embedders,
             retrieve_documents=retrieve_documents,
             cohere_reranker=cohere_reranker,
-            profile_aggregator=profile_aggregator
+            profile_aggregator=profile_aggregator,
+            profile_retriever=profile_retriever
         )
 
 # With Tab 1 (Custom Query)
@@ -231,5 +241,6 @@ with tabs[1]:
             embedders=embedders,
             retrieve_documents=retrieve_documents,
             cohere_reranker=cohere_reranker,
-            profile_aggregator=profile_aggregator
+            profile_aggregator=profile_aggregator,
+            profile_retriever=profile_retriever
         )

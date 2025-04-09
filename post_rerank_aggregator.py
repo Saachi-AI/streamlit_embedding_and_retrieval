@@ -129,6 +129,58 @@ class ProfileAggregator:
         # Return top K profiles from filtered list
         return filtered_profiles[:top_k]
     
+    def prepare_for_profile_retrieval(self, profile_scores):
+        """
+        Transform ProfileScore objects into the format expected by ProfileRetriever.
+        
+        Args:
+            profile_scores: List of ProfileScore objects from aggregate_profiles
+            
+        Returns:
+            List of profile entry dictionaries in the format expected by ProfileRetriever
+        """
+        profile_entries = []
+        
+        for profile_score in profile_scores:
+            try:
+                # Get profile_id
+                profile_id = profile_score.profile_id
+                if not profile_id:
+                    logger.warning(f"Skipping profile with missing profile_id")
+                    continue
+                    
+                # Get metadata from the best chunk (highest score)
+                if not profile_score.chunks:
+                    logger.warning(f"No chunks found for profile {profile_id}")
+                    continue
+                    
+                best_chunk = max(profile_score.chunks, key=lambda x: x[1])
+                document, _ = best_chunk
+                
+                # Extract metadata from document
+                if not hasattr(document, 'metadata'):
+                    logger.warning(f"Document missing metadata for profile {profile_id}")
+                    continue
+                    
+                metadata = document.metadata.copy()
+                
+                # Create profile entry
+                profile_entry = {
+                    "profile_id": profile_id,
+                    "metadata": metadata
+                }
+                
+                profile_entries.append(profile_entry)
+                
+            except Exception as e:
+                logger.error(f"Error processing profile {profile_id if 'profile_id' in locals() else 'unknown'}: {str(e)}")
+                continue
+        
+        if not profile_entries:
+            logger.warning("No valid profile entries were prepared for retrieval")
+        
+        return profile_entries
+    
     def get_explanation(self, profile_score: ProfileScore) -> str:
         """
         Generate an explanation of how the profile score was calculated.

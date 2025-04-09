@@ -63,13 +63,12 @@ def clean_text(text: str) -> str:
     # Strip leading/trailing whitespace
     return text.strip()
 
-def preprocess_profiles(profile_data: Dict[str, Dict[str, Any]], comparison_date: str = "2025-03-20") -> List[Dict[str, Any]]:
+def preprocess_profiles(profile_data: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
     """
     Preprocess raw profile data for LLM processing.
     
     Args:
         profile_data: Dictionary mapping profile IDs to profile data (output from ProfileRetriever)
-        comparison_date: Date string to compare with updated_at (default: "2025-03-20")
         
     Returns:
         List of processed profile objects ready for LLM processing
@@ -101,35 +100,22 @@ def preprocess_profiles(profile_data: Dict[str, Dict[str, Any]], comparison_date
                 cleaned_description = clean_html(tamago_data["description"])
                 processed_profile["consultant_description"] = cleaned_description
             
-            # 3. Created at
-            if tamago_data.get("created_at"):
-                processed_profile["created_at"] = tamago_data["created_at"]
-            
-            # 4. Updated at (with comparison logic)
-            if tamago_data.get("updated_at"):
-                tamago_updated = tamago_data["updated_at"]
-                
-                if linkedin_data:
-                    processed_profile["updated_at"] = tamago_updated if tamago_updated > comparison_date else comparison_date
-                else:
-                    processed_profile["updated_at"] = tamago_updated
-            
-            # 5. Headline
+            # 3. Headline
             if linkedin_data and linkedin_data.get("headline"):
                 processed_profile["headline"] = clean_text(linkedin_data["headline"])
             elif tamago_data.get("headline"):
                 processed_profile["headline"] = clean_text(tamago_data["headline"])
             
-            # 6. Nationality (only if not null)
+            # 4. Nationality (only if not null)
             if tamago_data.get("nationality"):
                 processed_profile["nationality"] = tamago_data["nationality"]
             
-            # 7. Employments
+            # 5. Employments
             employments = process_employments(profile)
             if employments:
                 processed_profile["employments"] = employments
             
-            # 8. Notes
+            # 6. Notes
             if tamago_data.get("notes"):
                 notes = []
                 for note in tamago_data["notes"]:
@@ -143,7 +129,7 @@ def preprocess_profiles(profile_data: Dict[str, Dict[str, Any]], comparison_date
                 if notes:
                     processed_profile["notes"] = notes
             
-            # 9. Skills
+            # 7. Skills
             if tamago_data.get("tags_simplified"):
                 skills = {}
                 tags = tamago_data["tags_simplified"]
@@ -153,16 +139,16 @@ def preprocess_profiles(profile_data: Dict[str, Dict[str, Any]], comparison_date
                 if skills:
                     processed_profile["skills"] = skills
             
-            # 10. Education
+            # 8. Education
             if linkedin_data and linkedin_data.get("education"):
                 processed_profile["education"] = linkedin_data["education"]
             
-            # 11. Languages
+            # 9. Languages
             languages = extract_languages(metadata)
             if languages:
                 processed_profile["languages"] = languages
             
-            # 12. Certifications
+            # 10. Certifications
             if linkedin_data and linkedin_data.get("certifications"):
                 certifications = [{"name": clean_text(cert.get("name"))} 
                                 for cert in linkedin_data["certifications"] 
@@ -170,7 +156,7 @@ def preprocess_profiles(profile_data: Dict[str, Dict[str, Any]], comparison_date
                 if certifications:
                     processed_profile["certifications"] = certifications
             
-            # 13. LinkedIn description
+            # 11. LinkedIn description
             if linkedin_data and linkedin_data.get("summary"):
                 processed_profile["linkedin_description"] = clean_text(linkedin_data["summary"])
             

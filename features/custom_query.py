@@ -1,5 +1,7 @@
 import streamlit as st
 import os
+import logging
+from profile_preprocessor import preprocess_profiles
 from core.ui_components import (
     display_retrieval_stats,
     display_initial_results_summary,
@@ -12,9 +14,14 @@ from core.ui_components import (
     create_sidebar_configuration,
     add_section_separator,
     display_fallback_results_header,
-    display_fallback_results
+    display_fallback_results,
+    display_profile_retrieval_and_preprocessing
 )
 from core.state_management import initialize_tab_state, get_tab_state, set_tab_state
+from llm_profile_ranking import LLMProfileRanker
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 def initialize_custom_query_state():
     """Initialize custom query tab-specific state variables."""
@@ -36,7 +43,7 @@ def handle_query_submission(query):
         return True
     return False
 
-def process_custom_query(query, settings, filter_extractor, embedders, retrieve_documents, cohere_reranker, profile_aggregator):
+def process_custom_query(query, settings, filter_extractor, embedders, retrieve_documents, cohere_reranker, profile_aggregator, profile_retriever):
     """Process the custom query and display results."""
     if not query:
         return
@@ -158,11 +165,40 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
                     # Add spacing between sections
                     add_section_separator()
                     
-                    # Perform profile aggregation
-                    with st.spinner("Aggregating profiles..."):
-                        profile_scores = profile_aggregator.aggregate_profiles(
-                            reranked_results
+                    # After reranking and before displaying results
+                    # Aggregate profiles
+                    profile_scores = profile_aggregator.aggregate_profiles(reranked_results)
+                    
+                    # Prepare profile entries for retrieval
+                    profile_entries = profile_aggregator.prepare_for_profile_retrieval(profile_scores)
+                    if not profile_entries:
+                        st.warning("No valid profiles found for retrieval")
+                        return
+                    
+                    # Retrieve and preprocess profile data
+                    try:
+                        # Retrieve profile data (set preprocess=False to get raw dictionary data)
+                        profile_data = profile_retriever.retrieve_profile_data(
+                            profile_entries=profile_entries,
+                            preprocess=False
                         )
+                        
+                        # Preprocess the profiles
+                        processed_profiles = preprocess_profiles(
+                            profile_data=profile_data
+                        )
+                        
+                        if not processed_profiles:
+                            st.warning("No valid profiles after preprocessing")
+                            return
+                            
+                        # Store processed profiles for later use
+                        st.session_state.processed_profiles = processed_profiles
+                        
+                    except Exception as e:
+                        st.error(f"Error in profile retrieval and preprocessing: {str(e)}")
+                        logger.error(f"Error in profile retrieval and preprocessing: {str(e)}")
+                        return
                     
                     # Display profile-level results
                     if profile_scores:
@@ -173,6 +209,23 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
                         display_profile_summary(profile_scores)
                     else:
                         st.warning("No profiles could be aggregated from the reranked results.")
+                    
+                    # Display profile retrieval and preprocessing results for debugging
+                    display_profile_retrieval_and_preprocessing(profile_data, processed_profiles)
+                    
+                    # Call LLM for profile ranking
+                    try:
+                        custom_query_text = get_tab_state("tab1", "query")
+                        
+                        llm_ranker = LLMProfileRanker()
+                        llm_ranking_results = llm_ranker.rank_profiles_custom_query(
+                            processed_profiles=processed_profiles,
+                            custom_query=custom_query_text
+                        )
+                        
+                        logger.info("LLM Profile Ranking completed")
+                    except Exception as e:
+                        logger.error(f"Error during LLM profile ranking: {str(e)}")
                 else:
                     st.warning("Reranking failed. Displaying original results.")
                     
@@ -185,7 +238,14 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
             st.error(f"Error during retrieval: {str(e)}")
             st.info(f"Make sure you've embedded documents with this model first. Run `python embedders/embed.py --model {model_choice}`")
 
-def render_custom_query_tab(filter_extractor, embedders, retrieve_documents, cohere_reranker, profile_aggregator):
+def render_custom_query_tab(
+    filter_extractor,
+    embedders,
+    retrieve_documents,
+    cohere_reranker,
+    profile_aggregator,
+    profile_retriever
+):
     """Render the custom query tab content."""
     # Initialize tab state if not already initialized
     initialize_custom_query_state()
@@ -221,5 +281,6 @@ def render_custom_query_tab(filter_extractor, embedders, retrieve_documents, coh
             embedders, 
             retrieve_documents, 
             cohere_reranker, 
-            profile_aggregator
+            profile_aggregator,
+            profile_retriever
         )

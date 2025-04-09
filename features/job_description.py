@@ -1,6 +1,8 @@
 import streamlit as st
 import os
 import json
+import logging
+from profile_preprocessor import preprocess_profiles
 from core.ui_components import (
     display_retrieval_stats,
     display_initial_results_summary,
@@ -13,9 +15,14 @@ from core.ui_components import (
     create_sidebar_configuration,
     add_section_separator,
     display_fallback_results_header,
-    display_fallback_results
+    display_fallback_results,
+    display_profile_retrieval_and_preprocessing
 )
 from core.state_management import initialize_tab_state, get_tab_state, set_tab_state
+from llm_profile_ranking import LLMProfileRanker
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 def initialize_job_description_state():
     """Initialize job description tab-specific state variables."""
@@ -106,7 +113,7 @@ def display_generated_prompt():
                 st.markdown("#### Experience Requirements")
                 st.json(prompt_data["extracted_experience"])
 
-def process_job_description_query(query, settings, filter_extractor, embedders, retrieve_documents, cohere_reranker, profile_aggregator):
+def process_job_description_query(query, settings, filter_extractor, embedders, retrieve_documents, cohere_reranker, profile_aggregator, profile_retriever):
     """Process the job description query and display results."""
     if not query:
         return
@@ -228,11 +235,40 @@ def process_job_description_query(query, settings, filter_extractor, embedders, 
                     # Add spacing between sections
                     add_section_separator()
                     
-                    # For profile aggregation, use the environment variable default by not specifying top_k
-                    with st.spinner("Aggregating profiles..."):
-                        profile_scores = profile_aggregator.aggregate_profiles(
-                            reranked_results
+                    # After reranking and before displaying results
+                    # Aggregate profiles
+                    profile_scores = profile_aggregator.aggregate_profiles(reranked_results)
+                    
+                    # Prepare profile entries for retrieval
+                    profile_entries = profile_aggregator.prepare_for_profile_retrieval(profile_scores)
+                    if not profile_entries:
+                        st.warning("No valid profiles found for retrieval")
+                        return
+                    
+                    # Retrieve and preprocess profile data
+                    try:
+                        # Retrieve profile data (set preprocess=False to get raw dictionary data)
+                        profile_data = profile_retriever.retrieve_profile_data(
+                            profile_entries=profile_entries,
+                            preprocess=False
                         )
+                        
+                        # Preprocess the profiles
+                        processed_profiles = preprocess_profiles(
+                            profile_data=profile_data
+                        )
+                        
+                        if not processed_profiles:
+                            st.warning("No valid profiles after preprocessing")
+                            return
+                            
+                        # Store processed profiles for later use
+                        st.session_state.processed_profiles = processed_profiles
+                        
+                    except Exception as e:
+                        st.error(f"Error in profile retrieval and preprocessing: {str(e)}")
+                        logger.error(f"Error in profile retrieval and preprocessing: {str(e)}")
+                        return
                     
                     # Display profile-level results
                     if profile_scores:
@@ -243,6 +279,26 @@ def process_job_description_query(query, settings, filter_extractor, embedders, 
                         display_profile_summary(profile_scores)
                     else:
                         st.warning("No profiles could be aggregated from the reranked results.")
+                    
+                    # Display profile retrieval and preprocessing results for debugging
+                    display_profile_retrieval_and_preprocessing(profile_data, processed_profiles)
+                    
+                    # Call LLM for profile ranking
+                    try:
+                        raw_jd = get_tab_state("tab0", "parsed_text")
+                        summarized_jd = get_tab_state("tab0", "generated_prompt")
+                        
+                        llm_ranker = LLMProfileRanker()
+                        llm_ranking_results = llm_ranker.rank_profiles_job_description(
+                            processed_profiles=processed_profiles,
+                            raw_job_description=raw_jd,
+                            summarized_job_description=summarized_jd
+                        )
+                        
+                        logger.info("LLM Profile Ranking completed")
+                    except Exception as e:
+                        logger.error(f"Error during LLM profile ranking: {str(e)}")
+                
                 else:
                     st.warning("Reranking failed. Displaying original results.")
                     
@@ -255,7 +311,16 @@ def process_job_description_query(query, settings, filter_extractor, embedders, 
             st.error(f"Error during retrieval: {str(e)}")
             st.info(f"Make sure you've embedded documents with this model first. Run `python embedders/embed.py --model {model_choice}`")
 
-def render_job_description_tab(document_parser, prompt_generator, filter_extractor, embedders, retrieve_documents, cohere_reranker, profile_aggregator):
+def render_job_description_tab(
+    document_parser,
+    prompt_generator,
+    filter_extractor,
+    embedders,
+    retrieve_documents,
+    cohere_reranker,
+    profile_aggregator,
+    profile_retriever
+):
     """Render the job description tab content."""
     # Initialize tab state if not already initialized
     initialize_job_description_state()
@@ -293,5 +358,6 @@ def render_job_description_tab(document_parser, prompt_generator, filter_extract
             embedders, 
             retrieve_documents, 
             cohere_reranker, 
-            profile_aggregator
+            profile_aggregator,
+            profile_retriever
         )

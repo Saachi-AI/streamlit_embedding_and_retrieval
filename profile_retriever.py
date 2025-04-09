@@ -2,6 +2,8 @@ import os
 import json
 import logging
 import boto3
+import re
+from datetime import datetime
 from typing import List, Dict, Any, Optional, Union
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
@@ -95,7 +97,7 @@ class ProfileRetriever:
             person_id: The profile/person ID to retrieve
             
         Returns:
-            Dictionary containing profile data or None if not found
+            Dictionary containing profile data and fetched_at timestamp or None if not found
         """
         try:
             response = self.linkedin_table.get_item(
@@ -107,13 +109,37 @@ class ProfileRetriever:
             # Check if the item was found
             if 'Item' in response:
                 profile_data = response['Item'].get('profile_data')
+                timestamp = response['Item'].get('timestamp')
+                
                 # Parse the JSON string if it's a string
                 if isinstance(profile_data, str):
                     try:
-                        return json.loads(profile_data)
+                        profile_data = json.loads(profile_data)
                     except json.JSONDecodeError as e:
                         logger.error(f"Error parsing LinkedIn profile JSON for {person_id}: {str(e)}")
                         return profile_data
+                
+                # Add fetched_at timestamp if available
+                if timestamp:
+                    try:
+                        # Convert timestamp to YYYY-MM-DD format
+                        # Handle different input formats
+                        if isinstance(timestamp, str):
+                            # If it's already in YYYY-MM-DD format
+                            if re.match(r'^\d{4}-\d{2}-\d{2}$', timestamp):
+                                profile_data['fetched_at'] = timestamp
+                            else:
+                                # Try to parse and format the date
+                                parsed_date = datetime.strptime(timestamp.split('T')[0], '%Y-%m-%d')
+                                profile_data['fetched_at'] = parsed_date.strftime('%Y-%m-%d')
+                        else:
+                            # Handle other timestamp formats if needed
+                            logger.warning(f"Unexpected timestamp format for LinkedIn profile {person_id}: {timestamp}")
+                    except Exception as e:
+                        logger.warning(f"Error processing timestamp for LinkedIn profile {person_id}: {str(e)}")
+                else:
+                    logger.warning(f"LinkedIn profile {person_id} missing fetched_at timestamp")
+                
                 return profile_data
             else:
                 logger.info(f"Profile {person_id} not found in linkedin_profiles table")
@@ -126,8 +152,7 @@ class ProfileRetriever:
     def retrieve_profile_data(
         self, 
         profile_entries: List[Dict[str, Any]], 
-        preprocess: bool = False,
-        comparison_date: str = "2025-03-20"
+        preprocess: bool = False
     ) -> Union[Dict[str, Dict[str, Any]], List[Dict[str, Any]]]:
         """
         Retrieve profile data from both DynamoDB tables for a list of profile entries.
@@ -137,7 +162,6 @@ class ProfileRetriever:
                 - 'profile_id': ID to retrieve from DynamoDB
                 - 'metadata': Metadata about the profile from the relevant chunk
             preprocess: Whether to preprocess the retrieved data for LLM (default: False)
-            comparison_date: Date string to compare with updated_at for preprocessing (default: "2025-03-20")
                 
         Returns:
             If preprocess=False:
@@ -185,7 +209,7 @@ class ProfileRetriever:
         # Apply preprocessing if requested and available
         if preprocess and PREPROCESSOR_AVAILABLE:
             logger.info("Preprocessing profile data for LLM")
-            return preprocess_profiles(results, comparison_date)
+            return preprocess_profiles(results)
         elif preprocess and not PREPROCESSOR_AVAILABLE:
             logger.warning("Preprocessing requested but preprocessor module not available. Returning raw data.")
             

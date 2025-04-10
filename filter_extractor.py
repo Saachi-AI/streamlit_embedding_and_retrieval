@@ -50,7 +50,7 @@ Rules:
    - "N3" -> "Professional working proficiency"
    - "N4" -> "Limited working proficiency"
    - "N5" -> "Elementary Proficiency"
-9. Return languages as an object with language names as keys and proficiency levels as values
+9. Return languages as an array of objects, each with "Language" and "Proficiency Level" fields
 10. If proficiency level is not specified for a language, assume "Professional working proficiency"
 11. Only include human/natural languages like English, French, Japanese, etc. Do not include programming languages.
 
@@ -73,20 +73,33 @@ Return a JSON object with only the fields that were EXPLICITLY mentioned in the 
                     json_str = response[start_idx:end_idx]
                     extracted_filters = json.loads(json_str)
                     
+                    # Post-process languages if they're in dictionary format
+                    if "languages" in extracted_filters and isinstance(extracted_filters["languages"], dict):
+                        languages_dict = extracted_filters["languages"]
+                        languages_array = []
+                        for language, level in languages_dict.items():
+                            languages_array.append({
+                                "Language": language,
+                                "Proficiency Level": level
+                            })
+                        extracted_filters["languages"] = languages_array
+                    
                     # Post-process to map Japanese language levels if needed
-                    if "languages" in extracted_filters and "Japanese" in extracted_filters["languages"]:
-                        japanese_level = extracted_filters["languages"]["Japanese"]
-                        # Check if the level contains N1-N5 notation but wasn't properly mapped
-                        if "N1" in japanese_level:
-                            extracted_filters["languages"]["Japanese"] = "Native or Bilingual proficiency"
-                        elif "N2" in japanese_level:
-                            extracted_filters["languages"]["Japanese"] = "Full professional proficiency"
-                        elif "N3" in japanese_level:
-                            extracted_filters["languages"]["Japanese"] = "Professional working proficiency"
-                        elif "N4" in japanese_level:
-                            extracted_filters["languages"]["Japanese"] = "Limited working proficiency"
-                        elif "N5" in japanese_level:
-                            extracted_filters["languages"]["Japanese"] = "Elementary Proficiency"
+                    if "languages" in extracted_filters and isinstance(extracted_filters["languages"], list):
+                        for lang_obj in extracted_filters["languages"]:
+                            if lang_obj.get("Language") == "Japanese":
+                                japanese_level = lang_obj.get("Proficiency Level", "")
+                                # Check if the level contains N1-N5 notation but wasn't properly mapped
+                                if "N1" in japanese_level:
+                                    lang_obj["Proficiency Level"] = "Native or Bilingual proficiency"
+                                elif "N2" in japanese_level:
+                                    lang_obj["Proficiency Level"] = "Full professional proficiency"
+                                elif "N3" in japanese_level:
+                                    lang_obj["Proficiency Level"] = "Professional working proficiency"
+                                elif "N4" in japanese_level:
+                                    lang_obj["Proficiency Level"] = "Limited working proficiency"
+                                elif "N5" in japanese_level:
+                                    lang_obj["Proficiency Level"] = "Elementary Proficiency"
                     
                     return extracted_filters
                 else:
@@ -187,8 +200,13 @@ Return a JSON object with only the fields that were EXPLICITLY mentioned in the 
                 pass
         
         # Process language filters
-        if "languages" in extracted_filters and isinstance(extracted_filters["languages"], dict):
-            self._process_language_filters(pinecone_filter, extracted_filters["languages"], strict_mode)
+        if "languages" in extracted_filters:
+            if isinstance(extracted_filters["languages"], dict):
+                # Handle old dictionary format
+                self._process_language_filters(pinecone_filter, extracted_filters["languages"], strict_mode)
+            elif isinstance(extracted_filters["languages"], list):
+                # Handle new array format
+                self._process_language_filters(pinecone_filter, extracted_filters["languages"], strict_mode)
             
         # If no filters were applied, return empty object
         if not pinecone_filter["$and"]:
@@ -202,10 +220,29 @@ Return a JSON object with only the fields that were EXPLICITLY mentioned in the 
         
         Args:
             pinecone_filter: The filter to add language filters to
-            language_filters: Dict of language to proficiency level
+            language_filters: List of language objects with Language and Proficiency Level
             strict_mode: If True, only include exact matches (don't include docs with missing fields)
         """
-        for language, level in language_filters.items():
+        # Handle both dictionary format and array format from the image
+        if isinstance(language_filters, dict):
+            # Convert dictionary to array format for consistency
+            language_array = []
+            for language, level in language_filters.items():
+                language_array.append({
+                    "Language": language,
+                    "Proficiency Level": level
+                })
+            language_filters = language_array
+        
+        # Process each language in the array
+        for lang_obj in language_filters:
+            # Extract language and level from object
+            if isinstance(lang_obj, dict) and "Language" in lang_obj and "Proficiency Level" in lang_obj:
+                language = lang_obj["Language"]
+                level = lang_obj["Proficiency Level"]
+            else:
+                continue
+                
             language_key = language.capitalize()  # Ensure proper capitalization
             level = level.lower() if isinstance(level, str) else ""
             

@@ -66,6 +66,12 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
             filter_result = filter_extractor.process_query(query, strict_mode=False)
             metadata_filter = filter_result["pinecone_filter"]
             extracted_filters = filter_result["extracted_filters"]
+            
+            # Display the extracted filters
+            # if extracted_filters:
+            #     st.subheader("Extracted Filters")
+            #     st.json(extracted_filters)
+                
         except Exception as e:
             st.error(f"Error extracting metadata filters: {str(e)}")
     

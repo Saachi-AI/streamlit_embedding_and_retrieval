@@ -86,34 +86,11 @@ def display_generated_prompt():
         st.subheader("Generated Search Prompt")
         st.text_area("Prompt for Semantic Search", generated_prompt, height=150)
         
-        # Display all information in a single dropdown
+        # Display raw prompt data JSON
         with st.expander("Prompt Generation Details", expanded=True):
             # Format the entire prompt_data as formatted JSON
             formatted_json = json.dumps(prompt_data, indent=2)
             st.code(formatted_json, language="json")
-            
-            st.markdown("### Prompt Generation Analysis")
-            
-            # Display metadata
-            if "metadata" in prompt_data:
-                st.markdown("#### Metadata Considered")
-                metadata = prompt_data["metadata"]
-                
-                for key, value in metadata.items():
-                    if key == "languages":
-                        st.markdown(f"**Languages**: {json.dumps(value, indent=2)}")
-                    else:
-                        st.markdown(f"**{key.replace('_', ' ').title()}**: {value}")
-            
-            # If there are any extracted skills
-            if "extracted_skills" in prompt_data and prompt_data["extracted_skills"]:
-                st.markdown("#### Skills Extracted")
-                st.json(prompt_data["extracted_skills"])
-            
-            # If there is experience information
-            if "extracted_experience" in prompt_data and prompt_data["extracted_experience"]:
-                st.markdown("#### Experience Requirements")
-                st.json(prompt_data["extracted_experience"])
 
 def process_job_description_query(query, settings, filter_extractor, embedders, retrieve_documents, cohere_reranker, profile_aggregator, profile_retriever):
     """Process the job description query and display results."""
@@ -136,6 +113,12 @@ def process_job_description_query(query, settings, filter_extractor, embedders, 
             filter_result = filter_extractor.process_query(query, strict_mode=False)
             metadata_filter = filter_result["pinecone_filter"]
             extracted_filters = filter_result["extracted_filters"]
+            
+            # Display the extracted filters
+            # if extracted_filters:
+            #     st.subheader("Extracted Filters")
+            #     st.json(extracted_filters)
+                
         except Exception as e:
             st.error(f"Error extracting metadata filters: {str(e)}")
     

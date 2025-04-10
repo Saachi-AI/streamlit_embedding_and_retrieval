@@ -543,13 +543,38 @@ def display_ranked_candidates(processed_candidates):
     
     # Display each candidate in an expandable section
     for candidate in processed_candidates:
-        # Create expander title with rank, placeholder for name, and short phrase
-        expander_title = f"{candidate['rank_display']} — [Profile Name] - {candidate['short_phrase']}"
+        # Create expander title with rank, display name, and short phrase
+        expander_title = f"{candidate['rank_display']} — {candidate['display_name']} - {candidate['short_phrase']}"
         
         # Create expandable section
         with st.expander(expander_title, expanded=candidate['rank'] == 1):  # Auto-expand first result
-            # Placeholder for future detailed content
-            st.info("Detailed profile information will be displayed here")
+            # Display profile header with employment details
+            employment_line = f"👤 - {candidate['display_name']}"
+            
+            # Build the position and company line with colored HTML
+            position_html = ""
+            company_html = ""
+            period_html = ""
+            
+            if candidate.get('position'):
+                position_html = f"<span style='color: #81D4FA;'>{candidate['position']}</span>"
+            
+            if candidate.get('company_name'):
+                if position_html:
+                    company_html = f" at <span style='color: #FFCC80;'>{candidate['company_name']}</span>"
+                else:
+                    company_html = f"<span style='color: #FFCC80;'>{candidate['company_name']}</span>"
+            
+            # Add period if available
+            if candidate.get('period'):
+                period_html = f" <span style='color: #B0BEC5;'>({candidate['period']})</span>"
+            
+            # Display employment information if we have any
+            if position_html or company_html:
+                employment_html = f"{employment_line}<br>{position_html}{company_html}{period_html}"
+                st.markdown(employment_html, unsafe_allow_html=True)
+            else:
+                st.markdown(employment_line)
             
             # Display profile ID for debugging
             st.caption(f"Profile ID: {candidate['profile_id']}")

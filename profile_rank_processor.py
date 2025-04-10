@@ -328,6 +328,21 @@ class ProfileRankProcessor:
             # Get employment information
             employment_info = self._get_employment_info(profile_data, profile_id)
             
+            # Get profile picture URL
+            profile_picture_url = None
+            if profile_id in profile_data and "linkedin_data" in profile_data[profile_id]:
+                linkedin_data = profile_data[profile_id]["linkedin_data"]
+                if linkedin_data and "profile_picture_url_large" in linkedin_data:
+                    profile_picture_url = linkedin_data["profile_picture_url_large"]
+            
+            # Use fallback avatar if no LinkedIn profile picture
+            if not profile_picture_url:
+                profile_picture_url = "https://api.dicebear.com/9.x/avataaars/svg?seed=Oliver"
+            
+            # Get match score and reasons for recommendation
+            match_score = profile_info.get("overallScore", "")
+            why_good_fit = profile_info.get("whyGoodFit", [])
+            
             candidates.append({
                 "profile_id": profile_id,
                 "rank": rank,
@@ -336,7 +351,10 @@ class ProfileRankProcessor:
                 "display_name": display_name,
                 "position": employment_info["position"],
                 "company_name": employment_info["company_name"],
-                "period": employment_info["period"]
+                "period": employment_info["period"],
+                "profile_picture_url": profile_picture_url,
+                "match_score": match_score,
+                "why_good_fit": why_good_fit
             })
         
         # Sort by rank

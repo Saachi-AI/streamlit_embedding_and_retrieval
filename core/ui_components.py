@@ -543,33 +543,61 @@ def display_ranked_candidates(processed_candidates):
         
         # Create expandable section
         with st.expander(expander_title, expanded=candidate['rank'] == 1):  # Auto-expand first result
-            # Display profile header with employment details
-            employment_line = f"👤 - {candidate['display_name']}"
+            # Create a two-column layout for profile info and picture
+            cols = st.columns([0.7, 0.3])
             
-            # Build the position and company line with colored HTML
-            position_html = ""
-            company_html = ""
-            period_html = ""
-            
-            if candidate.get('position'):
-                position_html = f"<span style='color: #81D4FA;'>{candidate['position']}</span>"
-            
-            if candidate.get('company_name'):
-                if position_html:
-                    company_html = f" at <span style='color: #FFCC80;'>{candidate['company_name']}</span>"
+            with cols[0]:  # Left column for text information
+                # Display profile header with employment details
+                employment_line = f"👤 - {candidate['display_name']}"
+                
+                # Build the position and company line with colored HTML
+                position_html = ""
+                company_html = ""
+                period_html = ""
+                
+                if candidate.get('position'):
+                    position_html = f"<span style='color: #81D4FA;'>{candidate['position']}</span>"
+                
+                if candidate.get('company_name'):
+                    if position_html:
+                        company_html = f" at <span style='color: #FFCC80;'>{candidate['company_name']}</span>"
+                    else:
+                        company_html = f"<span style='color: #FFCC80;'>{candidate['company_name']}</span>"
+                
+                # Add period if available
+                if candidate.get('period'):
+                    period_html = f" <span style='color: #B0BEC5;'>({candidate['period']})</span>"
+                
+                # Display employment information if we have any
+                if position_html or company_html:
+                    employment_html = f"{employment_line}<br>{position_html}{company_html}{period_html}"
+                    st.markdown(employment_html, unsafe_allow_html=True)
                 else:
-                    company_html = f"<span style='color: #FFCC80;'>{candidate['company_name']}</span>"
+                    st.markdown(employment_line)
+                
+                # Add spacing
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                # Display match score if available
+                if candidate.get('match_score'):
+                    st.markdown(f"#### ⭐ Match Score: {candidate['match_score']}%")
+                
+                # Display reasons why this candidate is a good fit
+                if candidate.get('why_good_fit') and len(candidate['why_good_fit']) > 0:
+                    st.markdown("#### 🤖 Why this candidate?")
+                    for reason in candidate['why_good_fit']:
+                        st.markdown(f"<div style='margin-left: 20px;'>{reason}</div>", unsafe_allow_html=True)
+                
+                # Display profile ID for debugging
+                st.caption(f"Profile ID: {candidate['profile_id']}")
             
-            # Add period if available
-            if candidate.get('period'):
-                period_html = f" <span style='color: #B0BEC5;'>({candidate['period']})</span>"
-            
-            # Display employment information if we have any
-            if position_html or company_html:
-                employment_html = f"{employment_line}<br>{position_html}{company_html}{period_html}"
-                st.markdown(employment_html, unsafe_allow_html=True)
-            else:
-                st.markdown(employment_line)
-            
-            # Display profile ID for debugging
-            st.caption(f"Profile ID: {candidate['profile_id']}")
+            with cols[1]:  # Right column for profile picture
+                if candidate.get('profile_picture_url'):
+                    # Use HTML to create a rounded profile picture
+                    st.markdown(f"""
+                    <div style="display: flex; justify-content: center;">
+                        <img src="{candidate['profile_picture_url']}" 
+                             style="border-radius: 50%; border: 2px solid #4a4a4a; width: 150px; height: 150px; object-fit: cover;"
+                             alt="{candidate['display_name']}'s profile picture">
+                    </div>
+                    """, unsafe_allow_html=True)

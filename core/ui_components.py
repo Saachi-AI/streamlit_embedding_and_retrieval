@@ -538,13 +538,37 @@ def display_ranked_candidates(processed_candidates):
     
     # Display each candidate in an expandable section
     for candidate in processed_candidates:
-        # Create expander title with rank, placeholder for name, and short phrase
-        expander_title = f"{candidate['rank_display']} — [Profile Name] - {candidate['short_phrase']}"
+        # Create expander title with rank, display name, and short phrase
+        expander_title = f"{candidate['rank_display']} — {candidate['display_name']} - {candidate['short_phrase']}"
         
         # Create expandable section
         with st.expander(expander_title, expanded=candidate['rank'] == 1):  # Auto-expand first result
-            # Placeholder for future detailed content
-            st.info("Detailed profile information will be displayed here")
+            # Display the same title inside the expander
+            st.markdown(f"**{candidate['rank_display']} — {candidate['display_name']} - {candidate['short_phrase']}**")
+            
+            # Display profile header with employment details
+            employment_line = f"👤 - {candidate['display_name']}"
+            
+            # Build the position and company line
+            position_company = ""
+            if candidate.get('position'):
+                position_company += candidate['position']
+            
+            if candidate.get('company_name'):
+                if position_company:
+                    position_company += f" at {candidate['company_name']}"
+                else:
+                    position_company += candidate['company_name']
+            
+            # Add period if available
+            if candidate.get('period'):
+                position_company += f" ({candidate['period']})"
+            
+            # Display employment information if we have any
+            if position_company:
+                st.markdown(f"{employment_line}  \n{position_company}")
+            else:
+                st.markdown(f"{employment_line}")
             
             # Display profile ID for debugging
             st.caption(f"Profile ID: {candidate['profile_id']}")

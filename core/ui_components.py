@@ -21,6 +21,11 @@ def display_retrieval_stats(total_chunks, filtered_size=None, results_count=None
         </div>
         """, unsafe_allow_html=True)
         
+        # Display the exact Pinecone filter syntax
+        with st.expander("Show Pinecone Filter Syntax", expanded=True):
+            st.markdown("### Pinecone Filter Query")
+            st.code(json.dumps(metadata_filter, indent=2), language="json")
+        
         st.subheader(f"Retrieved {results_count} chunks (filtered from {total_chunks} total vectors)")
     else:
         # Make results_count more prominent

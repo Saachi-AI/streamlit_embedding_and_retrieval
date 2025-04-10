@@ -347,7 +347,7 @@ def create_tab_specific_sidebar(active_tab_index):
     st.sidebar.slider(
         "Number of Retrieval Chunks",
         min_value=1,
-        max_value=20,
+        max_value=200,
         value=semantic_top_k,
         key=f"{tab_name}_semantic_slider",  # Different key for the widget
         on_change=on_semantic_change

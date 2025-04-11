@@ -343,6 +343,37 @@ class ProfileRankProcessor:
             match_score = profile_info.get("overallScore", "")
             why_good_fit = profile_info.get("whyGoodFit", [])
             
+            # Extract additional metadata fields
+            years_of_experience = None
+            gender = None
+            is_candidate = None
+            languages = {}
+            
+            if profile_id in profile_data and "metadata" in profile_data[profile_id]:
+                metadata = profile_data[profile_id]["metadata"]
+                
+                # Extract years of experience
+                if "years_of_experience" in metadata:
+                    years_of_experience = metadata["years_of_experience"]
+                
+                # Extract gender
+                if "gender" in metadata:
+                    gender = metadata["gender"]
+                
+                # Extract is_candidate
+                if "is_candidate" in metadata:
+                    is_candidate = metadata["is_candidate"]
+                
+                # Extract languages by filtering out non-language fields
+                excluded_fields = {"profile_id", "section", "placed", "years_of_experience", 
+                                "gender", "last_contacted", "is_candidate", "processed_at", 
+                                "position", "keywords"}
+                
+                languages = {key: value for key, value in metadata.items() if key not in excluded_fields}
+            
+            # Determine the candidate type based on is_candidate value
+            candidate_type = "Candidate" if is_candidate == True else "Lead"
+            
             candidates.append({
                 "profile_id": profile_id,
                 "rank": rank,
@@ -354,7 +385,11 @@ class ProfileRankProcessor:
                 "period": employment_info["period"],
                 "profile_picture_url": profile_picture_url,
                 "match_score": match_score,
-                "why_good_fit": why_good_fit
+                "why_good_fit": why_good_fit,
+                "years_of_experience": years_of_experience,
+                "gender": gender,
+                "type": candidate_type,
+                "languages": languages
             })
         
         # Sort by rank

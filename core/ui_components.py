@@ -553,7 +553,7 @@ def display_ranked_candidates(processed_candidates):
             
             with cols[0]:  # Left column for text information
                 # Display profile header with employment details
-                employment_line = f"👤 - {candidate['display_name']}"
+                employment_line = f"<h4 style='margin-bottom: 0;'>👤 {candidate['display_name']}</h4>"
                 
                 # Build the position and company line with colored HTML
                 position_html = ""
@@ -575,13 +575,13 @@ def display_ranked_candidates(processed_candidates):
                 
                 # Display employment information if we have any
                 if position_html or company_html:
-                    employment_html = f"{employment_line}<br>{position_html}{company_html}{period_html}"
+                    employment_html = f"{employment_line}<div style='margin-top: 3px;'>{position_html}{company_html}{period_html}</div>"
                     st.markdown(employment_html, unsafe_allow_html=True)
                 else:
-                    st.markdown(employment_line)
+                    st.markdown(employment_line, unsafe_allow_html=True)
                 
-                # Add spacing
-                st.markdown("<br>", unsafe_allow_html=True)
+                # Add small spacing instead of a full line break
+                st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
                 
                 # Display match score if available
                 if candidate.get('match_score'):
@@ -592,6 +592,29 @@ def display_ranked_candidates(processed_candidates):
                     st.markdown("#### 🤖 Why this candidate?")
                     for reason in candidate['why_good_fit']:
                         st.markdown(f"<div style='margin-left: 20px;'>{reason}</div>", unsafe_allow_html=True)
+                    
+                    # Add extra spacing after "Why this candidate?" section
+                    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+                
+                # Display Experience if available
+                if candidate.get('years_of_experience') and candidate['years_of_experience'] != 0:
+                    st.markdown(f"###### 💼 Experience: {candidate['years_of_experience']} years")
+                
+                # Display Gender if available and not "not mentioned"
+                if candidate.get('gender') and candidate['gender'].lower() != "not mentioned":
+                    st.markdown(f"###### 🚻 Gender: {candidate['gender']}")
+                
+                # Display Type if available
+                if candidate.get('type') is not None:
+                    type_value = candidate['type']
+                    color_style = "style='color: #FFCC80;'" if type_value == "Candidate" else ""
+                    st.markdown(f"###### 🤝 Type: <span {color_style}>{type_value}</span>", unsafe_allow_html=True)
+                
+                # Display Languages
+                if candidate.get('languages') and len(candidate['languages']) > 0:
+                    st.markdown("###### 🌐 Languages spoken")
+                    for language, proficiency in candidate['languages'].items():
+                        st.markdown(f"<div style='margin-left: 20px;'>• <strong>{language}</strong> - {proficiency}</div>", unsafe_allow_html=True)
                 
                 # Display profile ID for debugging
                 st.caption(f"Profile ID: {candidate['profile_id']}")

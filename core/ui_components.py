@@ -706,31 +706,69 @@ def display_ranked_candidates(processed_candidates):
                     st.markdown(f"""
                     <div style="display: flex; justify-content: center;">
                         <img src="{candidate['profile_picture_url']}" 
-                             style="border-radius: 50%; border: 2px solid #4a4a4a; width: 150px; height: 150px; object-fit: cover;"
+                             style="border-radius: 50%; border: 3px solid #0077B5; width: 150px; height: 150px; object-fit: cover;
+                             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+                             transition: transform 0.3s ease, box-shadow 0.3s ease;"
                              alt="{candidate['display_name']}'s profile picture">
                     </div>
                     """, unsafe_allow_html=True)
                     
                     # Add spacing between picture and buttons
-                    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height: 45px;'></div>", unsafe_allow_html=True)
                     
-                    # Add buttons
-                    button_cols = st.columns(2)
+                    # LinkedIn button (only if available) - centered
+                    if candidate.get('linkedin_url'):
+                        st.markdown(
+                            f"""<div style="display: flex; justify-content: center;">
+                                <a href="{candidate['linkedin_url']}" target="_blank" 
+                                   style="text-decoration: none; display: inline-block; width: 150px; text-align: center; 
+                                   background-color: #0077B5; color: white; padding: 12px 0; 
+                                   border: none; border-radius: 8px; font-weight: 500; letter-spacing: 0.5px;
+                                   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+                                   transition: all 0.3s ease;">
+                                   View on LinkedIn</a>
+                               </div>
+                               <style>
+                               div[data-testid="stVerticalBlock"] a[href="{candidate['linkedin_url']}"] {{ transition: all 0.3s; }}
+                               div[data-testid="stVerticalBlock"] a[href="{candidate['linkedin_url']}"]:hover {{ 
+                                   background-color: #0088cc !important; 
+                                   transform: translateY(-2px); 
+                                   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+                               }}
+                               div[data-testid="stVerticalBlock"] a[href="{candidate['linkedin_url']}"]:active {{ 
+                                   transform: translateY(0px); 
+                                   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+                               }}
+                               </style>""", 
+                            unsafe_allow_html=True
+                        )
                     
-                    # LinkedIn button (only if available)
-                    with button_cols[0]:
-                        if candidate.get('linkedin_url'):
-                            st.link_button(
-                                "View on LinkedIn", 
-                                candidate['linkedin_url'],
-                                use_container_width=True
-                            )
+                    # Add spacing between buttons
+                    st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
                     
-                    # Tamago button (always available)
-                    with button_cols[1]:
-                        if candidate.get('tamago_url'):
-                            st.link_button(
-                                "Open in Tamago", 
-                                candidate['tamago_url'],
-                                use_container_width=True
-                            )
+                    # Tamago button (always available) - centered
+                    if candidate.get('tamago_url'):
+                        st.markdown(
+                            f"""<div style="display: flex; justify-content: center;">
+                                <a href="{candidate['tamago_url']}" target="_blank" 
+                                   style="text-decoration: none; display: inline-block; width: 150px; text-align: center; 
+                                   background-color: #8DC63F; color: white; padding: 12px 0; 
+                                   border: none; border-radius: 8px; font-weight: 500; letter-spacing: 0.5px;
+                                   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+                                   transition: all 0.3s ease;">
+                                   Open in Tamago</a>
+                               </div>
+                               <style>
+                               div[data-testid="stVerticalBlock"] a[href="{candidate['tamago_url']}"] {{ transition: all 0.3s; }}
+                               div[data-testid="stVerticalBlock"] a[href="{candidate['tamago_url']}"]:hover {{ 
+                                   background-color: #9ED84F !important; 
+                                   transform: translateY(-2px); 
+                                   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+                               }}
+                               div[data-testid="stVerticalBlock"] a[href="{candidate['tamago_url']}"]:active {{ 
+                                   transform: translateY(0px); 
+                                   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+                               }}
+                               </style>""", 
+                            unsafe_allow_html=True
+                        )

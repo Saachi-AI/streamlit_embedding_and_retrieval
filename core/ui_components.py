@@ -548,8 +548,19 @@ def display_ranked_candidates(processed_candidates):
         
         # Create expandable section
         with st.expander(expander_title, expanded=candidate['rank'] == 1):  # Auto-expand first result
+            # Display LinkedIn enrichment info if available
+            if candidate.get('linkedin_fetched_at'):
+                st.markdown(f"""
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png"
+                         alt="LinkedIn icon"
+                         style="height: 16px; width: 16px; vertical-align: middle;" /> 
+                    enriched on <span style='color: #FFCC80;'>{candidate['linkedin_fetched_at']}</span>
+                </div>
+                """, unsafe_allow_html=True)
+            
             # Create a two-column layout for profile info and picture
-            cols = st.columns([0.7, 0.3])
+            cols = st.columns([0.60, 0.30])
             
             with cols[0]:  # Left column for text information
                 # Display profile header with employment details
@@ -596,6 +607,18 @@ def display_ranked_candidates(processed_candidates):
                     # Add extra spacing after "Why this candidate?" section
                     st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
                 
+                # Display Skills Match if available
+                if candidate.get('skills_match') and len(candidate['skills_match']) > 0:
+                    st.markdown("#### 🧠 Skills Match for this Job:")
+                    for i, skill_info in enumerate(candidate['skills_match'], 1):
+                        st.markdown(
+                            f"<div style='margin-left: 20px;'>{i}. {skill_info['skill']} - {skill_info['status_display']}</div>",
+                            unsafe_allow_html=True
+                        )
+                    
+                    # Add spacing after skills match section
+                    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+                
                 # Display Experience if available
                 if candidate.get('years_of_experience') and candidate['years_of_experience'] != 0:
                     st.markdown(f"###### 💼 Experience: {candidate['years_of_experience']} years")
@@ -615,6 +638,64 @@ def display_ranked_candidates(processed_candidates):
                     st.markdown("###### 🌐 Languages spoken")
                     for language, proficiency in candidate['languages'].items():
                         st.markdown(f"<div style='margin-left: 20px;'>• <strong>{language}</strong> - {proficiency}</div>", unsafe_allow_html=True)
+                    
+                    # Add spacing after languages
+                    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+                
+                # Display Previously Placed information
+                if candidate.get('previous_placements'):
+                    placements = candidate['previous_placements']
+                    if len(placements) == 1:
+                        # Single placement - display inline
+                        placement = placements[0]
+                        st.markdown(
+                            f"###### 🎖️ Previously Placed: <span style='font-weight: normal;'>We placed the candidate in </span>"
+                            f"<span style='color: #81D4FA;'>{placement['company_name']}</span> "
+                            f"<span style='font-weight: normal;'>on </span>"
+                            f"<span style='color: #B0BEC5;'>{placement['date']}</span> "
+                            f"<span style='font-weight: normal;'>by </span>"
+                            f"<span style='color: #FFCC80;'>{placement['person']}</span>",
+                            unsafe_allow_html=True
+                        )
+                    else:
+                        # Multiple placements - display as list
+                        st.markdown("###### 🎖️ Previously Placed:")
+                        for i, placement in enumerate(placements, 1):
+                            st.markdown(
+                                f"<div style='margin-left: 20px;'>{i}. We placed the candidate in "
+                                f"<span style='color: #81D4FA;'>{placement['company_name']}</span> on "
+                                f"<span style='color: #B0BEC5;'>{placement['date']}</span> by "
+                                f"<span style='color: #FFCC80;'>{placement['person']}</span></div>",
+                                unsafe_allow_html=True
+                            )
+                        
+                        # Add spacing after multiple placements list
+                        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+                
+                # Display Contradictions or Warnings if available
+                if candidate.get('contradictions'):
+                    st.markdown("###### ⚠️ Contradictions or Warnings:")
+                    for i, warning in enumerate(candidate['contradictions'], 1):
+                        st.markdown(f"<div style='margin-left: 20px;'>{i}. {warning}</div>", unsafe_allow_html=True)
+                    
+                    # Add spacing after warnings
+                    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+                
+                # Display Profile Created By
+                if candidate.get('profile_created'):
+                    st.markdown(
+                        f"###### 🧑‍💼 Profile Created By : <span style='color: #FFCC80;'>{candidate['profile_created']['name']}</span> "
+                        f"on <span style='color: #B0BEC5;'>{candidate['profile_created']['date']}</span>",
+                        unsafe_allow_html=True
+                    )
+                
+                # Display Last Contacted By
+                if candidate.get('last_contacted'):
+                    st.markdown(
+                        f"###### 📞 Last Contacted By : <span style='color: #FFCC80;'>{candidate['last_contacted']['name']}</span> "
+                        f"on <span style='color: #B0BEC5;'>{candidate['last_contacted']['date']}</span>",
+                        unsafe_allow_html=True
+                    )
                 
                 # Display profile ID for debugging
                 st.caption(f"Profile ID: {candidate['profile_id']}")
@@ -629,3 +710,27 @@ def display_ranked_candidates(processed_candidates):
                              alt="{candidate['display_name']}'s profile picture">
                     </div>
                     """, unsafe_allow_html=True)
+                    
+                    # Add spacing between picture and buttons
+                    st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+                    
+                    # Add buttons
+                    button_cols = st.columns(2)
+                    
+                    # LinkedIn button (only if available)
+                    with button_cols[0]:
+                        if candidate.get('linkedin_url'):
+                            st.link_button(
+                                "View on LinkedIn", 
+                                candidate['linkedin_url'],
+                                use_container_width=True
+                            )
+                    
+                    # Tamago button (always available)
+                    with button_cols[1]:
+                        if candidate.get('tamago_url'):
+                            st.link_button(
+                                "Open in Tamago", 
+                                candidate['tamago_url'],
+                                use_container_width=True
+                            )

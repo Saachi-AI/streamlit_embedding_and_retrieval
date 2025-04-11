@@ -328,12 +328,26 @@ class ProfileRankProcessor:
             # Get employment information
             employment_info = self._get_employment_info(profile_data, profile_id)
             
-            # Get profile picture URL
+            # Get profile picture URL and LinkedIn data
             profile_picture_url = None
+            linkedin_fetched_at = None
+            linkedin_url = None
             if profile_id in profile_data and "linkedin_data" in profile_data[profile_id]:
                 linkedin_data = profile_data[profile_id]["linkedin_data"]
-                if linkedin_data and "profile_picture_url_large" in linkedin_data:
-                    profile_picture_url = linkedin_data["profile_picture_url_large"]
+                if linkedin_data:
+                    if "profile_picture_url_large" in linkedin_data:
+                        profile_picture_url = linkedin_data["profile_picture_url_large"]
+                    if "fetched_at" in linkedin_data:
+                        linkedin_fetched_at = linkedin_data["fetched_at"].split("T")[0]  # Convert to YYYY-MM-DD
+            
+            # Get LinkedIn URL from tamago_data
+            if profile_id in profile_data and "tamago_data" in profile_data[profile_id]:
+                tamago_data = profile_data[profile_id]["tamago_data"]
+                if tamago_data and tamago_data.get("linkedin"):
+                    linkedin_url = tamago_data["linkedin"]
+            
+            # Construct Tamago URL using profile_id
+            tamago_url = f"https://saachi.tamago-db.com/contact/{profile_id}/show"
             
             # Use fallback avatar if no LinkedIn profile picture
             if not profile_picture_url:
@@ -343,11 +357,40 @@ class ProfileRankProcessor:
             match_score = profile_info.get("overallScore", "")
             why_good_fit = profile_info.get("whyGoodFit", [])
             
+            # Get contradictions or warnings
+            contradictions = profile_info.get("contradictionsOrWarnings", [])
+            
+            # Process skills match data
+            skills_match = []
+            if "skillsMatch" in profile_info:
+                # Sort skills by status (has -> partial -> missing)
+                status_priority = {"has": 0, "partial": 1, "missing": 2}
+                sorted_skills = sorted(
+                    profile_info["skillsMatch"].items(),
+                    key=lambda x: status_priority[x[1]]
+                )
+                
+                # Format each skill with appropriate emoji
+                for skill_name, status in sorted_skills:
+                    if status == "has":
+                        formatted_status = "✅"
+                    elif status == "partial":
+                        formatted_status = "🟡 (Partial)"
+                    else:  # missing
+                        formatted_status = "❌ (Missing)"
+                    
+                    skills_match.append({
+                        "skill": skill_name,
+                        "status_display": formatted_status
+                    })
+            
             # Extract additional metadata fields
             years_of_experience = None
             gender = None
             is_candidate = None
             languages = {}
+            profile_created = None
+            last_contacted = None
             
             if profile_id in profile_data and "metadata" in profile_data[profile_id]:
                 metadata = profile_data[profile_id]["metadata"]
@@ -356,9 +399,13 @@ class ProfileRankProcessor:
                 if "years_of_experience" in metadata:
                     years_of_experience = metadata["years_of_experience"]
                 
-                # Extract gender
+                # Extract and format gender
                 if "gender" in metadata:
-                    gender = metadata["gender"]
+                    raw_gender = metadata["gender"]
+                    if raw_gender.lower() in ['male', 'female']:
+                        gender = raw_gender.capitalize()
+                    else:
+                        gender = raw_gender  # Keep original value for other cases
                 
                 # Extract is_candidate
                 if "is_candidate" in metadata:
@@ -370,6 +417,81 @@ class ProfileRankProcessor:
                                 "position", "keywords"}
                 
                 languages = {key: value for key, value in metadata.items() if key not in excluded_fields}
+            
+            # Process profile creation and last contact information
+            if profile_id in profile_data and "tamago_data" in profile_data[profile_id]:
+                tamago_data = profile_data[profile_id]["tamago_data"]
+                
+                # Process Previously Placed information
+                previous_placements = []
+                if tamago_data.get("pipeline"):
+                    # Filter and process placement entries
+                    for entry in tamago_data["pipeline"]:
+                        if entry.get("result") == "placed":
+                            # Get the date (prefer updated_at, fallback to created_at)
+                            placement_date = entry.get("updated_at") or entry.get("created_at")
+                            if (placement_date and 
+                                entry.get("company_name") and 
+                                entry.get("created_by", {}).get("name")):
+                                
+                                previous_placements.append({
+                                    "company_name": entry["company_name"],
+                                    "date": placement_date.split("T")[0],  # Convert to YYYY-MM-DD
+                                    "person": entry["created_by"]["name"]
+                                })
+                    
+                    # Sort placements by date (most recent first)
+                    if previous_placements:
+                        previous_placements.sort(key=lambda x: x["date"], reverse=True)
+                
+                # Process Profile Created By
+                if (tamago_data.get("created_by") and 
+                    tamago_data["created_by"].get("name") and 
+                    tamago_data.get("created_at")):
+                    created_date = tamago_data["created_at"].split("T")[0]  # Get YYYY-MM-DD
+                    profile_created = {
+                        "name": tamago_data["created_by"]["name"],
+                        "date": created_date
+                    }
+                
+                # Process Last Contacted By
+                if tamago_data.get("notes") and len(tamago_data["notes"]) > 0:
+                    # Sort notes by both created_at and updated_at timestamps
+                    notes_with_times = []
+                    for note in tamago_data["notes"]:
+                        if note.get("created_at"):
+                            notes_with_times.append({
+                                "timestamp": note["created_at"],
+                                "is_update": False,
+                                "note": note
+                            })
+                        if note.get("updated_at"):
+                            notes_with_times.append({
+                                "timestamp": note["updated_at"],
+                                "is_update": True,
+                                "note": note
+                            })
+                    
+                    # Sort by timestamp in descending order
+                    notes_with_times.sort(key=lambda x: x["timestamp"], reverse=True)
+                    
+                    # Find the most recent note with valid name information
+                    for note_info in notes_with_times:
+                        note = note_info["note"]
+                        if note_info["is_update"] and note.get("updated_by") and note["updated_by"].get("name"):
+                            contact_date = note_info["timestamp"].split("T")[0]  # Get YYYY-MM-DD
+                            last_contacted = {
+                                "name": note["updated_by"]["name"],
+                                "date": contact_date
+                            }
+                            break
+                        elif not note_info["is_update"] and note.get("created_by") and note["created_by"].get("name"):
+                            contact_date = note_info["timestamp"].split("T")[0]  # Get YYYY-MM-DD
+                            last_contacted = {
+                                "name": note["created_by"]["name"],
+                                "date": contact_date
+                            }
+                            break
             
             # Determine the candidate type based on is_candidate value
             candidate_type = "Candidate" if is_candidate == True else "Lead"
@@ -384,12 +506,20 @@ class ProfileRankProcessor:
                 "company_name": employment_info["company_name"],
                 "period": employment_info["period"],
                 "profile_picture_url": profile_picture_url,
+                "linkedin_fetched_at": linkedin_fetched_at,
+                "linkedin_url": linkedin_url,
+                "tamago_url": tamago_url,
                 "match_score": match_score,
                 "why_good_fit": why_good_fit,
+                "contradictions": contradictions if contradictions else None,
+                "skills_match": skills_match,
                 "years_of_experience": years_of_experience,
                 "gender": gender,
                 "type": candidate_type,
-                "languages": languages
+                "languages": languages,
+                "previous_placements": previous_placements if previous_placements else None,
+                "profile_created": profile_created,
+                "last_contacted": last_contacted
             })
         
         # Sort by rank

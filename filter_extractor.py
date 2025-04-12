@@ -25,34 +25,26 @@ class FilterExtractor:
         # Define the prompt template
         prompt = f"""You are a metadata extraction assistant. Extract the following fields from the user's candidate search query:
 
-- gender: Extract if user EXPLICITLY specifies "male" or "female"
 - years_of_experience: Extract numeric value if the user mentions years of experience
-- last_contacted: Extract time period in years if user mentions when candidates were last contacted
-- is_candidate: Extract boolean ONLY if user EXPLICITLY mentions active candidate status
-- placed: Extract boolean ONLY if user EXPLICITLY mentions placement status
 - languages: Extract any natural/human language requirements (like English, Japanese, Spanish) with their proficiency levels
 
 Rules:
 1. Leave a field empty if not explicitly mentioned in the query
-2. For gender, only extract if specifically mentioned
-3. For experience, extract the minimum years as a number
-4. For last_contacted, extract the time period in years
-5. For is_candidate and placed, ONLY include these if EXPLICITLY mentioned in the query
-6. DO NOT make assumptions about fields that are not mentioned
-7. For language proficiency levels, map to standard values:
+2. For experience, extract the minimum years as a number
+3. For language proficiency levels, map to standard values:
    - "native-level", "mother tongue", "native speaker" -> "Native or Bilingual proficiency"
    - "business-level", "professional", "fluent" -> "Professional working proficiency"
    - "conversational", "intermediate" -> "Limited working proficiency"
    - "basic", "elementary", "beginner" -> "Elementary Proficiency"
-8. For Japanese language specifically, also map JLPT certification levels:
+4. For Japanese language specifically, also map JLPT certification levels:
    - "N1" -> "Native or Bilingual proficiency"
    - "N2" -> "Full professional proficiency" 
    - "N3" -> "Professional working proficiency"
    - "N4" -> "Limited working proficiency"
    - "N5" -> "Elementary Proficiency"
-9. Return languages as an array of objects, each with "Language" and "Proficiency Level" fields
-10. If proficiency level is not specified for a language, assume "Professional working proficiency"
-11. Only include human/natural languages like English, French, Japanese, etc. Do not include programming languages.
+5. Return languages as an array of objects, each with "Language" and "Proficiency Level" fields
+6. If proficiency level is not specified for a language, assume "Professional working proficiency"
+7. Only include human/natural languages like English, French, Japanese, etc. Do not include programming languages.
 
 USER QUERY: "{query}"
 

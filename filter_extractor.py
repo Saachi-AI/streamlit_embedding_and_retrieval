@@ -262,6 +262,24 @@ Extract metadata from this query and return ONLY a JSON object, with NO addition
                 except (ValueError, TypeError) as e:
                     debug_log(f"Error processing years_of_experience: {str(e)}")
                     min_years = 0
+            
+            # Process type filter (for Candidate/Lead distinction)
+            if "type" in extracted_filters:
+                try:
+                    type_value = extracted_filters["type"]
+                    debug_log(f"Processing type filter: {type_value}")
+                    
+                    if type_value == "Candidate":
+                        # For Candidate, set is_candidate to true
+                        candidate_filter = {"is_candidate": {"$eq": True}}
+                        pinecone_filter["$and"].append(candidate_filter)
+                    elif type_value == "Lead":
+                        # For Lead, set is_candidate to false
+                        candidate_filter = {"is_candidate": {"$eq": False}}
+                        pinecone_filter["$and"].append(candidate_filter)
+                    # If "No Preference" (or any other value), don't add a filter
+                except Exception as e:
+                    debug_log(f"Error processing type filter: {str(e)}")
                     
             # Process language filters
             if "languages" in extracted_filters:

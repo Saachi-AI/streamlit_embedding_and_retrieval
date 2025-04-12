@@ -21,6 +21,7 @@ from core.ui_components import (
 from core.state_management import initialize_tab_state, get_tab_state, set_tab_state
 from llm_profile_ranking import LLMProfileRanker
 from profile_rank_processor import ProfileRankProcessor
+from core.filter_editor_components import render_filter_editor
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -71,6 +72,22 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
             # if extracted_filters:
             #     st.subheader("Extracted Filters")
             #     st.json(extracted_filters)
+            
+            # Show filter editor and wait for user confirmation
+            st.subheader("Review and Adjust Search Filters")
+            st.markdown("Please review the automatically extracted filters and make any necessary adjustments before proceeding with the search.")
+            
+            # Pass extracted filters to the filter editor
+            modified_filters = render_filter_editor(extracted_filters)
+            
+            # If user hasn't confirmed yet, stop here
+            if modified_filters is None:
+                st.info("Please review the filters above and click 'Confirm & Proceed' to continue with the search.")
+                return
+            
+            # User has confirmed, build new Pinecone filter with modified filters
+            metadata_filter = filter_extractor.build_pinecone_filter(modified_filters, strict_mode=False)
+            st.success("Filters confirmed! Proceeding with search...")
                 
         except Exception as e:
             st.error(f"Error extracting metadata filters: {str(e)}")

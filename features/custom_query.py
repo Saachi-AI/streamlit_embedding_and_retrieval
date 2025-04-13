@@ -72,11 +72,7 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
             # if extracted_filters:
             #     st.subheader("Extracted Filters")
             #     st.json(extracted_filters)
-            
-            # Show filter editor and wait for user confirmation
-            st.subheader("Review and Adjust Search Filters")
-            st.markdown("Please review the automatically extracted filters and make any necessary adjustments before proceeding with the search.")
-            
+                        
             # Pass extracted filters to the filter editor
             modified_filters = render_filter_editor(extracted_filters)
             
@@ -98,9 +94,6 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
             # Get the total vector count first
             _, total_chunks = retrieve_documents("", model_choice, 1, None)
             
-            # Get actual search results - directly use session state value
-            st.info(f"**DEBUG - Before retrieve_documents call:**")
-            st.info(f"- Passing semantic_top_k = {semantic_top_k}")
             
             results, _ = retrieve_documents(query, model_choice, semantic_top_k, metadata_filter)
             
@@ -158,7 +151,7 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
                 )
                 
                 # Display initial results summary
-                with st.expander("Initial Retrieval Results", expanded=True):
+                with st.expander("Initial Retrieval Results", expanded=False):
                     display_initial_results_summary(results)
                 
                 # Display detailed results for each document

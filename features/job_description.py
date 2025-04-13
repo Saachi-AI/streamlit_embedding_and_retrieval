@@ -66,7 +66,7 @@ def handle_document_upload(uploaded_file, document_parser, prompt_generator):
                 set_tab_state("tab0", "query_executed", True)
                 
                 # Success message
-                st.success("Job description parsed and prompt generated successfully! Searching for candidates...")
+                st.success("Job description parsed and prompt generated successfully!")
         else:
             st.error(message)
 
@@ -83,15 +83,9 @@ def display_generated_prompt():
     generated_prompt = get_tab_state("tab0", "generated_prompt")
     
     if prompt_data and generated_prompt:
-        # Display generated prompt
-        st.subheader("Generated Search Prompt")
-        st.text_area("Prompt for Semantic Search", generated_prompt, height=150)
-        
-        # Display raw prompt data JSON
-        with st.expander("Prompt Generation Details", expanded=True):
-            # Format the entire prompt_data as formatted JSON
-            formatted_json = json.dumps(prompt_data, indent=2)
-            st.code(formatted_json, language="json")
+        # Display generated prompt with AI prefix and increased height
+        st.subheader("AI Generated Search Prompt")
+        st.text_area("Prompt for Semantic Search", generated_prompt, height=250)
 
 def process_job_description_query(query, settings, filter_extractor, embedders, retrieve_documents, cohere_reranker, profile_aggregator, profile_retriever):
     """Process the job description query and display results."""
@@ -121,8 +115,6 @@ def process_job_description_query(query, settings, filter_extractor, embedders, 
             #     st.json(extracted_filters)
             
             # Show filter editor and wait for user confirmation
-            st.subheader("Review and Adjust Search Filters")
-            st.markdown("Please review the automatically extracted filters and make any necessary adjustments before proceeding with the search.")
             
             # Pass extracted filters to the filter editor
             modified_filters = render_filter_editor(extracted_filters)
@@ -144,11 +136,7 @@ def process_job_description_query(query, settings, filter_extractor, embedders, 
         try:
             # Get the total vector count first
             _, total_chunks = retrieve_documents("", model_choice, 1, None)
-            
-            # Get actual search results - directly use session state value
-            st.info(f"**DEBUG - Before retrieve_documents call:**")
-            st.info(f"- Passing semantic_top_k = {semantic_top_k}")
-            
+                        
             results, _ = retrieve_documents(query, model_choice, semantic_top_k, metadata_filter)
             
             # Display results
@@ -205,7 +193,7 @@ def process_job_description_query(query, settings, filter_extractor, embedders, 
                 )
                 
                 # Display initial results summary
-                with st.expander("Initial Retrieval Results", expanded=True):
+                with st.expander("Initial Retrieval Results", expanded=False):
                     display_initial_results_summary(results)
                 
                 # Display detailed results for each document
@@ -350,7 +338,7 @@ def render_job_description_tab(
     
     # Process uploaded file button
     if uploaded_file is not None and document_parser and prompt_generator:
-        if st.button("Parse Document", key="parse_doc_button"):
+        if st.button("Parse Document", type="primary", use_container_width=True, key="parse_doc_button"):
             handle_document_upload(uploaded_file, document_parser, prompt_generator)
     
     # Display parsed document if available

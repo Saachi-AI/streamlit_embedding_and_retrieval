@@ -40,7 +40,6 @@ def render_filter_editor(extracted_filters):
     st.markdown("## Search Filters")
     st.markdown("Help us fine-tune your search to get the most accurate candidate matches")
     
-    st.info("Required filters are marked with *. Optional filters will only be applied if changed from 'No Preference'.")
     
     # Render individual filter components
     render_gender_filter()
@@ -72,7 +71,7 @@ def render_filter_editor(extracted_filters):
 
 def render_gender_filter():
     """Render gender preference filter."""
-    st.subheader("Gender Preference (Optional)")
+    st.subheader("Gender")
     st.caption("Select a gender if the role specifically requires one")
     
     st.session_state.gender = st.selectbox(
@@ -84,22 +83,18 @@ def render_gender_filter():
 
 def render_yoe_filter():
     """Render years of experience filter."""
-    st.subheader("Minimum Years of Experience* (Required)")
-    st.caption(f"✨ Detected from JD: {st.session_state.years_experience}. Adjust if needed")
+    st.subheader("Years of Experience")
+    st.markdown(f"""<div style="text-shadow: 0 0 5px rgba(255,255,255,0.3); font-size: 1.05em;">
+                <span style="color: white;">✨ Detected from JD: </span>
+                <span style="color: #FFCC80;">{st.session_state.years_experience} YOE</span>
+                <span style="color: white;">. Adjust if needed</span>
+                </div>""", 
+                unsafe_allow_html=True)
     st.caption("Search will return candidates with at least this many years of experience.")
-    
-    st.session_state.years_experience = st.number_input(
-        label="Years of Experience",
-        min_value=0,
-        max_value=30,
-        value=st.session_state.years_experience,
-        step=1,
-        key="yoe_input"
-    )
 
 def render_type_filter():
     """Render profile type filter."""
-    st.subheader("Profile Type (Optional)")
+    st.subheader("Profile Type")
     st.caption("Candidates are actively seeking positions. Leads are potential matches not actively job hunting.")
     
     st.session_state.profile_type = st.selectbox(
@@ -111,12 +106,17 @@ def render_type_filter():
 
 def render_language_filters():
     """Render language and proficiency filters for detected languages only."""
-    st.subheader("Required Languages* (At least one required)")
+    st.subheader("Required Languages")
     
     # Display detected languages info
     if st.session_state.languages:
         detected_str = ", ".join([f"{lang} ({prof})" for lang, prof in st.session_state.languages.items()])
-        st.caption(f"✨ Detected from JD: {detected_str}. Adjust proficiency if needed")
+        st.markdown(f"""<div style="text-shadow: 0 0 5px rgba(255,255,255,0.3); font-size: 1.05em;">
+                    <span style="color: white;">✨ Detected from JD: </span>
+                    <span style="color: #FFCC80;">{detected_str}</span>
+                    <span style="color: white;">. Adjust proficiency if needed</span>
+                    </div>""", 
+                    unsafe_allow_html=True)
     
     st.caption("Each proficiency level includes all higher levels automatically.")
     

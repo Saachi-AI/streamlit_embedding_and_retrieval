@@ -15,14 +15,13 @@ def display_retrieval_stats(total_chunks, filtered_size=None, results_count=None
                 <li>Retrieved results: <strong>{results_count}</strong> vectors</li>
             </ul>
             <p style="margin-top: 8px; font-size: 0.9em;">
-                Metadata filtering mode: <span style="font-weight: bold;">Inclusive</span><br>
                 Metadata filters are applied first at the database level, then semantic search retrieves the most relevant matches.
             </p>
         </div>
         """, unsafe_allow_html=True)
         
         # Display the exact Pinecone filter syntax
-        with st.expander("Show Pinecone Filter Syntax", expanded=True):
+        with st.expander("Show Pinecone Filter Syntax", expanded=False):
             st.markdown("### Pinecone Filter Query")
             st.code(json.dumps(metadata_filter, indent=2), language="json")
         
@@ -317,9 +316,9 @@ def create_tab_specific_sidebar(active_tab_index):
     
     # Initialize session state values if they don't exist yet
     if semantic_top_k_key not in st.session_state:
-        st.session_state[semantic_top_k_key] = 15
+        st.session_state[semantic_top_k_key] = 100
     if rerank_top_k_key not in st.session_state:
-        st.session_state[rerank_top_k_key] = 10
+        st.session_state[rerank_top_k_key] = 90
     
     # Read current values from session state
     semantic_top_k = st.session_state[semantic_top_k_key]
@@ -375,8 +374,8 @@ def create_sidebar_configuration(tab_name):
     This function is used by feature modules to get their configuration.
     """
     # Use session state values with hardcoded defaults instead of environment variables
-    semantic_top_k = st.session_state.get(f"{tab_name}_semantic_top_k", 15)
-    rerank_top_k = st.session_state.get(f"{tab_name}_rerank_top_k", 10)
+    semantic_top_k = st.session_state.get(f"{tab_name}_semantic_top_k", 100)
+    rerank_top_k = st.session_state.get(f"{tab_name}_rerank_top_k", 90)
     
     return {
         "semantic_top_k": semantic_top_k,
@@ -509,7 +508,10 @@ def display_profile_retrieval_and_preprocessing(profile_data, processed_profiles
     # Show raw profile data in an expander
     with st.expander("View Raw Profile Data", expanded=False):
         st.json(profile_data)
-    
+
+    # Add some spacing before this section
+    add_section_separator()
+
     # Add some separation between sections
     st.markdown("<div style='margin: 20px 0;'></div>", unsafe_allow_html=True)
     
@@ -535,7 +537,7 @@ def display_ranked_candidates(processed_candidates):
     Args:
         processed_candidates: List of processed candidate objects from ProfileRankProcessor
     """
-    st.header("Our AI carefully reviewed the Job Description and matched the most relevant profiles from Saachi's database.")
+    st.header("Here are the Top Profiles:")
     
     if not processed_candidates:
         st.info("No ranked candidates to display")

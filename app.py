@@ -151,7 +151,7 @@ def retrieve_documents(query, model_name, top_k, metadata_filter=None):
     embedder = embedders[model_name]
     
     # Get the vector store
-    namespace = f"{model_name.lower().replace('-', '_')}_embeddings"
+    namespace = ""
     vector_store = get_vector_store(embedder.get_embeddings(), env_vars, namespace)
     
     # Get total count of vectors

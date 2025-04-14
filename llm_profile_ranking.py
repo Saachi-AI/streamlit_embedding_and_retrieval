@@ -30,7 +30,7 @@ class LLMProfileRanker:
         1. A single job description (JD) with explicit or implicit weighting priorities (domain expertise, technical skills, language proficiency, etc.).  
         2. An array of JSON candidate profiles.
 
-        You will produce a ranked evaluation for EVERY candidate profile provided, without exception. You must analyze and rank ALL profiles in the input, even those that seem less relevant. The number of profiles in your output MUST match exactly the number of profiles in the input.
+        You will produce a ranked evaluation for EXACTLY the number of profiles provided. Your output MUST contain ONE JSON object per unique profile_id. CRITICAL: Do not rank the same profile_id more than once. The number of profiles in your output MUST match exactly the number of unique profile_ids in the input.
 
         ======================
         1. Data You Receive
@@ -71,7 +71,9 @@ class LLMProfileRanker:
         1. Ranking
            - Assign each candidate a rank (1 = highest match, 2 = second-best, etc.).
            - No ties; each candidate must have a distinct rank.
-           - CRITICAL: You must rank EVERY profile provided in the input. The number of ranked profiles in your output MUST match exactly the number of profiles in the input. Do not skip or omit any profiles.
+           - CRITICAL: You must rank EVERY unique profile_id provided in the input EXACTLY ONCE.
+           - The number of profile objects in your output MUST match exactly the number of unique profile_ids in the input.
+           - NEVER include the same profile_id more than once in your output.
 
         2. Skills Handling
            - Look for synonyms or tangential references to required skills. For example, if the JD says "Azure" but the candidate mentions "Microsoft Cloud or AWS" treat that as partial or potentially "has," depending on context.
@@ -115,7 +117,11 @@ class LLMProfileRanker:
         10. Single JD Only
            - You will be given one JD at a time.
 
-        Before providing your final response, verify that you have ranked exactly the same number of profiles as were provided in the input. Count the profiles in your JSON output and ensure none were omitted.
+        Before providing your final response:
+        1. Count the unique profile_ids in your JSON output.
+        2. Verify this count matches the number stated in the user message.
+        3. Check that no profile_id appears more than once in your output.
+        4. If any profile is missing, add it with the next available rank.
 
         =========================
         3. Output Format
@@ -168,8 +174,7 @@ class LLMProfileRanker:
           "5678": {
             "rank": 2,
             ...
-          },
-          "_disclaimer": "Do not add text outside this JSON. ..."
+          }
         }
 
         =========================
@@ -216,9 +221,10 @@ class LLMProfileRanker:
              - "partial" for skills that are partially present or have equivalent experience
 
         10. Complete Analysis
-           - You MUST include ALL profiles from the input in your output.
+           - You MUST include ALL profiles from the input in your output, each exactly once.
            - Count the number of profiles in your response and verify it matches the input count.
            - Never exclude any profile, regardless of relevance or match quality.
+           - NEVER repeat the same profile_id multiple times.
 
         This completes your instructions. Follow them closely, parse the JD and candidate data, then output the final JSON with one key per profile and the global "_disclaimer".
         """
@@ -266,9 +272,8 @@ class LLMProfileRanker:
             {summarized_job_description}
             --- SUMMARIZED JD END ---
 
-            Below is the array of candidate profiles in JSON format. Please analyze them
-            according to the system instructions. Then produce a single JSON as the final output,
-            with no extra text.
+            Below is an array of {len(processed_profiles)} candidate profiles in JSON format.
+            You MUST analyze and rank ALL {len(processed_profiles)} profiles, with each profile_id appearing EXACTLY ONCE in your output.
 
             --- CANDIDATE JSON START ---
             {candidate_json}
@@ -283,7 +288,8 @@ class LLMProfileRanker:
                     {"role": "system", "content": self.system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                temperature=0.1
+                temperature=0.1,
+                max_tokens=16384
             )
             
             # Extract and parse response
@@ -353,6 +359,9 @@ class LLMProfileRanker:
             {custom_query}
             --- RECRUITER-TYPED REQUIREMENTS END ---
 
+            Below is an array of {len(processed_profiles)} candidate profiles in JSON format.
+            You MUST analyze and rank ALL {len(processed_profiles)} profiles, with each profile_id appearing EXACTLY ONCE in your output.
+
             --- CANDIDATE JSON START ---
             {candidate_json}
             --- CANDIDATE JSON END ---
@@ -366,7 +375,8 @@ class LLMProfileRanker:
                     {"role": "system", "content": self.system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                temperature=0.1
+                temperature=0.1,
+                max_tokens=16384
             )
             
             # Extract and parse response

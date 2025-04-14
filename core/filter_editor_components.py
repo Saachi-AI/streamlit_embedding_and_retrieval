@@ -92,6 +92,15 @@ def render_yoe_filter():
                 unsafe_allow_html=True)
     st.caption("Search will return candidates with at least this many years of experience.")
 
+    st.session_state.years_experience = st.number_input(
+        label="Years of Experience",
+        min_value=0,
+        max_value=30,
+        value=st.session_state.years_experience,
+        step=1,
+        key="yoe_input"
+    )
+
 def render_type_filter():
     """Render profile type filter."""
     st.subheader("Profile Type")

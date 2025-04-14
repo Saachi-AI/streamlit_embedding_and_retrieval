@@ -282,15 +282,27 @@ class LLMProfileRanker:
             
             # Call GROQ API
             logger.info(f"Calling GROQ LLM to rank {len(processed_profiles)} profiles for job description")
-            response = self.client.chat.completions.create(
-                model="deepseek-r1-distill-llama-70b",
-                messages=[
-                    {"role": "system", "content": self.system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=0.1,
-                max_tokens=16384
-            )
+            try:
+                import time
+                start_time = time.time()
+                response = self.client.chat.completions.create(
+                    model="deepseek-r1-distill-llama-70b",
+                    messages=[
+                        {"role": "system", "content": self.system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    temperature=0.1,
+                    max_tokens=16384
+                )
+                end_time = time.time()
+                logger.info(f"API call took {end_time - start_time:.2f} seconds")
+                logger.info(f"Response status: {response.status_code if hasattr(response, 'status_code') else 'No status code'}")
+                logger.info(f"Response headers: {response.headers if hasattr(response, 'headers') else 'No headers'}")
+                logger.info(f"Raw response content: {response.choices[0].message.content if response.choices else 'No content'}")
+            except Exception as e:
+                logger.error(f"Error during API call: {str(e)}")
+                logger.error(f"Error type: {type(e)}")
+                raise
             
             # Extract and parse response
             llm_response = response.choices[0].message.content
@@ -369,15 +381,27 @@ class LLMProfileRanker:
             
             # Call GROQ API
             logger.info(f"Calling GROQ LLM to rank {len(processed_profiles)} profiles for custom query")
-            response = self.client.chat.completions.create(
-                model="deepseek-r1-distill-llama-70b",
-                messages=[
-                    {"role": "system", "content": self.system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=0.1,
-                max_tokens=16384
-            )
+            try:
+                import time
+                start_time = time.time()
+                response = self.client.chat.completions.create(
+                    model="deepseek-r1-distill-llama-70b",
+                    messages=[
+                        {"role": "system", "content": self.system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    temperature=0.1,
+                    max_tokens=16384
+                )
+                end_time = time.time()
+                logger.info(f"API call took {end_time - start_time:.2f} seconds")
+                logger.info(f"Response status: {response.status_code if hasattr(response, 'status_code') else 'No status code'}")
+                logger.info(f"Response headers: {response.headers if hasattr(response, 'headers') else 'No headers'}")
+                logger.info(f"Raw response content: {response.choices[0].message.content if response.choices else 'No content'}")
+            except Exception as e:
+                logger.error(f"Error during API call: {str(e)}")
+                logger.error(f"Error type: {type(e)}")
+                raise
             
             # Extract and parse response
             llm_response = response.choices[0].message.content

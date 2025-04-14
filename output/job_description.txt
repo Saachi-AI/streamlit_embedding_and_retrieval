@@ -1,137 +1,204 @@
-Senior Data Scientist, GG11
+4/14/25,5:23 PM
 
 
-Position Overview:
+Lead/Senior Scrum Master(E1/P3),Agile & Tech Transformation,Technology I アクサ生命保険株式会社
 
 
-The Senior Data Scientist will drive innovative approaches to understanding, interacting, and
-optimizing customer engagement by leveraging advanced analytics to derive actionable
-business insights. The successful candidate will work closely with business stakeholders,
-primarily in Japanese, to understand their requirements and the broader business context. This
-role entails leading data analytics initiatives from conception through implementation to delivery.
+アクサ生命保険株式会社
 
 
-Responsibilities:
+$$|\Gamma\mid\sim\mathcal{D}\mathcal{+}\supset\Sigma>\underline{{{\Rightarrow}}}>\ \stackrel{\star}{\mathcal{D}}\mathcal{U}\subseteq\mathcal{N}$$
 
 
-· Collaborate with business stakeholders to gather requirements, understand business
-context, and derive data-driven solutions.
+Lead/Senior Scrum Master(E1 /P3), Agile & Tech
+Transformation,Technology
 
 
-· Oversee data analytics initiatives, including planning, execution, and delivery of high-
-quality analytical solutions.
+職務内容
+Job description
 
 
-· Work closely with the data platform team and other IT teams, identifying dependencies,
-and resolving blockers to ensure smooth development processes.
+Job Purpose
 
 
-· Develop, deploy, and manage machine learning models and analytics projects, ensuring
-alignment with business objectives.
+We are looking for a Lead/Senior Scrum Master who will act as a True Leader,
+driving Agile transformation and fostering a culture of continuous improvement.
+You will empower teams to deliver value with flexibility, enhance cross-team
+communication, and help shape a more Agile organization.
 
 
-· Utilize CI/CD, MLOps, Azure or similar cloud platforms, and DevOps to streamline
-development and deployment processes.
+Key Responsibilities
 
 
-· Apply hands-on expertise with SQL, Python, Pandas, PySpark, AzureML, and PowerBI to
-develop and implement data models and analytics.
+1, Empower Teams to Reach Their Full Potential
+- Foster a strong team spirit and encourage collaboration.
+- Guide the team toward self-organization and maximizing its potential.
+- Coach the team on Agile principles and best practices to enhance value
+delivery.
+- Create a safe environment for open discussions and issue resolution.
+- Promote a Kaizen (continuous improvement) mindset in daily work.
 
 
-· Leverage domain expertise in financial or insurance sectors, especially in distribution,
-operations and marketing, to ensure successful project outcomes.
+2,Support Growth & Learning
+- Identify and facilitate growth opportunities such as knowledge sharing,
+feedback -sessions, and mentoring.
+- Coach the Product Owner in backlog management, prioritization, and
+stakeholder communication.
 
 
-· Prepare detailed documentation for analytics and ML initiatives, including project
-deliverables and technical specifications.
+https://www.com/pring.nojogesanyyingmift.pdf
 
 
-· Communicate effectively with team members and leadership through presentations and
-reports detailing analytics and machine learning requirements, progress, and outcomes.
+1/4
 
 
-· Ensure the responsible use of AI practices, adhering to ethical guidelines and compliance
-standards.
+Lead/Senior Scrum Master(E1/P3),Agile & Tech Transformation,Technology I アク サ生命保険株式会社
 
 
-· Employ best practices and methodologies from other markets to improve analytics and
-data solutions.
+4/14/25,5:23 PM
 
 
-· Proactively propose new solutions and enhancements based on emerging technologies
-and business needs.
+- Support squad members in delivering the highest value in the best way
+possible.
 
 
-Requirements:
+- Lead by example as an Agile role model.
 
 
-· 3+ years of experience in advanced analytics roles, delivering successful business
+3,Facilitate Workshops & Decision-Making
+
+
+- Conduct effective workshops and discussions to align on goals and maximize
 outcomes.
 
 
-· Proven experience in managing data science or analytics projects.
+- Facilitate team and stakeholder decision-making.
+- Mediate and resolve conflicts constructively.
 
 
-Technical Skills:
+4, Own & Optimize the Team's Agile Process
+- Maintain end-to-end visibility of the team's workflow (e.g., Kanban, Value Stream
+Mapping).
+- Establish and track actionable Agile KPls to drive continuous improvement.
+- Identify and remove impediments that hinder team progress.
 
 
-· Proficiency in quantitative methods and business analytics with strong problem-solving
-skills.
+5, Drive Transparency & Communication
 
 
-Expertise in building and applying data models using machine learning techniques such as
-classification, regression, clustering, time-series analysis, and dimensionality reduction.
+- Provide clear visibility into team progress using Agile metrics (e.g., Velocity,
+Retrospectives).
 
 
-Competent programming skills with Python and SQL.
+- Maintain valuable and actionable KPls for the team.
+- Share successes and failures to foster learning across teams.
+- Actively engage in internal communication and lessons learned from Agile
+transformation.
+- Stay curious and proactive in exploring new industry trends and Agile practices.
+- Take an active role in Product & Scrum Master Communities of Practice.
 
 
-Strong understanding of data visualization tools, particularly PowerBI.
+6, Lead Transformation Beyond the Team
+- Proactively improve cross-team collaboration by eliminating siloed mindsets and
+fostering a culture of transparency and alignment.
+- Guide and mentor at least one Scrum Master from another squad, helping them
+grow in their role.
+- Represent the team and organization by actively contributing to external
+discussions, such as conferences, on Agile transformation and lessons learned.
+- Expand your network and stay updated on industry best practices by
 
 
-· Experience with CI/CD, MLOps, and cloud platforms such as Azure for deploying analytics
-and ML solutions.
+https://www.com/pring.oflygootograint_(pdf_506
 
 
-· Hands-on experience with data analytics tools and libraries such as Pandas, PySpark, and
-AzureML.
+2/4
 
 
-· Background in financial or insurance domains, particularly in distribution, operations and
-marketing.
+4/14/25,5:23 PM
 
 
-· Continuous learning of new tools and technologies, such as Generative AI (GenAI), to stay
-ahead of industry trends and enhance analytics capabilities.
+Lead/Senior Scrum Master(E1/P3),Agile & Tech Transformation,Technology I アク サ生命保険株式会社
 
 
-Education:
+participating in Agile community events in Japan whenever possible.
 
 
-· Bachelor's degree in a quantitative modeling-focused discipline such as Statistics,
-Marketing Science, Operations Research, Econometrics, Machine Learning, or a related
-field.
+求めるスキル · 経験
+Job qualification
 
 
-· An advanced degree in similar disciplines is a plus. Courses or specialization in data &
-analytics.
+【Requirements】
 
 
-· Azure certifications, especially Azure Data Scientist, Azure Enterprise Data Analyst, Azure
-Data Engineer.
+Critical Leadership Competencies:
+· Be a change leader, Persuasion skills
+· Japanese and English bilingual - Business level mandatory
+· Teaching & Coaching skills, Communication skills
+· Ability to adapt depending on the audience (Technical experts, Product
+managers, Heads of departments)
+· Mastery of Agile Practices :
+- Mastery of coaching techniques and coaching stances (coach stance: listening,
+questioning and providing feedbacks)
+- Mastery of Product Management techniques (Product Vision, Story Mapping,
+Product Backlog...) and Value-based prioritization
+- Mastery of Agile project management methods and associated tools (Visual
+management, Agile indicators, Visual management, Agile KPI)
+- Mastery of the conception and redaction of User Stories (BDD, TDD knowledge
+are also welcomed)
+- Mastery of Scrum and Kanban practices (especially rituals such as daily
+meetings, retrospectives, demos...)
+- Mastery of workshops organization and practices facilitation
+- Mastery of Agile and Innovative games' facilitation
 
 
-Language Requirements:
+待遇
+Condition
 
 
-· Japanese: Advanced.
-· English: Intermediate.
+【賃金】 現年収、 能力、 経験に応じて当社規定により優遇
 
 
-Additional Information:
+【勤務時間】
 
 
-The role requires a proactive individual with a strong analytical background, capable of driving
-data initiatives while collaborating effectively with cross-functional teams. The ideal candidate
-will have financial or insurance expertise, technical prowess with relevant tools, and the ability to
-navigate complex business environments to deliver impactful analytics solutions.
+9:00~ 17:00 (休憩 1 2:00~13:00)
+
+
+https://www.com/pring.oflygootograint_(pdf_506
+
+
+3/4
+
+
+4/14/25,5:23 PM
+
+
+Lead/Senior Scrum Master(E1/P3),Agile & Tech Transformation,Technology I アクサ生命保険株式会社
+
+
+フレ ックスタイムあり
+
+
+勤務地
+Place
+
+
+(雇入れ直後) 白金本社
+
+
+(変更の範囲) 会社の定める就業場所へ異動を命じることがある。
+
+
+この職種へ登録 / Entry
+
+
+←職種一覧へ/Open Positions
+
+
+Copyright Ⓒ AXA Life Insurance Co.,Ltd. All Rights Reserved.
+
+
+https://www.com/pring.nojogesanyyingmift.pdf
+
+
+4/4

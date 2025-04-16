@@ -1,204 +1,129 @@
-4/14/25,5:23 PM
+MetLife
+メットライフ生命
 
 
-Lead/Senior Scrum Master(E1/P3),Agile & Tech Transformation,Technology I アクサ生命保険株式会社
+Job Description
 
 
-アクサ生命保険株式会社
+LOB/Group/Team
+Information Technology/App Dev/Digital Engineering
+Position Title
+Lead Full Stack Software Engineer
+Report Line
+Y. Senoo
+Location
+Tokyo
+Global Grade
+GG12
+# of Hiring
+1
+FIex
+Yes
+Hiring Source
+External (MetLife Japan HP & Recruiting Agency) · Internal
+Position Information
 
 
-$$|\Gamma\mid\sim\mathcal{D}\mathcal{+}\supset\Sigma>\underline{{{\Rightarrow}}}>\ \stackrel{\star}{\mathcal{D}}\mathcal{U}\subseteq\mathcal{N}$$
+Job Summary
 
 
-Lead/Senior Scrum Master(E1 /P3), Agile & Tech
-Transformation,Technology
+Looking for a Lead Full Stack Software Engineer to join our NextGen PAS team. This team
+is spearheading the effort to develop strategies for migrating multiple legacy applications
+from a mainframe environment and building new cloud-native applications in an open-
+source environment.
 
 
-職務内容
-Job description
+We are seeking an engineer to take on a central role as the lead for application design and
+development. The ideal candidate must have extensive experience with open systems, from
+requirements definition through to development, design, testing, and release. The required
+skill set is correspondingly high, and the successful candidate must demonstrate excellence
+in several of the following areas:
 
 
-Job Purpose
+Extensive experience in designing and developing open systems, including databases.
 
 
-We are looking for a Lead/Senior Scrum Master who will act as a True Leader,
-driving Agile transformation and fostering a culture of continuous improvement.
-You will empower teams to deliver value with flexibility, enhance cross-team
-communication, and help shape a more Agile organization.
+· Code analysis of existing systems
+· Knowledge and experience with public clouds (Azure, AWS, GCP)
+· Experience in data and UML modeling
+· Ability to review code created by team members and provide appropriate feedback
+· Experience in the life insurance industry and related business knowledge
+· Communication with other teams primarily in Japanese
+· Ability to lead teams of up to "two pizzas" in size.
 
 
-Key Responsibilities
+Responsibilities
 
 
-1, Empower Teams to Reach Their Full Potential
-- Foster a strong team spirit and encourage collaboration.
-- Guide the team toward self-organization and maximizing its potential.
-- Coach the team on Agile principles and best practices to enhance value
-delivery.
-- Create a safe environment for open discussions and issue resolution.
-- Promote a Kaizen (continuous improvement) mindset in daily work.
+To migrate the functions of existing applications currently running on a mainframe to
+an open system, the incumbent will be responsible for carrying out all necessary tasks
+from the architecture planning, design, development, testing, and deployment of new
+Java Batch/UI/API applications.
 
 
-2,Support Growth & Learning
-- Identify and facilitate growth opportunities such as knowledge sharing,
-feedback -sessions, and mentoring.
-- Coach the Product Owner in backlog management, prioritization, and
-stakeholder communication.
+We hope that in the future, ideal candidate will be able to take the lead in planning and
+developing teams, providing guidance to members, and conducting reviews of
+deliverables.
 
 
-https://www.com/pring.nojogesanyyingmift.pdf
+MetLife
+メットライフ生命
 
 
-1/4
+Requirements (Experience, Skills, Education)
 
 
-Lead/Senior Scrum Master(E1/P3),Agile & Tech Transformation,Technology I アク サ生命保険株式会社
+Experience:
 
 
-4/14/25,5:23 PM
+· 5+ years of design experience and 10+ years of development experience with
+Java and RDB
+· General RDB (関係データベース/SQL (関係データベース:Structured Query Language)
+knowledge in programming
+Experience in designing, developing, and preparing operating environments for
+new applications
+· Ability to analyze application logs and troubleshoot issues
+· Development experience with cloud technologies (Azure, AWS, GCP) (Azure will be
+used)
+· Ability to understand the source code of open systems
+· Experience in reviewing code created by team members and providing appropriate
+feedback
+· Experience coding(SQL, Python, HTML/CSS) within the past 2 years
+· Japanese language proficiency (native or JLPT N2 level or above)
+· Knowledge of life insurance industry (not required for native Japanese speakers)
+○
 
 
-- Support squad members in delivering the highest value in the best way
-possible.
+Education:
 
 
-- Lead by example as an Agile role model.
+· Bachelor's degree in Computer Science, Information Technology, or equivalent
+knowledge.
 
 
-3,Facilitate Workshops & Decision-Making
+Preferable
 
 
-- Conduct effective workshops and discussions to align on goals and maximize
-outcomes.
+· Experience in designing and developing batch applications
+· Ability to perform performance tuning on applications and databases
+· Experience in an Agile development environment
+· Experience implementing CICD (planned implementation using Azure DevOps)
+· Experience in developing with Mainframe
+· Understanding of COBOL, JCL, and Assembler languages
+· Ability to plan testing and rollout
+· Knowledge and experience in enterprise-level development
+· Business level English proficiency
 
 
-- Facilitate team and stakeholder decision-making.
-- Mediate and resolve conflicts constructively.
+Others
 
 
-4, Own & Optimize the Team's Agile Process
-- Maintain end-to-end visibility of the team's workflow (e.g., Kanban, Value Stream
-Mapping).
-- Establish and track actionable Agile KPls to drive continuous improvement.
-- Identify and remove impediments that hinder team progress.
+Qualification
+Language
+English (□ Advanced □ Intermediate □ Basic) Japanese ( □ Advanced □ Intermediate □ Basic) □ Not Required
 
 
-5, Drive Transparency & Communication
-
-
-- Provide clear visibility into team progress using Agile metrics (e.g., Velocity,
-Retrospectives).
-
-
-- Maintain valuable and actionable KPls for the team.
-- Share successes and failures to foster learning across teams.
-- Actively engage in internal communication and lessons learned from Agile
-transformation.
-- Stay curious and proactive in exploring new industry trends and Agile practices.
-- Take an active role in Product & Scrum Master Communities of Practice.
-
-
-6, Lead Transformation Beyond the Team
-- Proactively improve cross-team collaboration by eliminating siloed mindsets and
-fostering a culture of transparency and alignment.
-- Guide and mentor at least one Scrum Master from another squad, helping them
-grow in their role.
-- Represent the team and organization by actively contributing to external
-discussions, such as conferences, on Agile transformation and lessons learned.
-- Expand your network and stay updated on industry best practices by
-
-
-https://www.com/pring.oflygootograint_(pdf_506
-
-
-2/4
-
-
-4/14/25,5:23 PM
-
-
-Lead/Senior Scrum Master(E1/P3),Agile & Tech Transformation,Technology I アク サ生命保険株式会社
-
-
-participating in Agile community events in Japan whenever possible.
-
-
-求めるスキル · 経験
-Job qualification
-
-
-【Requirements】
-
-
-Critical Leadership Competencies:
-· Be a change leader, Persuasion skills
-· Japanese and English bilingual - Business level mandatory
-· Teaching & Coaching skills, Communication skills
-· Ability to adapt depending on the audience (Technical experts, Product
-managers, Heads of departments)
-· Mastery of Agile Practices :
-- Mastery of coaching techniques and coaching stances (coach stance: listening,
-questioning and providing feedbacks)
-- Mastery of Product Management techniques (Product Vision, Story Mapping,
-Product Backlog...) and Value-based prioritization
-- Mastery of Agile project management methods and associated tools (Visual
-management, Agile indicators, Visual management, Agile KPI)
-- Mastery of the conception and redaction of User Stories (BDD, TDD knowledge
-are also welcomed)
-- Mastery of Scrum and Kanban practices (especially rituals such as daily
-meetings, retrospectives, demos...)
-- Mastery of workshops organization and practices facilitation
-- Mastery of Agile and Innovative games' facilitation
-
-
-待遇
-Condition
-
-
-【賃金】 現年収、 能力、 経験に応じて当社規定により優遇
-
-
-【勤務時間】
-
-
-9:00~ 17:00 (休憩 1 2:00~13:00)
-
-
-https://www.com/pring.oflygootograint_(pdf_506
-
-
-3/4
-
-
-4/14/25,5:23 PM
-
-
-Lead/Senior Scrum Master(E1/P3),Agile & Tech Transformation,Technology I アクサ生命保険株式会社
-
-
-フレ ックスタイムあり
-
-
-勤務地
-Place
-
-
-(雇入れ直後) 白金本社
-
-
-(変更の範囲) 会社の定める就業場所へ異動を命じることがある。
-
-
-この職種へ登録 / Entry
-
-
-←職種一覧へ/Open Positions
-
-
-Copyright Ⓒ AXA Life Insurance Co.,Ltd. All Rights Reserved.
-
-
-https://www.com/pring.nojogesanyyingmift.pdf
-
-
-4/4
+Date
+01-Jan-2025
+Prepared by
+Yoshimi Senoo

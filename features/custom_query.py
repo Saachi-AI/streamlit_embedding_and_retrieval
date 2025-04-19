@@ -1,50 +1,45 @@
 import streamlit as st
+import json
 import os
 import logging
-from profile_preprocessor import preprocess_profiles
+
+from pinecone import Pinecone
 from core.ui_components import (
-    display_retrieval_stats,
+    display_retrieval_stats, 
     display_initial_results_summary,
     display_detailed_results,
+    add_section_separator,
     display_reranked_results_header,
     display_reranked_results_summary,
     display_reranked_detailed_results,
     display_profile_results,
     display_profile_summary,
-    create_sidebar_configuration,
-    add_section_separator,
-    display_fallback_results_header,
-    display_fallback_results,
     display_profile_retrieval_and_preprocessing,
-    display_ranked_candidates
+    display_ranked_candidates,
+    display_individual_profile_evaluations
 )
-from core.state_management import initialize_tab_state, get_tab_state, set_tab_state
-from llm_profile_ranking import LLMProfileRanker
-from profile_rank_processor import ProfileRankProcessor
 from core.filter_editor_components import render_filter_editor
 
+from profile_preprocessor import preprocess_profiles
+from llm_profile_ranking import LLMProfileRanker
+from individual_profile_evaluator import IndividualProfileEvaluator
+
 # Configure logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def initialize_custom_query_state():
-    """Initialize custom query tab-specific state variables."""
-    # Use hardcoded defaults instead of environment variables
-    defaults = {
-        "semantic_top_k": 15,
-        "rerank_top_k": 10,
-        "enable_metadata_filtering": True,
-        "query_executed": False,
-        "query": None
-    }
-    initialize_tab_state("tab1", defaults)
-
-def handle_query_submission(query):
-    """Handle query submission."""
-    if query:
-        set_tab_state("tab1", "query", query)
-        set_tab_state("tab1", "query_executed", True)
-        return True
-    return False
+    """Initialize session state variables for the custom query tab."""
+    # If not already set, create default values for our settings
+    if "tab1_semantic_top_k" not in st.session_state:
+        st.session_state.tab1_semantic_top_k = 15  # Default value
+        
+    if "tab1_rerank_top_k" not in st.session_state:
+        st.session_state.tab1_rerank_top_k = 10  # Default value
+        
+    # Feature flag for individual profile evaluation
+    if "use_individual_profile_evaluator_custom" not in st.session_state:
+        st.session_state.use_individual_profile_evaluator_custom = True
 
 def process_custom_query(query, settings, filter_extractor, embedders, retrieve_documents, cohere_reranker, profile_aggregator, profile_retriever):
     """Process the custom query and display results."""
@@ -54,9 +49,7 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
     # Get values directly from session state (highest priority)
     semantic_top_k = st.session_state.get("tab1_semantic_top_k", 15)  # Use our new default value
     rerank_top_k = st.session_state.get("tab1_rerank_top_k", 10)  # Use our new default value
-    
-    # Fixed model choice for custom query tab
-    model_choice = "cohere"
+    model_choice = settings.get("model_name", "cohere")
     
     # Always extract metadata filters
     metadata_filter = None
@@ -68,12 +61,7 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
             metadata_filter = filter_result["pinecone_filter"]
             extracted_filters = filter_result["extracted_filters"]
             
-            # Display the extracted filters
-            # if extracted_filters:
-            #     st.subheader("Extracted Filters")
-            #     st.json(extracted_filters)
-                        
-            # Pass extracted filters to the filter editor
+            # Show filter editor and wait for user confirmation
             modified_filters = render_filter_editor(extracted_filters)
             
             # If user hasn't confirmed yet, stop here
@@ -159,10 +147,9 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
                 
                 # Add spacing between sections
                 add_section_separator()
-
-                # Perform reranking - use session state value directly
+                
+                # Perform reranking
                 with st.spinner("Reranking results with Cohere..."):
-                    # Pass rerank_top_k directly
                     reranked_results = cohere_reranker.rerank(
                         query, 
                         results, 
@@ -210,9 +197,6 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
                             st.warning("No valid profiles after preprocessing")
                             return
                             
-                        # Store processed profiles for later use
-                        st.session_state.processed_profiles = processed_profiles
-                        
                     except Exception as e:
                         st.error(f"Error in profile retrieval and preprocessing: {str(e)}")
                         logger.error(f"Error in profile retrieval and preprocessing: {str(e)}")
@@ -231,42 +215,61 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
                     # Display profile retrieval and preprocessing results for debugging
                     display_profile_retrieval_and_preprocessing(profile_data, processed_profiles)
                     
-                    # Call LLM for profile ranking
-                    try:
-                        custom_query_text = get_tab_state("tab1", "query")
-                        
-                        llm_ranker = LLMProfileRanker()
-                        llm_ranking_results = llm_ranker.rank_profiles_custom_query(
-                            processed_profiles=processed_profiles,
-                            custom_query=custom_query_text
-                        )
-                        
-                        # Process ranked profiles for display
-                        if llm_ranking_results:
-                            profile_rank_processor = ProfileRankProcessor()
-                            processed_candidates = profile_rank_processor.process_ranked_profiles(
-                                llm_ranking_results=llm_ranking_results,
-                                profile_data=profile_data
+                    # Check feature flag for individual profile evaluation
+                    if st.session_state.get("use_individual_profile_evaluator_custom", True):
+                        # New approach: Evaluate profiles individually
+                        with st.spinner("Evaluating profiles individually..."):
+                            st.info("Using individual profile evaluation approach")
+                            
+                            # Initialize the individual profile evaluator
+                            individual_evaluator = IndividualProfileEvaluator()
+                            
+                            # Evaluate profiles individually
+                            evaluation_results = individual_evaluator.evaluate_profiles(
+                                processed_profiles=processed_profiles,
+                                raw_job_description=query,  # Use the custom query as job description
                             )
                             
-                            # Display ranked candidates
-                            add_section_separator()
-                            display_ranked_candidates(processed_candidates)
-                        
-                        logger.info("LLM Profile Ranking completed")
-                    except Exception as e:
-                        logger.error(f"Error during LLM profile ranking: {str(e)}")
+                            # Display individual profile evaluations
+                            if evaluation_results:
+                                add_section_separator()
+                                display_individual_profile_evaluations(evaluation_results)
+                            else:
+                                st.warning("No individual profile evaluation results available.")
+                    else:
+                        # Original approach: Evaluate all profiles together
+                        with st.spinner("Ranking profiles with LLM..."):
+                            st.info("Using original profile ranking approach")
+                            
+                            # Call LLM for profile ranking
+                            llm_ranker = LLMProfileRanker()
+                            llm_ranking_results = llm_ranker.rank_profiles_custom_query(
+                                processed_profiles=processed_profiles,
+                                custom_query=query
+                            )
+                            
+                            # Process ranked profiles for display
+                            if llm_ranking_results:
+                                from profile_rank_processor import ProfileRankProcessor
+                                profile_rank_processor = ProfileRankProcessor()
+                                processed_candidates = profile_rank_processor.process_ranked_profiles(
+                                    llm_ranking_results=llm_ranking_results,
+                                    profile_data=profile_data
+                                )
+                                
+                                # Display ranked candidates
+                                add_section_separator()
+                                display_ranked_candidates(processed_candidates)
+                            else:
+                                st.warning("No profile ranking results available.")
                 else:
-                    st.warning("Reranking failed. Displaying original results.")
-                    
-                    # Display fallback results
-                    display_fallback_results_header(min(rerank_top_k, len(results)))
-                    display_fallback_results(results, rerank_top_k, tab_prefix="tab1_")
+                    st.warning("No reranked results found.")
             else:
-                st.info("No results found. Try adjusting your query or filters.")
+                st.warning("No results found for the given query and filters.")
+                
         except Exception as e:
-            st.error(f"Error during retrieval: {str(e)}")
-            st.info(f"Make sure you've embedded documents with this model first. Run `python embedders/embed.py --model {model_choice}`")
+            st.error(f"Error in document retrieval and reranking: {str(e)}")
+            logger.error(f"Error in document retrieval and reranking: {str(e)}")
 
 def render_custom_query_tab(
     filter_extractor,
@@ -276,41 +279,54 @@ def render_custom_query_tab(
     profile_aggregator,
     profile_retriever
 ):
-    """Render the custom query tab content."""
-    # Initialize tab state if not already initialized
+    """Render the custom query tab."""
+    # Initialize session state
     initialize_custom_query_state()
     
-    # Tab header
-    st.subheader("Custom Search")
+    # Set up the UI
+    st.header("🔍 Custom Search Query")
+    st.markdown("""
+    Enter a free-form query to search for candidates with specific skills, experience, or qualifications.
+    """)
     
-    # Get sidebar configuration without rendering UI elements
-    settings = create_sidebar_configuration("tab1")
+    # Display toggle for profile evaluation method
+    st.sidebar.markdown("### Profile Evaluation Method")
+    use_individual = st.sidebar.toggle(
+        "Use Individual Profile Evaluation", 
+        value=st.session_state.get("use_individual_profile_evaluator_custom", True),
+        help="When enabled, each profile is evaluated individually against your query."
+    )
+    st.session_state.use_individual_profile_evaluator_custom = use_individual
     
-    # Main query input
-    query_input = st.text_area(
-        "Enter your query:", 
-        key="query_input_tab1",  # Tab-specific key for Tab 1
+    # Create a text area for input
+    query = st.text_area(
+        "Custom Search Query",
+        value="",
         height=150,
-        placeholder="Example: Find candidates who speak fluent Japanese with at least 5 years of experience"
+        key="tab1_query_input",
+        help="Describe the type of candidate you're looking for."
     )
     
-    # Submit button with tab-specific key
-    search_query_submitted = st.button("Search", type="primary", use_container_width=True, key="search_button_tab1")
-    
-    # Store tab1-specific query and status
-    if search_query_submitted and query_input:
-        handle_query_submission(query_input)
-    
-    # Only execute the search if the tab1 query has been submitted
-    if get_tab_state("tab1", "query_executed"):
-        query = get_tab_state("tab1", "query")
-        process_custom_query(
-            query, 
-            settings, 
-            filter_extractor, 
-            embedders, 
-            retrieve_documents, 
-            cohere_reranker, 
-            profile_aggregator,
-            profile_retriever
-        )
+    # Display button
+    if st.button("🔍 Search", key="tab1_search_button", use_container_width=True):
+        if query:
+            # Create a dictionary of settings (will be extended later)
+            settings = {
+                "model_name": "cohere",
+                "enable_metadata_filtering": True,
+                "semantic_top_k": st.session_state.tab1_semantic_top_k,
+                "rerank_top_k": st.session_state.tab1_rerank_top_k
+            }
+            
+            process_custom_query(
+                query, 
+                settings, 
+                filter_extractor, 
+                embedders,
+                retrieve_documents,
+                cohere_reranker,
+                profile_aggregator,
+                profile_retriever
+            )
+        else:
+            st.warning("Please enter a search query first.")

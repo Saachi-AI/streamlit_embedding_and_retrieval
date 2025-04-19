@@ -17,12 +17,14 @@ from core.ui_components import (
     display_fallback_results_header,
     display_fallback_results,
     display_profile_retrieval_and_preprocessing,
-    display_ranked_candidates
+    display_ranked_candidates,
+    display_individual_profile_evaluations
 )
 from core.state_management import initialize_tab_state, get_tab_state, set_tab_state
 from llm_profile_ranking import LLMProfileRanker
 from profile_rank_processor import ProfileRankProcessor
 from core.filter_editor_components import render_filter_editor
+from individual_profile_evaluator import IndividualProfileEvaluator
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -41,6 +43,10 @@ def initialize_job_description_state():
         "query": None
     }
     initialize_tab_state("tab0", defaults)
+
+    # Feature flag for individual profile evaluation
+    if "use_individual_profile_evaluator" not in st.session_state:
+        st.session_state.use_individual_profile_evaluator = True
 
 def handle_document_upload(uploaded_file, document_parser, prompt_generator):
     """Handle document upload and parsing."""
@@ -273,34 +279,57 @@ def process_job_description_query(query, settings, filter_extractor, embedders, 
                     # Display profile retrieval and preprocessing results for debugging
                     display_profile_retrieval_and_preprocessing(profile_data, processed_profiles)
                     
-                    # Call LLM for profile ranking
-                    try:
-                        raw_jd = get_tab_state("tab0", "parsed_text")
-                        summarized_jd = get_tab_state("tab0", "generated_prompt")
-                        
-                        llm_ranker = LLMProfileRanker()
-                        llm_ranking_results = llm_ranker.rank_profiles_job_description(
-                            processed_profiles=processed_profiles,
-                            raw_job_description=raw_jd,
-                            summarized_job_description=summarized_jd
-                        )
-                        
-                        # Process ranked profiles for display
-                        if llm_ranking_results:
-                            profile_rank_processor = ProfileRankProcessor()
-                            processed_candidates = profile_rank_processor.process_ranked_profiles(
-                                llm_ranking_results=llm_ranking_results,
-                                profile_data=profile_data
+                    raw_jd = get_tab_state("tab0", "parsed_text")
+                    summarized_jd = get_tab_state("tab0", "generated_prompt")
+                    
+                    # Check feature flag for individual profile evaluation
+                    if st.session_state.get("use_individual_profile_evaluator", True):
+                        # New approach: Evaluate profiles individually
+                        with st.spinner("Evaluating profiles individually..."):
+                            st.info("Using individual profile evaluation approach")
+                            
+                            # Initialize the individual profile evaluator
+                            individual_evaluator = IndividualProfileEvaluator()
+                            
+                            # Evaluate profiles individually
+                            evaluation_results = individual_evaluator.evaluate_profiles(
+                                processed_profiles=processed_profiles,
+                                raw_job_description=raw_jd,
+                                summarized_job_description=summarized_jd
                             )
                             
-                            # Display ranked candidates
-                            add_section_separator()
-                            display_ranked_candidates(processed_candidates)
-                        
-                        logger.info("LLM Profile Ranking completed")
-                    except Exception as e:
-                        logger.error(f"Error during LLM profile ranking: {str(e)}")
-                
+                            # Display individual profile evaluations
+                            if evaluation_results:
+                                add_section_separator()
+                                display_individual_profile_evaluations(evaluation_results)
+                            else:
+                                st.warning("No individual profile evaluation results available.")
+                    else:
+                        # Original approach: Evaluate all profiles together
+                        with st.spinner("Ranking profiles with LLM..."):
+                            st.info("Using original profile ranking approach")
+                            
+                            # Call LLM for profile ranking
+                            llm_ranker = LLMProfileRanker()
+                            llm_ranking_results = llm_ranker.rank_profiles_job_description(
+                                processed_profiles=processed_profiles,
+                                raw_job_description=raw_jd,
+                                summarized_job_description=summarized_jd
+                            )
+                            
+                            # Process ranked profiles for display
+                            if llm_ranking_results:
+                                profile_rank_processor = ProfileRankProcessor()
+                                processed_candidates = profile_rank_processor.process_ranked_profiles(
+                                    llm_ranking_results=llm_ranking_results,
+                                    profile_data=profile_data
+                                )
+                                
+                                # Display ranked candidates
+                                add_section_separator()
+                                display_ranked_candidates(processed_candidates)
+                            else:
+                                st.warning("No profile ranking results available.")
                 else:
                     st.warning("Reranking failed. Displaying original results.")
                     

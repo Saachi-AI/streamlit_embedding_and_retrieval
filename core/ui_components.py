@@ -774,3 +774,99 @@ def display_ranked_candidates(processed_candidates):
                                </style>""", 
                             unsafe_allow_html=True
                         )
+
+def display_individual_profile_evaluations(evaluation_results):
+    """
+    Display individual profile evaluations with their match percentages and scores.
+    
+    Args:
+        evaluation_results: List of evaluation results from IndividualProfileEvaluator
+    """
+    if not evaluation_results:
+        st.warning("No profile evaluation results available.")
+        return
+    
+    st.subheader("🏆 Candidate Evaluations (Ranked by Match %)")
+    
+    # Define color mapping for match categories
+    category_colors = {
+        "Excellent Match": "#4CAF50",  # Green
+        "Good Match": "#8BC34A",       # Light Green
+        "Fair Match": "#FFC107",       # Amber
+        "Poor Match": "#F44336"        # Red
+    }
+    
+    # Create tabs for each candidate
+    candidate_tabs = st.tabs([f"#{i+1}: {result.get('overall_match', {}).get('percentage', 0)}% Match" 
+                             for i, result in enumerate(evaluation_results)])
+    
+    # Fill each tab with candidate information
+    for i, (tab, result) in enumerate(zip(candidate_tabs, evaluation_results)):
+        with tab:
+            # Get the match percentage and category
+            match_percentage = result.get("overall_match", {}).get("percentage", 0)
+            match_category = result.get("overall_match", {}).get("category", "Unknown")
+            
+            # Profile ID
+            profile_id = result.get("profile_id", "Unknown")
+            
+            # Display match information with styled container
+            st.markdown(f"""
+            <div style="background-color: {category_colors.get(match_category, '#757575')}; 
+                       padding: 10px; 
+                       border-radius: 5px; 
+                       color: white; 
+                       margin-bottom: 15px;
+                       display: flex;
+                       justify-content: space-between;
+                       align-items: center;">
+                <div>
+                    <h3 style="margin: 0;">Candidate #{i+1} (ID: {profile_id})</h3>
+                    <p style="margin: 5px 0 0 0;">{match_category}</p>
+                </div>
+                <div style="font-size: 32px; font-weight: bold;">
+                    {match_percentage}%
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Display dimensional scores
+            st.markdown("### Dimensional Scores")
+            
+            dimensional_scores = result.get("dimensional_scores", [])
+            if dimensional_scores:
+                for dimension in dimensional_scores:
+                    dimension_name = dimension.get("dimension", "Unknown Dimension")
+                    dimension_score = dimension.get("score", 0)
+                    dimension_reasoning = dimension.get("reasoning", "")
+                    
+                    # Create a progress bar for the score
+                    col1, col2 = st.columns([3, 7])
+                    with col1:
+                        st.markdown(f"**{dimension_name}**")
+                    with col2:
+                        st.progress(dimension_score / 100)
+                        st.caption(f"{dimension_score}% - {dimension_reasoning}")
+            else:
+                st.info("No dimensional scores available.")
+            
+            # Display strengths and gaps
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("### ✅ Key Strengths")
+                strengths = result.get("key_strengths", [])
+                if strengths:
+                    for strength in strengths:
+                        st.markdown(f"- {strength}")
+                else:
+                    st.info("No key strengths listed.")
+            
+            with col2:
+                st.markdown("### ⚠️ Key Gaps")
+                gaps = result.get("key_gaps", [])
+                if gaps:
+                    for gap in gaps:
+                        st.markdown(f"- {gap}")
+                else:
+                    st.info("No key gaps listed.")

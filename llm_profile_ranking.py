@@ -15,13 +15,13 @@ class LLMProfileRanker:
     """
     
     def __init__(self, api_key: str = None):
-        """Initialize with GROQ API key."""
-        self.api_key = api_key or os.environ.get("GROQ_API_KEY")
+        """Initialize with X AI API key."""
+        self.api_key = api_key or os.environ.get("XAI_API_KEY")
         if not self.api_key:
-            logger.warning("GROQ_API_KEY not found in environment. LLM ranking will not work.")
+            logger.warning("XAI_API_KEY not found in environment. LLM ranking will not work.")
         
-        # Initialize the OpenAI client (GROQ uses OpenAI compatible API)
-        self.client = OpenAI(api_key=self.api_key, base_url="https://api.groq.com/openai/v1")
+        # Initialize the OpenAI client with X AI API base URL
+        self.client = OpenAI(api_key=self.api_key, base_url="https://api.x.ai/v1")
         
         # System prompt for LLM
         self.system_prompt = """
@@ -280,13 +280,13 @@ class LLMProfileRanker:
             --- CANDIDATE JSON END ---
             """
             
-            # Call GROQ API
-            logger.info(f"Calling GROQ LLM to rank {len(processed_profiles)} profiles for job description")
+            # Call X AI API
+            logger.info(f"Calling X AI LLM to rank {len(processed_profiles)} profiles for job description")
             try:
                 import time
                 start_time = time.time()
                 response = self.client.chat.completions.create(
-                    model="deepseek-r1-distill-llama-70b",
+                    model="grok-3-beta",
                     messages=[
                         {"role": "system", "content": self.system_prompt},
                         {"role": "user", "content": user_prompt}
@@ -379,13 +379,13 @@ class LLMProfileRanker:
             --- CANDIDATE JSON END ---
             """
             
-            # Call GROQ API
-            logger.info(f"Calling GROQ LLM to rank {len(processed_profiles)} profiles for custom query")
+            # Call X AI API
+            logger.info(f"Calling X AI LLM to rank {len(processed_profiles)} profiles for custom query")
             try:
                 import time
                 start_time = time.time()
                 response = self.client.chat.completions.create(
-                    model="deepseek-r1-distill-llama-70b",
+                    model="grok-3-beta",
                     messages=[
                         {"role": "system", "content": self.system_prompt},
                         {"role": "user", "content": user_prompt}

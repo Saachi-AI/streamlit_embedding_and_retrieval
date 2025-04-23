@@ -3,7 +3,7 @@ import json
 import logging
 import re
 from typing import List, Dict, Any, Optional, Tuple
-from openai import OpenAI
+from google import genai  # Changed from OpenAI to Google's genai
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -15,13 +15,13 @@ class IndividualProfileEvaluator:
     """
     
     def __init__(self, api_key: str = None):
-        """Initialize with GROQ API key."""
-        self.api_key = api_key or os.environ.get("GROQ_API_KEY")
+        """Initialize with Google API key."""
+        self.api_key = api_key or os.environ.get("GOOGLE_API_KEY")
         if not self.api_key:
-            logger.warning("GROQ_API_KEY not found in environment. Individual profile evaluation will not work.")
+            logger.warning("GOOGLE_API_KEY not found in environment. Individual profile evaluation will not work.")
         
-        # Initialize the OpenAI client (GROQ uses OpenAI compatible API)
-        self.client = OpenAI(api_key=self.api_key, base_url="https://api.groq.com/openai/v1")
+        # Initialize the Google client API
+        self.client = genai.Client(api_key=self.api_key)
         
         # System prompt for LLM
         self.system_prompt = """
@@ -173,6 +173,8 @@ class IndividualProfileEvaluator:
             
             # Format the user prompt
             user_prompt = f"""
+            {self.system_prompt}
+            
             Evaluate this single candidate profile against the job description.
             Provide your evaluation in the required JSON format with dimensional scores,
             overall match percentage and category, key strengths, and key gaps.
@@ -184,20 +186,18 @@ class IndividualProfileEvaluator:
             --- CANDIDATE PROFILE END ---
             """
             
-            # Call GROQ API
-            logger.info(f"Calling GROQ LLM to evaluate profile {profile.get('profile_id', 'unknown')}")
+            # Call Google's Gemini API using the Client approach
+            logger.info(f"Calling Google Gemini to evaluate profile {profile.get('profile_id', 'unknown')}")
             try:
                 import time
                 start_time = time.time()
-                response = self.client.chat.completions.create(
-                    model="deepseek-r1-distill-llama-70b",
-                    messages=[
-                        {"role": "system", "content": self.system_prompt},
-                        {"role": "user", "content": user_prompt}
-                    ],
-                    temperature=0.1,
-                    max_tokens=4096
+                
+                # Use models.generate_content similar to google_api.py
+                response = self.client.models.generate_content(
+                    model="gemini-2.5-pro-exp-03-25",
+                    contents=user_prompt,
                 )
+                
                 end_time = time.time()
                 logger.info(f"API call took {end_time - start_time:.2f} seconds")
             except Exception as e:
@@ -206,11 +206,11 @@ class IndividualProfileEvaluator:
                 raise
             
             # Extract and parse response
-            llm_response = response.choices[0].message.content
+            llm_response = response.text
             logger.info("LLM Individual Profile Evaluation response:")
             logger.info(llm_response)
             
-            # Extract JSON from the response
+            # Extract JSON from the response - keep the same parsing logic
             try:
                 # Remove thinking part
                 cleaned_response = re.sub(r"<think>.*?</think>", "", llm_response, flags=re.DOTALL)

@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class ProfileRankProcessor:
     """
-    Class to process LLM ranking results for UI display.
+    Class to process profile evaluation results for UI display.
     Transforms the LLM output to a format suitable for Streamlit UI components.
     """
     
@@ -247,6 +247,212 @@ class ProfileRankProcessor:
                                 employment_info["period"] = f"{formatted_start} - Present"
         
         return employment_info
+    
+    def process_evaluated_profiles(self, evaluation_results: Dict[str, Any], profile_data: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Process profile evaluation results and profile data for UI display.
+        
+        Args:
+            evaluation_results: Output from IndividualProfileEvaluator (dict)
+            profile_data: Raw profile data from ProfileRetriever (dict)
+            
+        Returns:
+            List of processed candidate objects for UI display
+        """
+        self.logger.info("Processing evaluated profiles for UI display")
+        
+        # Extract profiles and dimensions from the evaluation results
+        profiles = evaluation_results.get("profiles", [])
+        dimensions = evaluation_results.get("job_dimensions", [])
+        
+        if not profiles:
+            self.logger.warning("No evaluated profiles to process")
+            return []
+        
+        # Log profile_data
+        self.logger.info(f"Profile data contains {len(profile_data)} profiles")
+        
+        # Convert to list and sort by rank (should already be sorted, but ensuring)
+        candidates = []
+        for profile in profiles:
+            profile_id = profile.get("profile_id", "unknown")
+            
+            # Skip profiles without valid profile_id
+            if profile_id == "unknown" or profile_id not in profile_data:
+                self.logger.warning(f"Skipping profile with missing or invalid profile_id: {profile_id}")
+                continue
+                
+            # Get rank and determine emoji
+            rank = profile.get("rank", 99)
+            rank_display = self._get_rank_display(rank)
+            
+            # Get display_name from profile_data if available
+            display_name = "[No Name]"
+            if "tamago_data" in profile_data[profile_id]:
+                tamago_data = profile_data[profile_id]["tamago_data"]
+                if tamago_data and "display_name" in tamago_data:
+                    display_name = tamago_data["display_name"]
+            
+            # Get employment information
+            employment_info = self._get_employment_info(profile_data, profile_id)
+            
+            # Get profile picture URL and LinkedIn data
+            profile_picture_url = None
+            linkedin_fetched_at = None
+            linkedin_url = None
+            if "linkedin_data" in profile_data[profile_id]:
+                linkedin_data = profile_data[profile_id]["linkedin_data"]
+                if linkedin_data:
+                    if "profile_picture_url_large" in linkedin_data:
+                        profile_picture_url = linkedin_data["profile_picture_url_large"]
+                    if "fetched_at" in linkedin_data:
+                        linkedin_fetched_at = linkedin_data["fetched_at"].split("T")[0]  # Convert to YYYY-MM-DD
+            
+            # Get LinkedIn URL from tamago_data
+            if "tamago_data" in profile_data[profile_id]:
+                tamago_data = profile_data[profile_id]["tamago_data"]
+                if tamago_data and tamago_data.get("linkedin"):
+                    linkedin_url = tamago_data["linkedin"]
+            
+            # Construct Tamago URL using profile_id
+            tamago_url = f"https://saachi.tamago-db.com/contact/{profile_id}/show"
+            
+            # Use fallback avatar if no LinkedIn profile picture
+            if not profile_picture_url:
+                profile_picture_url = "https://api.dicebear.com/9.x/avataaars/svg?seed=Oliver"
+            
+            # Get match data from evaluation results
+            overall_match = profile.get("overall_match", {})
+            match_percentage = overall_match.get("percentage", 0)
+            match_category = overall_match.get("category", "Unknown")
+            match_reasoning = overall_match.get("reasoning", "")
+            
+            # Get dimension scores
+            dimension_scores = profile.get("dimensions", [])
+            
+            # Get strengths and gaps
+            key_strengths = profile.get("key_strengths", [])
+            key_gaps = profile.get("key_gaps", [])
+            
+            # Get overqualification status
+            is_overqualified = profile.get("is_overqualified", False)
+            overqualification_reasoning = profile.get("overqualification_reasoning", "")
+            
+            # Format dimension scores for display
+            formatted_dimensions = []
+            for dim in dimension_scores:
+                # Get score and determine color
+                score = dim.get("score", 0)
+                
+                # Determine color based on score
+                if score >= 85:
+                    color = "green"
+                elif score >= 70:
+                    color = "lightgreen"
+                elif score >= 50:
+                    color = "orange"
+                else:
+                    color = "red"
+                
+                formatted_dimensions.append({
+                    "name": dim.get("name", ""),
+                    "score": score,
+                    "reasoning": dim.get("reasoning", ""),
+                    "color": color
+                })
+            
+            # Extract additional metadata fields
+            years_of_experience = None
+            gender = None
+            is_candidate = None
+            languages = {}
+            
+            if "metadata" in profile_data[profile_id]:
+                metadata = profile_data[profile_id]["metadata"]
+                
+                # Extract years of experience
+                if "years_of_experience" in metadata:
+                    years_of_experience = metadata["years_of_experience"]
+                
+                # Extract and format gender
+                if "gender" in metadata:
+                    raw_gender = metadata["gender"]
+                    if raw_gender.lower() in ['male', 'female']:
+                        gender = raw_gender.capitalize()
+                    else:
+                        gender = raw_gender  # Keep original value for other cases
+                
+                # Extract is_candidate
+                if "is_candidate" in metadata:
+                    is_candidate = metadata["is_candidate"]
+                
+                # Extract languages by filtering out non-language fields
+                excluded_fields = {"profile_id", "section", "placed", "years_of_experience", 
+                                "gender", "last_contacted", "is_candidate", "processed_at", 
+                                "position", "keywords"}
+                
+                languages = {key: value for key, value in metadata.items() if key not in excluded_fields}
+            
+            # Process profile creation and last contact information
+            previous_placements = []
+            if "tamago_data" in profile_data[profile_id]:
+                tamago_data = profile_data[profile_id]["tamago_data"]
+                
+                # Process Previously Placed information
+                if tamago_data.get("pipeline"):
+                    # Filter and process placement entries
+                    for entry in tamago_data["pipeline"]:
+                        if entry.get("result") == "placed":
+                            # Get the date (prefer updated_at, fallback to created_at)
+                            placement_date = entry.get("updated_at") or entry.get("created_at")
+                            if (placement_date and 
+                                entry.get("company_name") and 
+                                entry.get("created_by", {}).get("name")):
+                                
+                                previous_placements.append({
+                                    "company_name": entry["company_name"],
+                                    "date": placement_date.split("T")[0],  # Convert to YYYY-MM-DD
+                                    "person": entry["created_by"]["name"]
+                                })
+                    
+                    # Sort placements by date (most recent first)
+                    if previous_placements:
+                        previous_placements.sort(key=lambda x: x["date"], reverse=True)
+            
+            # Create candidate object
+            candidate = {
+                "profile_id": profile_id,
+                "rank": rank,
+                "rank_display": rank_display,
+                "display_name": display_name,
+                "current_position": employment_info.get("position"),
+                "current_company": employment_info.get("company_name"),
+                "employment_period": employment_info.get("period"),
+                "profile_picture_url": profile_picture_url,
+                "match_percentage": match_percentage,
+                "match_category": match_category,
+                "match_reasoning": match_reasoning,
+                "dimension_scores": formatted_dimensions,
+                "key_strengths": key_strengths,
+                "key_gaps": key_gaps,
+                "is_overqualified": is_overqualified,
+                "overqualification_reasoning": overqualification_reasoning,
+                "years_of_experience": years_of_experience,
+                "gender": gender,
+                "languages": languages,
+                "is_candidate": is_candidate,
+                "linkedin_url": linkedin_url,
+                "tamago_url": tamago_url,
+                "linkedin_fetched_at": linkedin_fetched_at,
+                "previous_placements": previous_placements
+            }
+            
+            candidates.append(candidate)
+        
+        # Sort candidates by rank
+        candidates.sort(key=lambda x: x["rank"])
+        
+        return candidates
     
     def process_ranked_profiles(self, llm_ranking_results: Union[str, Dict[str, Any]], profile_data: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:
         """

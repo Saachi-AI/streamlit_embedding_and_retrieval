@@ -1,0 +1,441 @@
+import os
+import json
+import logging
+import re
+from typing import List, Dict, Any, Optional, Union
+from openai import OpenAI
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class IndividualProfileEvaluator:
+    """
+    Class to evaluate individual profiles using LLM based on job description.
+    This class extracts dimensions from job descriptions and provides detailed
+    evaluation of each candidate against these dimensions.
+    """
+    
+    def __init__(self, api_key: str = None):
+        """Initialize with X AI API key."""
+        self.api_key = api_key or os.environ.get("XAI_API_KEY")
+        if not self.api_key:
+            logger.warning("XAI_API_KEY not found in environment. LLM evaluation will not work.")
+        
+        # Initialize the OpenAI client with X AI API base URL
+        self.client = OpenAI(api_key=self.api_key, base_url="https://api.x.ai/v1")
+        
+        # Initialize job dimensions cache
+        self.job_dimensions = None
+        
+        # System prompt for dimension extraction
+        self.dimension_extraction_prompt = """
+        You are an expert talent acquisition specialist trained to analyze job descriptions and identify key dimensions for candidate evaluation.
+
+        Your task is to analyze the provided job description and identify 3-5 key dimensions that will be used to evaluate candidates. These dimensions should be specific to the job requirements and help determine the candidate's fit for the role.
+
+        RULES:
+        1. Identify 3-5 job-specific evaluation dimensions based on the job description.
+        2. ALWAYS include "Role Alignment" as one of the dimensions to evaluate career fit.
+        3. Each dimension must have:
+           - A clear name (e.g., "Technical Expertise", "Industry Experience")
+           - A concise description explaining what this dimension evaluates
+           - 2-3 key success factors that define excellence in this dimension
+
+        4. Focus on extracting dimensions related to:
+           - Required skills and technical expertise
+           - Domain/industry experience
+           - Relevant qualifications or certifications
+           - Soft skills or behavioral attributes mentioned
+           - Language requirements if specified
+
+        5. Dimensions should be specific enough to meaningfully differentiate candidates
+        6. Do not include generic dimensions that apply to all jobs (e.g., "Communication Skills") unless specifically emphasized in the description
+
+        OUTPUT FORMAT:
+        Return a JSON object with the following structure:
+        {
+          "dimensions": [
+            {
+              "name": "Dimension Name",
+              "description": "Clear explanation of what this dimension evaluates",
+              "key_success_factors": [
+                "Success factor 1",
+                "Success factor 2",
+                "Success factor 3"
+              ]
+            },
+            // Additional dimensions...
+          ]
+        }
+
+        IMPORTANT: 
+        - Do not include any text outside the JSON structure
+        - Ensure the output is valid JSON
+        - Make dimensions specific to this particular job
+        - ALWAYS include "Role Alignment" as one of the dimensions
+        """
+        
+        # System prompt for profile evaluation
+        self.profile_evaluation_prompt = """
+        You are an expert talent acquisition specialist trained to evaluate candidate profiles against job requirements.
+
+        Your task is to evaluate a candidate profile against specific job dimensions and provide a detailed assessment of their fit for the role.
+
+        EVALUATION APPROACH:
+        1. Analyze the candidate profile in relation to each dimension
+        2. Assign percentage scores (0-100%) for each dimension with detailed reasoning
+        3. Calculate an overall match percentage as a weighted average of dimension scores
+        4. Categorize the candidate as:
+           - "Excellent Match" (85-100%)
+           - "Good Match" (70-84%)
+           - "Fair Match" (50-69%)
+           - "Poor Match" (0-49%)
+        5. Identify if the candidate is overqualified for the role and adjust ranking accordingly
+        6. Highlight 2-3 key strengths and 1-2 key gaps
+
+        OVERQUALIFICATION ASSESSMENT:
+        - If the profile indicates the candidate is significantly more senior than required (e.g., CEO applying for developer position), flag this with specific reasoning
+        - Adjust the overall score downward for significant overqualification, as these candidates are less likely to be satisfied in the role
+        - Consider title history, years of experience, and level of previous responsibilities
+
+        OUTPUT FORMAT:
+        Return a JSON object with the following structure:
+        {
+          "profile_id": "candidate's profile ID",
+          "dimensions": [
+            {
+              "name": "Dimension Name",
+              "score": 85,
+              "reasoning": "Detailed explanation of why this score was assigned, referencing specific aspects of the candidate's profile"
+            },
+            // Additional dimensions...
+          ],
+          "overall_match": {
+            "percentage": 78,
+            "category": "Good Match",
+            "reasoning": "Overall assessment of why the candidate received this score and category"
+          },
+          "is_overqualified": false,  // or true with reasoning if applicable
+          "overqualification_reasoning": "",  // Only populated if is_overqualified is true
+          "key_strengths": [
+            "Strength 1 with specific evidence",
+            "Strength 2 with specific evidence",
+            "Strength 3 with specific evidence"
+          ],
+          "key_gaps": [
+            "Gap 1 with specific evidence",
+            "Gap 2 with specific evidence"
+          ]
+        }
+
+        IMPORTANT: 
+        - Do not include any text outside the JSON structure
+        - Ensure the output is valid JSON
+        - Provide specific evidence from the profile for each score and assessment
+        - Be thorough in your reasoning, explaining exactly why scores were assigned
+        - Ensure the overall match percentage is a weighted average of the dimension scores
+        """
+    
+    def extract_job_dimensions(self, raw_job_description: str, summarized_job_description: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Extract key dimensions from job description for candidate evaluation.
+        
+        Args:
+            raw_job_description: Full job description text
+            summarized_job_description: Optional summarized job description
+            
+        Returns:
+            Dictionary containing extracted dimensions
+        """
+        if not raw_job_description:
+            logger.error("No job description provided for dimension extraction")
+            return {"dimensions": []}
+            
+        try:
+            # Format the prompt to include both raw and summarized descriptions when available
+            if summarized_job_description:
+                user_prompt = f"""
+                Please analyze this job description to identify 3-5 key dimensions for candidate evaluation.
+
+                --- FULL JOB DESCRIPTION ---
+                {raw_job_description}
+                --- END FULL JOB DESCRIPTION ---
+
+                --- SUMMARIZED JOB DESCRIPTION ---
+                {summarized_job_description}
+                --- END SUMMARIZED JOB DESCRIPTION ---
+
+                Extract 3-5 key dimensions that will be used to evaluate candidates for this role.
+                Remember to always include "Role Alignment" as one of the dimensions.
+                """
+            else:
+                user_prompt = f"""
+                Please analyze this job description to identify 3-5 key dimensions for candidate evaluation.
+
+                --- JOB DESCRIPTION ---
+                {raw_job_description}
+                --- END JOB DESCRIPTION ---
+
+                Extract 3-5 key dimensions that will be used to evaluate candidates for this role.
+                Remember to always include "Role Alignment" as one of the dimensions.
+                """
+                
+            # Call X AI API to extract dimensions
+            logger.info("Calling X AI LLM to extract job dimensions")
+            response = self.client.chat.completions.create(
+                model="grok-3-beta",
+                messages=[
+                    {"role": "system", "content": self.dimension_extraction_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.2,
+                max_tokens=4096
+            )
+            
+            # Extract LLM response
+            llm_response = response.choices[0].message.content
+            logger.info("Job dimension extraction response received from LLM")
+            
+            # Extract JSON from the response
+            extracted_dimensions = self._extract_json_from_response(llm_response)
+            
+            # Validate dimensions format
+            if "dimensions" not in extracted_dimensions or not isinstance(extracted_dimensions["dimensions"], list):
+                logger.error("Invalid format in extracted dimensions response")
+                return {"dimensions": []}
+                
+            # Ensure Role Alignment dimension is included
+            has_role_alignment = any(
+                dim.get("name", "").lower() == "role alignment" 
+                for dim in extracted_dimensions["dimensions"]
+            )
+            
+            if not has_role_alignment:
+                logger.warning("Role Alignment dimension not found, adding it manually")
+                extracted_dimensions["dimensions"].append({
+                    "name": "Role Alignment",
+                    "description": "Evaluates how well the candidate's career trajectory, seniority, and aspirations align with this specific role",
+                    "key_success_factors": [
+                        "Appropriate seniority level for the position",
+                        "Career trajectory suggests interest in this type of role",
+                        "Not significantly overqualified or underqualified"
+                    ]
+                })
+                
+            logger.info(f"Successfully extracted {len(extracted_dimensions['dimensions'])} dimensions from job description")
+            return extracted_dimensions
+                
+        except Exception as e:
+            logger.error(f"Error extracting job dimensions: {str(e)}")
+            return {"dimensions": []}
+    
+    def evaluate_profile(
+        self,
+        profile_data: Dict[str, Any],
+        raw_job_description: str,
+        dimensions: List[Dict[str, Any]],
+        profile_id: str
+    ) -> Dict[str, Any]:
+        """
+        Evaluate a single profile against extracted job dimensions.
+        
+        Args:
+            profile_data: Processed profile data
+            raw_job_description: Full job description
+            dimensions: Extracted job dimensions
+            profile_id: Profile ID
+            
+        Returns:
+            Dictionary containing detailed evaluation results
+        """
+        if not profile_data or not dimensions:
+            logger.error("Missing profile data or dimensions for evaluation")
+            return {}
+            
+        try:
+            # Format dimensions as string for the prompt
+            dimensions_str = json.dumps(dimensions, ensure_ascii=False)
+            
+            # Format profile data as string
+            profile_str = json.dumps(profile_data, ensure_ascii=False)
+            
+            # Format the user prompt
+            user_prompt = f"""
+            Your task is to evaluate this candidate profile against the job requirements and dimensions.
+
+            --- JOB DESCRIPTION ---
+            {raw_job_description}
+            --- END JOB DESCRIPTION ---
+
+            --- EVALUATION DIMENSIONS ---
+            {dimensions_str}
+            --- END EVALUATION DIMENSIONS ---
+
+            --- CANDIDATE PROFILE ---
+            {profile_str}
+            --- END CANDIDATE PROFILE ---
+
+            Please evaluate this candidate (profile_id: {profile_id}) against each dimension, providing percentage scores, reasoning, and an overall assessment.
+            """
+            
+            # Call X AI API for profile evaluation
+            logger.info(f"Calling X AI LLM to evaluate profile {profile_id}")
+            response = self.client.chat.completions.create(
+                model="grok-3-beta",
+                messages=[
+                    {"role": "system", "content": self.profile_evaluation_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.3,
+                max_tokens=8192
+            )
+            
+            # Extract LLM response
+            llm_response = response.choices[0].message.content
+            logger.info(f"Profile evaluation response received for profile {profile_id}")
+            
+            # Extract JSON from the response
+            evaluation_results = self._extract_json_from_response(llm_response)
+            
+            # Ensure profile_id is included
+            if "profile_id" not in evaluation_results:
+                evaluation_results["profile_id"] = profile_id
+                
+            return evaluation_results
+                
+        except Exception as e:
+            logger.error(f"Error evaluating profile {profile_id}: {str(e)}")
+            return {"profile_id": profile_id, "error": str(e)}
+    
+    def evaluate_profiles(
+        self,
+        processed_profiles: List[Dict[str, Any]],
+        raw_job_description: str,
+        summarized_job_description: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Evaluate multiple profiles against job description.
+        
+        Args:
+            processed_profiles: List of processed profile data
+            raw_job_description: Full job description
+            summarized_job_description: Optional summarized job description
+            
+        Returns:
+            Dictionary containing evaluation results for all profiles
+        """
+        if not processed_profiles:
+            logger.info("No profiles to evaluate")
+            return {"profiles": []}
+            
+        if not raw_job_description:
+            logger.info("Missing job description - skipping evaluation")
+            return {"profiles": []}
+            
+        try:
+            # Extract job dimensions if not already cached
+            if not self.job_dimensions:
+                logger.info("Extracting job dimensions")
+                self.job_dimensions = self.extract_job_dimensions(raw_job_description, summarized_job_description)
+            
+            dimensions = self.job_dimensions.get("dimensions", [])
+            if not dimensions:
+                logger.error("Failed to extract job dimensions")
+                return {"profiles": []}
+                
+            # Evaluate each profile
+            evaluated_profiles = []
+            for profile in processed_profiles:
+                profile_id = profile.get("profile_id", "unknown")
+                logger.info(f"Evaluating profile {profile_id}")
+                
+                evaluation = self.evaluate_profile(
+                    profile_data=profile,
+                    raw_job_description=raw_job_description,
+                    dimensions=dimensions,
+                    profile_id=profile_id
+                )
+                
+                evaluated_profiles.append(evaluation)
+                
+            # Sort profiles by overall match percentage (descending)
+            evaluated_profiles.sort(
+                key=lambda x: x.get("overall_match", {}).get("percentage", 0),
+                reverse=True
+            )
+            
+            # Add ranks based on sorted order
+            for i, profile in enumerate(evaluated_profiles):
+                profile["rank"] = i + 1
+                
+            return {
+                "job_dimensions": dimensions,
+                "profiles": evaluated_profiles
+            }
+                
+        except Exception as e:
+            logger.error(f"Error in profile evaluation: {str(e)}")
+            return {"profiles": []}
+    
+    def evaluate_profiles_custom_query(
+        self,
+        processed_profiles: List[Dict[str, Any]],
+        custom_query: str
+    ) -> Dict[str, Any]:
+        """
+        Evaluate profiles based on custom query.
+        
+        Args:
+            processed_profiles: List of processed profile data
+            custom_query: Custom query text
+            
+        Returns:
+            Dictionary containing evaluation results for all profiles
+        """
+        # Reset dimensions cache for new query
+        self.job_dimensions = None
+        
+        # Use the same evaluation method but with custom query as job description
+        return self.evaluate_profiles(processed_profiles, custom_query)
+    
+    def _extract_json_from_response(self, response_text: str) -> Dict[str, Any]:
+        """
+        Extract JSON from LLM response text.
+        
+        Args:
+            response_text: Raw response text from LLM
+            
+        Returns:
+            Parsed JSON as dictionary
+        """
+        try:
+            # Remove thinking part
+            cleaned_response = re.sub(r"<think>.*?</think>", "", response_text, flags=re.DOTALL)
+            
+            # Try to find JSON in code blocks
+            json_match = re.search(r"```(?:json)?\s*([\s\S]*?)```", cleaned_response)
+            if json_match:
+                json_str = json_match.group(1).strip()
+            else:
+                # If no code blocks, try to find JSON using braces
+                start_idx = cleaned_response.find('{')
+                end_idx = cleaned_response.rfind('}') + 1
+                
+                if start_idx >= 0 and end_idx > start_idx:
+                    json_str = cleaned_response[start_idx:end_idx]
+                else:
+                    # If no JSON found, use the entire cleaned response
+                    json_str = cleaned_response.strip()
+            
+            # Parse the JSON
+            parsed_json = json.loads(json_str)
+            return parsed_json
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"Error parsing JSON from LLM response: {str(e)}")
+            logger.debug(f"Problematic response: {response_text[:1000]}")
+            return {}
+        except Exception as e:
+            logger.error(f"Error extracting JSON from LLM response: {str(e)}")
+            return {} 

@@ -19,6 +19,7 @@ from profile_preprocessor import preprocess_profiles
 from pinecone import Pinecone
 from document_parser import DocumentParser
 from prompt_generator import PromptGenerator
+from profile_evaluator import IndividualProfileEvaluator
 
 # Import feature modules
 from features.job_description import render_job_description_tab
@@ -123,6 +124,18 @@ except Exception as e:
     st.error(f"Error initializing prompt generator: {str(e)}")
     st.warning("Make sure GROQ_API_KEY is set in your .env file")
     prompt_generator = None
+
+# Initialize Profile Evaluator
+@st.cache_resource
+def get_profile_evaluator():
+    return IndividualProfileEvaluator(api_key=env_vars["xai_api_key"])
+
+try:
+    profile_evaluator = get_profile_evaluator()
+except Exception as e:
+    st.error(f"Error initializing profile evaluator: {str(e)}")
+    st.warning("Make sure XAI_API_KEY is set in your .env file")
+    profile_evaluator = None
 
 # Display traceable information about the retrieval process
 @traceable(name="retrieve_documents")
@@ -254,7 +267,8 @@ with tabs[0]:
             retrieve_documents=retrieve_documents,
             cohere_reranker=cohere_reranker,
             profile_aggregator=profile_aggregator,
-            profile_retriever=profile_retriever
+            profile_retriever=profile_retriever,
+            profile_evaluator=profile_evaluator
         )
 
 # With Tab 1 (Custom Query)
@@ -267,5 +281,6 @@ with tabs[1]:
             retrieve_documents=retrieve_documents,
             cohere_reranker=cohere_reranker,
             profile_aggregator=profile_aggregator,
-            profile_retriever=profile_retriever
+            profile_retriever=profile_retriever,
+            profile_evaluator=profile_evaluator
         )

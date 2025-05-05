@@ -21,6 +21,7 @@ from core.ui_components import (
 )
 from core.state_management import initialize_tab_state, get_tab_state, set_tab_state
 from llm_profile_ranking import LLMProfileRanker
+from profile_evaluator import IndividualProfileEvaluator
 from profile_rank_processor import ProfileRankProcessor
 from core.filter_editor_components import render_filter_editor
 
@@ -87,7 +88,7 @@ def display_generated_prompt():
         st.subheader("AI Generated Search Prompt")
         st.text_area("Prompt for Semantic Search", generated_prompt, height=250)
 
-def process_job_description_query(query, settings, filter_extractor, embedders, retrieve_documents, cohere_reranker, profile_aggregator, profile_retriever):
+def process_job_description_query(query, settings, filter_extractor, embedders, retrieve_documents, cohere_reranker, profile_aggregator, profile_retriever, profile_evaluator):
     """Process the job description query and display results."""
     if not query:
         return
@@ -273,33 +274,70 @@ def process_job_description_query(query, settings, filter_extractor, embedders, 
                     # Display profile retrieval and preprocessing results for debugging
                     display_profile_retrieval_and_preprocessing(profile_data, processed_profiles)
                     
-                    # Call LLM for profile ranking
+                    # Call profile evaluator for individual profile assessment
                     try:
                         raw_jd = get_tab_state("tab0", "parsed_text")
                         summarized_jd = get_tab_state("tab0", "generated_prompt")
                         
-                        llm_ranker = LLMProfileRanker()
-                        llm_ranking_results = llm_ranker.rank_profiles_job_description(
-                            processed_profiles=processed_profiles,
-                            raw_job_description=raw_jd,
-                            summarized_job_description=summarized_jd
-                        )
+                        # Use the passed-in profile_evaluator if available
+                        if profile_evaluator:
+                            evaluation_results = profile_evaluator.evaluate_profiles(
+                                processed_profiles=processed_profiles,
+                                raw_job_description=raw_jd,
+                                summarized_job_description=summarized_jd
+                            )
+                        else:
+                            # Fall back to creating a new one if not available
+                            logger.info("Creating profile evaluator instance since none was passed")
+                            profile_evaluator = IndividualProfileEvaluator()
+                            evaluation_results = profile_evaluator.evaluate_profiles(
+                                processed_profiles=processed_profiles,
+                                raw_job_description=raw_jd,
+                                summarized_job_description=summarized_jd
+                            )
                         
-                        # Process ranked profiles for display
-                        if llm_ranking_results:
+                        # Process evaluated profiles for display
+                        if evaluation_results and evaluation_results.get("profiles"):
                             profile_rank_processor = ProfileRankProcessor()
-                            processed_candidates = profile_rank_processor.process_ranked_profiles(
-                                llm_ranking_results=llm_ranking_results,
+                            processed_candidates = profile_rank_processor.process_evaluated_profiles(
+                                evaluation_results=evaluation_results,
                                 profile_data=profile_data
                             )
                             
-                            # Display ranked candidates
+                            # Display evaluated candidates
                             add_section_separator()
                             display_ranked_candidates(processed_candidates)
                         
-                        logger.info("LLM Profile Ranking completed")
+                        logger.info("Profile Evaluation completed")
                     except Exception as e:
-                        logger.error(f"Error during LLM profile ranking: {str(e)}")
+                        logger.error(f"Error during profile evaluation: {str(e)}")
+                        st.error(f"Error during profile evaluation: {str(e)}")
+                        
+                        # Fall back to old ranking method if new evaluation fails
+                        try:
+                            logger.info("Falling back to legacy LLM profile ranking")
+                            llm_ranker = LLMProfileRanker()
+                            llm_ranking_results = llm_ranker.rank_profiles_job_description(
+                                processed_profiles=processed_profiles,
+                                raw_job_description=raw_jd,
+                                summarized_job_description=summarized_jd
+                            )
+                            
+                            # Process ranked profiles for display
+                            if llm_ranking_results:
+                                profile_rank_processor = ProfileRankProcessor()
+                                processed_candidates = profile_rank_processor.process_ranked_profiles(
+                                    llm_ranking_results=llm_ranking_results,
+                                    profile_data=profile_data
+                                )
+                                
+                                # Display ranked candidates
+                                add_section_separator()
+                                display_ranked_candidates(processed_candidates)
+                            
+                            logger.info("Legacy LLM Profile Ranking completed")
+                        except Exception as e2:
+                            logger.error(f"Error during fallback LLM profile ranking: {str(e2)}")
                 
                 else:
                     st.warning("Reranking failed. Displaying original results.")
@@ -321,7 +359,8 @@ def render_job_description_tab(
     retrieve_documents,
     cohere_reranker,
     profile_aggregator,
-    profile_retriever
+    profile_retriever,
+    profile_evaluator
 ):
     """Render the job description tab content."""
     # Initialize tab state if not already initialized
@@ -361,5 +400,6 @@ def render_job_description_tab(
             retrieve_documents, 
             cohere_reranker, 
             profile_aggregator,
-            profile_retriever
+            profile_retriever,
+            profile_evaluator
         )

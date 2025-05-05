@@ -530,6 +530,55 @@ def display_profile_retrieval_and_preprocessing(profile_data, processed_profiles
     with st.expander("View Processed Profile Data", expanded=False):
         st.json(processed_profiles)
 
+def display_dimension_scores(dimension_scores):
+    """
+    Display dimension scores with progress bars and reasoning.
+    
+    Args:
+        dimension_scores: List of dimension score objects with name, score, reasoning, and color
+    """
+    if not dimension_scores:
+        return
+    
+    st.markdown("#### 📊 Evaluation by Dimensions:")
+    
+    for dimension in dimension_scores:
+        # Get dimension details
+        name = dimension.get('name', 'Unknown Dimension')
+        score = dimension.get('score', 0)
+        reasoning = dimension.get('reasoning', '')
+        color = dimension.get('color', 'gray')
+        
+        # Display dimension name
+        st.markdown(f"<strong>{name}</strong>", unsafe_allow_html=True)
+        
+        # Display score as progress bar
+        progress_html = f"""
+        <div style="margin-bottom: 5px;">
+            <div style="background-color: #f0f0f0; border-radius: 5px; height: 12px; width: 100%;">
+                <div style="background-color: {color}; border-radius: 5px; height: 12px; width: {score}%;"></div>
+            </div>
+            <div style="text-align: right; font-size: 12px; color: {color}; font-weight: bold;">
+                {score}%
+            </div>
+        </div>
+        """
+        st.markdown(progress_html, unsafe_allow_html=True)
+        
+        # Display reasoning without using an expander
+        if reasoning:
+            st.markdown(f"""
+            <details>
+                <summary style="cursor: pointer; color: #4a86e8; font-size: 14px;">Show reasoning</summary>
+                <div style="margin-top: 8px; margin-left: 20px; font-size: 14px; color: #555;">
+                    {reasoning}
+                </div>
+            </details>
+            """, unsafe_allow_html=True)
+        
+        # Add spacing between dimensions
+        st.markdown("<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True)
+
 def display_ranked_candidates(processed_candidates):
     """
     Display ranked candidates in expandable sections.
@@ -545,8 +594,15 @@ def display_ranked_candidates(processed_candidates):
     
     # Display each candidate in an expandable section
     for candidate in processed_candidates:
-        # Create expander title with rank, display name, and short phrase
-        expander_title = f"{candidate['rank_display']} — {candidate['display_name']} - {candidate['short_phrase']}"
+        # Create expander title with rank, display name
+        # Check if we have the new format (dimension-based) or old format
+        if 'dimension_scores' in candidate:
+            # New format - use match category
+            match_category = candidate.get('match_category', 'Unknown Match')
+            expander_title = f"{candidate['rank_display']} — {candidate['display_name']} - {match_category}"
+        else:
+            # Old format - use short phrase
+            expander_title = f"{candidate['rank_display']} — {candidate['display_name']} - {candidate.get('short_phrase', '')}"
         
         # Create expandable section
         with st.expander(expander_title, expanded=candidate['rank'] == 1):  # Auto-expand first result
@@ -573,18 +629,18 @@ def display_ranked_candidates(processed_candidates):
                 company_html = ""
                 period_html = ""
                 
-                if candidate.get('position'):
-                    position_html = f"<span style='color: #81D4FA;'>{candidate['position']}</span>"
+                if candidate.get('current_position'):
+                    position_html = f"<span style='color: #81D4FA;'>{candidate['current_position']}</span>"
                 
-                if candidate.get('company_name'):
+                if candidate.get('current_company'):
                     if position_html:
-                        company_html = f" at <span style='color: #FFCC80;'>{candidate['company_name']}</span>"
+                        company_html = f" at <span style='color: #FFCC80;'>{candidate['current_company']}</span>"
                     else:
-                        company_html = f"<span style='color: #FFCC80;'>{candidate['company_name']}</span>"
+                        company_html = f"<span style='color: #FFCC80;'>{candidate['current_company']}</span>"
                 
                 # Add period if available
-                if candidate.get('period'):
-                    period_html = f" <span style='color: #B0BEC5;'>({candidate['period']})</span>"
+                if candidate.get('employment_period'):
+                    period_html = f" <span style='color: #B0BEC5;'>({candidate['employment_period']})</span>"
                 
                 # Display employment information if we have any
                 if position_html or company_html:
@@ -596,30 +652,90 @@ def display_ranked_candidates(processed_candidates):
                 # Add small spacing instead of a full line break
                 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
                 
-                # Display match score if available
-                if candidate.get('match_score'):
-                    st.markdown(f"#### ⭐ Match Score: {candidate['match_score']}%")
-                
-                # Display reasons why this candidate is a good fit
-                if candidate.get('why_good_fit') and len(candidate['why_good_fit']) > 0:
-                    st.markdown("#### 🤖 Why this candidate?")
-                    for reason in candidate['why_good_fit']:
-                        st.markdown(f"<div style='margin-left: 20px;'>{reason}</div>", unsafe_allow_html=True)
+                # Check if we have the new format (dimension-based) or old format
+                if 'dimension_scores' in candidate:
+                    # New format - dimension-based evaluation
                     
-                    # Add extra spacing after "Why this candidate?" section
-                    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-                
-                # Display Skills Match if available
-                if candidate.get('skills_match') and len(candidate['skills_match']) > 0:
-                    st.markdown("#### 🧠 Skills Match for this Job:")
-                    for i, skill_info in enumerate(candidate['skills_match'], 1):
+                    # Display match percentage if available
+                    if 'match_percentage' in candidate:
+                        # Determine color based on match percentage
+                        if candidate['match_percentage'] >= 85:
+                            match_color = "green"
+                        elif candidate['match_percentage'] >= 70:
+                            match_color = "lightgreen"
+                        elif candidate['match_percentage'] >= 50:
+                            match_color = "orange"
+                        else:
+                            match_color = "red"
+                            
                         st.markdown(
-                            f"<div style='margin-left: 20px;'>{i}. {skill_info['skill']} - {skill_info['status_display']}</div>",
+                            f"#### ⭐ Overall Match: <span style='color: {match_color};'>{candidate['match_percentage']}%</span> "
+                            f"(<span style='color: {match_color};'>{candidate['match_category']}</span>)",
                             unsafe_allow_html=True
                         )
                     
-                    # Add spacing after skills match section
-                    st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+                    # Display match reasoning if available without using expander
+                    if candidate.get('match_reasoning'):
+                        st.markdown(f"""
+                        <details>
+                            <summary style="cursor: pointer; color: #4a86e8; font-size: 14px;">Overall Match Reasoning</summary>
+                            <div style="margin-top: 8px; margin-left: 20px; font-size: 14px; color: #555;">
+                                {candidate['match_reasoning']}
+                            </div>
+                        </details>
+                        """, unsafe_allow_html=True)
+                    
+                    # Display dimension scores
+                    display_dimension_scores(candidate.get('dimension_scores', []))
+                    
+                    # Display key strengths if available
+                    if candidate.get('key_strengths') and len(candidate['key_strengths']) > 0:
+                        st.markdown("#### 💪 Key Strengths:")
+                        for i, strength in enumerate(candidate['key_strengths'], 1):
+                            st.markdown(f"<div style='margin-left: 20px;'>{i}. {strength}</div>", unsafe_allow_html=True)
+                        
+                        # Add spacing after strengths section
+                        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+                    
+                    # Display key gaps if available
+                    if candidate.get('key_gaps') and len(candidate['key_gaps']) > 0:
+                        st.markdown("#### 🚧 Areas for Development:")
+                        for i, gap in enumerate(candidate['key_gaps'], 1):
+                            st.markdown(f"<div style='margin-left: 20px;'>{i}. {gap}</div>", unsafe_allow_html=True)
+                        
+                        # Add spacing after gaps section
+                        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+                    
+                    # Display overqualification warning if applicable
+                    if candidate.get('is_overqualified'):
+                        st.warning(f"⚠️ Overqualified: {candidate.get('overqualification_reasoning', '')}")
+                else:
+                    # Old format - skills-based evaluation
+                    
+                    # Display match score if available
+                    if candidate.get('match_score'):
+                        st.markdown(f"#### ⭐ Match Score: {candidate['match_score']}%")
+                    
+                    # Display reasons why this candidate is a good fit
+                    if candidate.get('why_good_fit') and len(candidate['why_good_fit']) > 0:
+                        st.markdown("#### 🤖 Why this candidate?")
+                        for reason in candidate['why_good_fit']:
+                            st.markdown(f"<div style='margin-left: 20px;'>{reason}</div>", unsafe_allow_html=True)
+                        
+                        # Add extra spacing after "Why this candidate?" section
+                        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+                    
+                    # Display Skills Match if available
+                    if candidate.get('skills_match') and len(candidate['skills_match']) > 0:
+                        st.markdown("#### 🧠 Skills Match for this Job:")
+                        for i, skill_info in enumerate(candidate['skills_match'], 1):
+                            st.markdown(
+                                f"<div style='margin-left: 20px;'>{i}. {skill_info['skill']} - {skill_info['status_display']}</div>",
+                                unsafe_allow_html=True
+                            )
+                        
+                        # Add spacing after skills match section
+                        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
                 
                 # Display Experience if available
                 if candidate.get('years_of_experience') and candidate['years_of_experience'] != 0:
@@ -633,6 +749,11 @@ def display_ranked_candidates(processed_candidates):
                 if candidate.get('type') is not None:
                     type_value = candidate['type']
                     color_style = "style='color: #FFCC80;'" if type_value == "Candidate" else ""
+                    st.markdown(f"###### 🤝 Type: <span {color_style}>{type_value}</span>", unsafe_allow_html=True)
+                elif candidate.get('is_candidate') is not None:
+                    is_candidate = candidate['is_candidate']
+                    type_value = "Candidate" if is_candidate else "Unknown"
+                    color_style = "style='color: #FFCC80;'" if is_candidate else ""
                     st.markdown(f"###### 🤝 Type: <span {color_style}>{type_value}</span>", unsafe_allow_html=True)
                 
                 # Display Languages
@@ -729,48 +850,27 @@ def display_ranked_candidates(processed_candidates):
                                    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
                                    transition: all 0.3s ease;">
                                    View on LinkedIn</a>
-                               </div>
-                               <style>
-                               div[data-testid="stVerticalBlock"] a[href="{candidate['linkedin_url']}"] {{ transition: all 0.3s; }}
-                               div[data-testid="stVerticalBlock"] a[href="{candidate['linkedin_url']}"]:hover {{ 
-                                   background-color: #0088cc !important; 
-                                   transform: translateY(-2px); 
-                                   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
-                               }}
-                               div[data-testid="stVerticalBlock"] a[href="{candidate['linkedin_url']}"]:active {{ 
-                                   transform: translateY(0px); 
-                                   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
-                               }}
-                               </style>""", 
+                            </div>""",
                             unsafe_allow_html=True
                         )
                     
                     # Add spacing between buttons
                     st.markdown("<div style='height: 20px;'></div>", unsafe_allow_html=True)
                     
-                    # Tamago button (always available) - centered
+                    # Tamago button - centered
                     if candidate.get('tamago_url'):
                         st.markdown(
                             f"""<div style="display: flex; justify-content: center;">
-                                <a href="{candidate['tamago_url']}" target="_blank" 
-                                   style="text-decoration: none; display: inline-block; width: 150px; text-align: center; 
-                                   background-color: #8DC63F; color: white; padding: 12px 0; 
+                                <a href="{candidate['tamago_url']}" target="_blank"
+                                   style="text-decoration: none; display: inline-block; width: 150px; text-align: center;
+                                   background-color: #FF5722; color: white; padding: 12px 0;
                                    border: none; border-radius: 8px; font-weight: 500; letter-spacing: 0.5px;
                                    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
                                    transition: all 0.3s ease;">
-                                   Open in Tamago</a>
-                               </div>
-                               <style>
-                               div[data-testid="stVerticalBlock"] a[href="{candidate['tamago_url']}"] {{ transition: all 0.3s; }}
-                               div[data-testid="stVerticalBlock"] a[href="{candidate['tamago_url']}"]:hover {{ 
-                                   background-color: #9ED84F !important; 
-                                   transform: translateY(-2px); 
-                                   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
-                               }}
-                               div[data-testid="stVerticalBlock"] a[href="{candidate['tamago_url']}"]:active {{ 
-                                   transform: translateY(0px); 
-                                   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
-                               }}
-                               </style>""", 
+                                   View on Tamago</a>
+                            </div>""",
                             unsafe_allow_html=True
                         )
+                    
+            # Add a separator between candidates
+            st.markdown("<hr style='margin-top: 30px; margin-bottom: 30px;'>", unsafe_allow_html=True)

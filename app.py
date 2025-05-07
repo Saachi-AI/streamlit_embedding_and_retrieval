@@ -7,6 +7,7 @@ from langsmith import Client
 from langsmith.run_helpers import traceable
 import time
 import warnings
+import sys
 
 from utils import load_environment, get_vector_store
 from embedders.openai_embedder import OpenAIEmbedder
@@ -125,10 +126,46 @@ except Exception as e:
     st.warning("Make sure GROQ_API_KEY is set in your .env file")
     prompt_generator = None
 
+# Parse command line args for Streamlit
+def get_streamlit_query_params():
+    """Get query parameters that can be passed to Streamlit."""
+    query_params = {}
+    
+    # Check for query parameters in format: key=value
+    for arg in sys.argv:
+        if "=" in arg:
+            key, value = arg.split("=", 1)
+            query_params[key] = value
+    
+    return query_params
+
+# Get query parameters
+query_params = get_streamlit_query_params()
+
 # Initialize Profile Evaluator
 @st.cache_resource
 def get_profile_evaluator():
-    return IndividualProfileEvaluator(api_key=env_vars["xai_api_key"])
+    # Get LLM choice from query parameters or environment variable
+    llm_choice = query_params.get("llm", "grok")
+    
+    # Set API keys based on LLM choice
+    api_key = None
+    if llm_choice == "gemini":
+        # For Gemini, use GOOGLE_API_KEY
+        api_key = os.environ.get("GOOGLE_API_KEY")
+        if not api_key:
+            # Use the provided key 
+            api_key = "AIzaSyCrctPuG21p0SRA82ex3EXegBVQGp3a6B0"
+            os.environ["GOOGLE_API_KEY"] = api_key
+            st.sidebar.info(f"Using default Google API key")
+    else:
+        # For Grok, use XAI_API_KEY
+        api_key = env_vars["xai_api_key"]
+    
+    # Display LLM choice in sidebar
+    st.sidebar.info(f"Using LLM: {llm_choice}")
+    
+    return IndividualProfileEvaluator(api_key=api_key, llm_choice=llm_choice)
 
 try:
     profile_evaluator = get_profile_evaluator()

@@ -1,129 +1,234 @@
-MetLife
-メットライフ生命
+Senior Full Stack Software Engineer (JavaScript/TypeScript)(P2/P3), Open Dev, Technology NEW !
 
 
-Job Description
+職務内容
+Job description
 
 
-LOB/Group/Team
-Information Technology/App Dev/Digital Engineering
-Position Title
-Lead Full Stack Software Engineer
-Report Line
-Y. Senoo
-Location
-Tokyo
-Global Grade
-GG12
-# of Hiring
-1
-FIex
-Yes
-Hiring Source
-External (MetLife Japan HP & Recruiting Agency) · Internal
-Position Information
+Background
 
 
-Job Summary
-
-
-Looking for a Lead Full Stack Software Engineer to join our NextGen PAS team. This team
-is spearheading the effort to develop strategies for migrating multiple legacy applications
-from a mainframe environment and building new cloud-native applications in an open-
-source environment.
-
-
-We are seeking an engineer to take on a central role as the lead for application design and
-development. The ideal candidate must have extensive experience with open systems, from
-requirements definition through to development, design, testing, and release. The required
-skill set is correspondingly high, and the successful candidate must demonstrate excellence
-in several of the following areas:
-
-
-Extensive experience in designing and developing open systems, including databases.
-
-
-· Code analysis of existing systems
-· Knowledge and experience with public clouds (Azure, AWS, GCP)
-· Experience in data and UML modeling
-· Ability to review code created by team members and provide appropriate feedback
-· Experience in the life insurance industry and related business knowledge
-· Communication with other teams primarily in Japanese
-· Ability to lead teams of up to "two pizzas" in size.
+As an AXA engineer, you will be working closely with product owners, business analysts,
+UI/UX designers and other developers to build web applications, and will handle all steps
+of software development, such as requirement analysis, system design, coding, testing,
+deployment, release and maintenance/enhancement.
+The primary programming language for this role is JavaScript/TypeScript, and additional
+proficiency in Java/SpringBoot is a major plus.
 
 
 Responsibilities
 
 
-To migrate the functions of existing applications currently running on a mainframe to
-an open system, the incumbent will be responsible for carrying out all necessary tasks
-from the architecture planning, design, development, testing, and deployment of new
-Java Batch/UI/API applications.
+· Develop, thoroughly unit-tested, front-end and/or back-end applications using
+TypeScript.
 
 
-We hope that in the future, ideal candidate will be able to take the lead in planning and
-developing teams, providing guidance to members, and conducting reviews of
-deliverables.
+· Take architectural decisions and design scalable systems.
+· Continuously identify ways of enhancing the existing applications and work on the
+improvements.
 
 
-MetLife
-メットライフ生命
+· Review code developed by other developers and provide feedback to ensure best
+practices, such as efficiency, testability, readability, maintainability and style guide
+compliance.
 
 
-Requirements (Experience, Skills, Education)
+· Contribute to our software engineering CoPs (Communities of Practice) by sharing
+knowledge and promoting best practices.
 
 
-Experience:
+· Mentor and support junior and mid-level engineers
 
 
-· 5+ years of design experience and 10+ years of development experience with
-Java and RDB
-· General RDB (関係データベース/SQL (関係データベース:Structured Query Language)
-knowledge in programming
-Experience in designing, developing, and preparing operating environments for
-new applications
-· Ability to analyze application logs and troubleshoot issues
-· Development experience with cloud technologies (Azure, AWS, GCP) (Azure will be
-used)
-· Ability to understand the source code of open systems
-· Experience in reviewing code created by team members and providing appropriate
-feedback
-· Experience coding(SQL, Python, HTML/CSS) within the past 2 years
-· Japanese language proficiency (native or JLPT N2 level or above)
-· Knowledge of life insurance industry (not required for native Japanese speakers)
+Tech Stack
 
 
-○
+· Programming languages: TypeScript/JavaScript, HTML, CSS
+· Libraries/Frameworks: React.js/Next.js, Serverless Framework, Express.js/Fastify, Jest
+· Platforms: AWS, OpenShift
+· Databases: Aurora MySQL, DocumentDB, Redis
+· Monitoring: Kibana, Splunk, Dynatrace
+· CI/CD:Jenkins, ArgoCD, SonarQube
+· Other: GitHub, Microsoft Teams, Jira, Confluence
 
 
-Education:
+背景
 
 
-· Bachelor's degree in Computer Science, Information Technology, or equivalent
-knowledge.
+AXA エンジニアとして、 プロダクトオーナー、 ビジネスアナリスト、 UI/UXデザ
+イナー、 その他の開発者と緊密に協力してWeb アプリケーションを構築し、 要
+件分析、 システム設計、 コーディング、 テスト、 デプロイ、 リ リース、 および
+メンテナンス(株式強化などソフトウェア開発の全保険を担当していただきます
+。 このポジションでは主なプログラミング言語は JavaScript/TypeScript ですが、
+Java/SpringBoot のスキルは大きなプラスとなり ます。
 
 
-Preferable
+責任
 
 
-· Experience in designing and developing batch applications
-· Ability to perform performance tuning on applications and databases
-· Experience in an Agile development environment
-· Experience implementing CICD (planned implementation using Azure DevOps)
-· Experience in developing with Mainframe
-· Understanding of COBOL, JCL, and Assembler languages
-· Ability to plan testing and rollout
-· Knowledge and experience in enterprise-level development
-· Business level English proficiency
+· TypeScript を使用して、 完全に単体テス ト済みのフロントエンドおよびバック
 
 
-Qualification
-Language
-English (□ Advanced □ Intermediate □ Basic) Japanese ( □ Advanced □ Intermediate □ Basic) □ Not Required
-Others
+エンドのアプリケーションを開発します。
 
 
-Date
-01-Jan-2025
-Prepared by
-Yoshimi Senoo
+· アーキテクチャに関する決定を下し、 スケーラブルなシステムを設計します
+
+
+。
+
+
+· 既存のアプリケーションを継続的に改善する方法を特定し、 その改善に取 り
+
+
+組みます。
+
+
+· 他の開発者が作成したコードをレビューし、 効率、 テスト容易性、 可読性、
+保守性、 スタイルガイ ドへの単純などのベストプラクティスを確保するための
+フィードバックを提供します。
+· 知識を共有し、 ベストプラクティスを促進することで、 ソフトウェアエンジ
+ニアリングの CoP (実践のコミュニティ)に貢献します。
+· 若手 · 中堅エンジニアのメンターやサポートを行います。
+
+
+技術スタック
+
+
+· プログラミング言語 : TypeScript/JavaScript, HTML, CSS
+
+
+· ライプラリ/フレームワーク : React.js/Next.js, Serverless Framework,
+
+
+Express.js/Fastify, Jest
+
+
+· プラ ッ ト フォーム : AWS、 OpenShift
+· データベース : Aurora MySQL、 DocumentDB、 Redis
+· モニタ リ ング : Kibana、 Splunk、 Dynatrace
+· CI/CD: Jenkins, ArgoCD, SonarQube
+· その他 : GitHub、 Microsoft Teams、 Jira、 Confluence
+
+
+Required skills and
+experienceJob
+qualification
+
+
+Minimum Qualifications
+
+
+· At least 7 years of relevant experience developing web applications using
+JavaScript/TypeScript.
+
+
+· Experience with front-end development using React and/or Next.js.
+· Ability to use HTML/CSS to implement clean and responsive user interfaces.
+· Experience with back-end development using Node.js and frameworks available for it,
+such as Express or Fastify.
+
+
+· Good understanding of RESTful APIs design and Swagger/Open API specification.
+· Understanding of relational databases, such as MySQL, and ability to design schemas,
+
+
+create efficient queries and add indexes as needed.
+
+
+· Interest and ability to learn new technologies as needed, such as Next.js or Serverless
+Framework.
+
+
+· Knowledge of software development best practices and ability to write readable and
+maintainable code.
+
+
+· Ability to take architectural decisions and design scalable systems.
+· Ability to take ownership and proactively implement improvements to the existing
+
+
+applications.
+
+
+· Ability to introduce new relevant libraries/frameworks as needed.
+· Experience with Agile/Scrum methodology.
+· Experience with AWS.
+· Ability to coach/mentor other software engineers
+· Good understanding of Git and ability to work collaboratively with other developers.
+· Business English (TOEIC 785 or above) and Business Japanese (JLPT N2 or above),
+
+
+ability in both languages is required
+
+
+· Degree in Computer Science or equivalent practical experience.
+
+
+Preferred Qualifications
+
+
+· Knowledge of Java/SpringBoot.
+
+
+· Understanding of NoSQL databases, such as DocumentDB and Redis.
+· Experience with OpenShift and/or Kubernetes.
+· Experience with serverless architecture.
+· Experience with service-oriented and/or micro service architecture.
+· Experience with CI/CD tools such as Jenkins and SonarQube.
+
+
+必須資格
+
+
+· Jkuarh://pebritoを使用したwarアプリケーション開発において、 少なく と
+も7年の関連経験。
+· React.jsお よび/またはNotipを使用したフロントエンド開発の経験。
+· HTML/CSSを使用して、 クリーンでレスポンシブなユーザーインターフェイス
+を実装する能力。
+· Nodelsおよびそれに対応するフレームワーク (ExpressやFastifyなど) を使用し
+たバックエンド開発の経験。
+· RESTful APIの設計とSwagger/Open API仕様に関する十分な理解。
+· MySQLなどのリ レーショナルデータベースの理解、 スキーマ設計、 効率的なク
+エ リ 作成、 必要に応じたインデックス追加の能力。
+· Next.jsやServerless famewortなどの新しい技術を必要に応じて学ぶ興味と能力
+。
+· ソフトウェア開発のベストプラクティスに関する知識と、 読みやすく保守し
+やすいコードを書く能力。
+· アーキテクチャに関する決定を下し、 スケーラブルなシステムを設計する能
+力。
+· 既存アプリケーションの改善に主体的に取り組み、 積極的に実施する能力。
+· 必要に応じて新しい関連ライプラ」/フレームワークを導入する能力。
+· アジャイル/Scrum手法の経験。
+· AWSの経験。
+· 他のソフトウェアエンジニアを指導 · メンターする能力。
+· Gitの良い理解と、 他の開発者と協力して作業する能力。
+· ビジネス英語 (TOEIC785点以上) およびビジネス日本語 (JLPT N2以上) の能
+力が必要。
+· Computer Science degree or equivalent work experience.
+Preferred Qualifications
+
+
+· Knowledge of Java/SpringBoot.
+· Understanding of NoSQL databases such as DocumentDB or Redis.
+· Experience with OpenShift and/or Kubernetes.
+· Experience with serverless architectures.
+· Experience with service-oriented and/or microservices architectures.
+· Experience with CI/CD tools such as Jenkins or SonarQube.
+
+
+Treatment
+Condition
+
+
+[Wages] Preferential treatment according to company regulations based on current
+annual income, ability, and experience
+
+
+[Working hours]
+
+
+9:00-17:00 (break 12:00-13:00)
+
+
+Flextime available

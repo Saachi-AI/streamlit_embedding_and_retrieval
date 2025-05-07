@@ -18,3 +18,4 @@ langchain-pinecone
 boto3
 python-dotenv
 beautifulsoup4
+google-generativeai>=0.3.0

@@ -2,8 +2,10 @@ import os
 import json
 import logging
 import re
+import argparse
 from typing import List, Dict, Any, Optional, Union
 from openai import OpenAI
+from google import genai
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -16,14 +18,37 @@ class IndividualProfileEvaluator:
     evaluation of each candidate against these dimensions.
     """
     
-    def __init__(self, api_key: str = None):
-        """Initialize with X AI API key."""
-        self.api_key = api_key or os.environ.get("XAI_API_KEY")
-        if not self.api_key:
-            logger.warning("XAI_API_KEY not found in environment. LLM evaluation will not work.")
+    def __init__(self, api_key: str = None, llm_choice: str = "grok"):
+        """Initialize with X AI API key or Google API key based on llm_choice."""
+        self.llm_choice = llm_choice.lower()
         
-        # Initialize the OpenAI client with X AI API base URL
-        self.client = OpenAI(api_key=self.api_key, base_url="https://api.x.ai/v1")
+        if self.llm_choice == "grok":
+            self.api_key = api_key or os.environ.get("XAI_API_KEY")
+            if not self.api_key:
+                logger.warning("XAI_API_KEY not found in environment. Grok LLM evaluation will not work.")
+            
+            # Initialize the OpenAI client with X AI API base URL
+            self.client = OpenAI(api_key=self.api_key, base_url="https://api.x.ai/v1")
+        elif self.llm_choice == "gemini":
+            self.api_key = api_key or os.environ.get("GOOGLE_API_KEY")
+            if not self.api_key:
+                logger.warning("GOOGLE_API_KEY not found in environment. Gemini LLM evaluation will not work.")
+            else:
+                # Log that we found the API key (safely)
+                logger.info(f"Using Google API key (starting with: {self.api_key[:4]}{'*' * 10})")
+            
+            # Initialize the Gemini client 
+            # Note: The client directly takes the API key, no need for configure method
+            self.client = genai.Client(api_key=self.api_key)
+        else:
+            logger.warning(f"Unknown LLM choice: {llm_choice}. Defaulting to Grok.")
+            self.llm_choice = "grok"
+            self.api_key = api_key or os.environ.get("XAI_API_KEY")
+            if not self.api_key:
+                logger.warning("XAI_API_KEY not found in environment. Grok LLM evaluation will not work.")
+            
+            # Initialize the OpenAI client with X AI API base URL
+            self.client = OpenAI(api_key=self.api_key, base_url="https://api.x.ai/v1")
         
         # Initialize job dimensions cache
         self.job_dimensions = None
@@ -137,6 +162,54 @@ class IndividualProfileEvaluator:
         - Ensure the overall match percentage is a weighted average of the dimension scores
         """
     
+    def _call_grok_llm(self, system_prompt: str, user_prompt: str, temperature: float = 0.2, max_tokens: int = 4096) -> str:
+        """
+        Call Grok LLM API.
+        
+        Args:
+            system_prompt: System prompt text
+            user_prompt: User prompt text
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens to generate
+            
+        Returns:
+            LLM response text
+        """
+        response = self.client.chat.completions.create(
+            model="grok-3-beta",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
+        return response.choices[0].message.content
+    
+    def _call_gemini_llm(self, system_prompt: str, user_prompt: str, temperature: float = 0.2, max_tokens: int = 4096) -> str:
+        """
+        Call Gemini LLM API.
+        
+        Args:
+            system_prompt: System prompt text
+            user_prompt: User prompt text
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens to generate
+            
+        Returns:
+            LLM response text
+        """
+        # Combine system prompt and user prompt for Gemini
+        combined_prompt = f"{system_prompt}\n\n{user_prompt}"
+        
+        # Generate content with parameters directly
+        response = self.client.models.generate_content(
+            model="gemini-2.5-pro-exp-03-25",
+            contents=combined_prompt,
+        )
+        
+        return response.text
+    
     def extract_job_dimensions(self, raw_job_description: str, summarized_job_description: Optional[str] = None) -> Dict[str, Any]:
         """
         Extract key dimensions from job description for candidate evaluation.
@@ -181,21 +254,25 @@ class IndividualProfileEvaluator:
                 Remember to always include "Role Alignment" as one of the dimensions.
                 """
                 
-            # Call X AI API to extract dimensions
-            logger.info("Calling X AI LLM to extract job dimensions")
-            response = self.client.chat.completions.create(
-                model="grok-3-beta",
-                messages=[
-                    {"role": "system", "content": self.dimension_extraction_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=0.2,
-                max_tokens=4096
-            )
+            # Call LLM to extract dimensions
+            logger.info(f"Calling {self.llm_choice.upper()} LLM to extract job dimensions")
             
-            # Extract LLM response
-            llm_response = response.choices[0].message.content
-            logger.info("Job dimension extraction response received from LLM")
+            if self.llm_choice == "grok":
+                llm_response = self._call_grok_llm(
+                    system_prompt=self.dimension_extraction_prompt,
+                    user_prompt=user_prompt,
+                    temperature=0.2,
+                    max_tokens=4096
+                )
+            else:  # gemini
+                llm_response = self._call_gemini_llm(
+                    system_prompt=self.dimension_extraction_prompt,
+                    user_prompt=user_prompt,
+                    temperature=0.2,
+                    max_tokens=4096
+                )
+            
+            logger.info(f"Job dimension extraction response received from {self.llm_choice.upper()} LLM")
             
             # Extract JSON from the response
             extracted_dimensions = self._extract_json_from_response(llm_response)
@@ -279,21 +356,25 @@ class IndividualProfileEvaluator:
             Please evaluate this candidate (profile_id: {profile_id}) against each dimension, providing percentage scores, reasoning, and an overall assessment.
             """
             
-            # Call X AI API for profile evaluation
-            logger.info(f"Calling X AI LLM to evaluate profile {profile_id}")
-            response = self.client.chat.completions.create(
-                model="grok-3-beta",
-                messages=[
-                    {"role": "system", "content": self.profile_evaluation_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=0.3,
-                max_tokens=8192
-            )
+            # Call LLM for profile evaluation
+            logger.info(f"Calling {self.llm_choice.upper()} LLM to evaluate profile {profile_id}")
             
-            # Extract LLM response
-            llm_response = response.choices[0].message.content
-            logger.info(f"Profile evaluation response received for profile {profile_id}")
+            if self.llm_choice == "grok":
+                llm_response = self._call_grok_llm(
+                    system_prompt=self.profile_evaluation_prompt,
+                    user_prompt=user_prompt,
+                    temperature=0.3,
+                    max_tokens=8192
+                )
+            else:  # gemini
+                llm_response = self._call_gemini_llm(
+                    system_prompt=self.profile_evaluation_prompt,
+                    user_prompt=user_prompt,
+                    temperature=0.3,
+                    max_tokens=8192
+                )
+            
+            logger.info(f"Profile evaluation response received from {self.llm_choice.upper()} LLM for profile {profile_id}")
             
             # Extract JSON from the response
             evaluation_results = self._extract_json_from_response(llm_response)
@@ -359,10 +440,14 @@ class IndividualProfileEvaluator:
                 
                 evaluated_profiles.append(evaluation)
                 
-            # Sort profiles by overall match percentage (descending)
+            # Sort profiles: First by overqualification status, then by match percentage (descending)
             evaluated_profiles.sort(
-                key=lambda x: x.get("overall_match", {}).get("percentage", 0),
-                reverse=True
+                key=lambda x: (
+                    # Sort overqualified candidates after non-overqualified candidates
+                    x.get("is_overqualified", False),
+                    # Then by overall match percentage (descending)
+                    -x.get("overall_match", {}).get("percentage", 0)
+                )
             )
             
             # Add ranks based on sorted order
@@ -438,4 +523,35 @@ class IndividualProfileEvaluator:
             return {}
         except Exception as e:
             logger.error(f"Error extracting JSON from LLM response: {str(e)}")
-            return {} 
+            return {}
+
+
+def parse_args():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(description="Profile Evaluator using LLM")
+    parser.add_argument(
+        "--llm",
+        type=str,
+        default="grok",
+        choices=["grok", "gemini"],
+        help="LLM model to use (default: grok)"
+    )
+    parser.add_argument(
+        "--job",
+        type=str,
+        help="Path to job description file"
+    )
+    parser.add_argument(
+        "--profiles",
+        type=str,
+        help="Path to profiles file or directory"
+    )
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    evaluator = IndividualProfileEvaluator(llm_choice=args.llm)
+    print(f"Initialized profile evaluator with LLM: {args.llm}")
+    print("Note: For full functionality, use this class within your application.")
+    print("For streamlit integration, pass LLM choice via config or environment variables.") 

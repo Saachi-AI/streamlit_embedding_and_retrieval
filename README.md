@@ -9,70 +9,52 @@ A modular Python framework for building and deploying document retrieval systems
 - **Structured Filtering**: Extract structured filters from natural language queries
 - **Vector Store Integration**: Ready-to-use integration with Pinecone
 - **Reranking Capability**: Enhance retrieval quality with Cohere's Rerank API
+- **Multiple LLM Options**: Use either Grok or Gemini for profile evaluation
 - **High-Level Services**: Simplified interfaces for common retrieval tasks
 - **Configuration Management**: Centralized settings management with environment variable support
 - **Robust Error Handling**: Custom error types and automatic retries for reliability
 
-## Installation
+## Setup
 
-```bash
-pip install retrieval-framework
+1. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+2. Set up environment variables in `.env` file:
+   ```
+   XAI_API_KEY=your_grok_api_key
+   GOOGLE_API_KEY=your_gemini_api_key
+   OPENAI_API_KEY=your_openai_api_key
+   COHERE_API_KEY=your_cohere_api_key
+   PINECONE_API_KEY=your_pinecone_api_key
+   PINECONE_INDEX_NAME=your_pinecone_index
+   GROQ_API_KEY=your_groq_api_key
+   ```
+
+## Running the Application
+
+To run the application with Grok LLM (default):
+```
+streamlit run app.py
 ```
 
-## Quick Start
-
-```python
-from retrieval_framework.services import RetrievalService, EmbeddingService
-from retrieval_framework.core.embedders import OpenAIEmbedder
-from retrieval_framework.core.filters import FilterExtractor
-from retrieval_framework.core.vectorstores import PineconeStore
-from retrieval_framework.core.rerankers import CohereReranker
-
-# Initialize components
-embedder = OpenAIEmbedder(api_key="your-openai-api-key")
-filter_extractor = FilterExtractor(api_key="your-groq-api-key")
-vector_store = PineconeStore(
-    api_key="your-pinecone-api-key",
-    index_name="your-index-name"
-)
-reranker = CohereReranker(api_key="your-cohere-api-key")
-
-# Create retrieval service
-retrieval_service = RetrievalService(
-    embedder=embedder,
-    vector_store=vector_store,
-    filter_extractor=filter_extractor,
-    reranker=reranker
-)
-
-# Search with natural language filtering and reranking
-results = retrieval_service.retrieve_documents(
-    query="Find candidates who speak fluent Japanese with at least 5 years of experience",
-    top_k=10,
-    rerank_top_k=5,
-    enable_metadata_filtering=True,
-    enable_reranking=True
-)
-
-print(f"Found {len(results)} matching documents")
-for i, doc in enumerate(results):
-    print(f"Result {i+1}: {doc.metadata.get('title')} - Score: {doc.score}")
+To run the application with Gemini LLM:
 ```
+streamlit run app.py llm=gemini
+```
+
+The application will automatically detect the LLM choice from the command line parameters and use the appropriate API key.
 
 ## Environment Variables
 
-The framework supports configuration via environment variables:
-
-```
-OPENAI_API_KEY=your-openai-api-key
-COHERE_API_KEY=your-cohere-api-key
-PINECONE_API_KEY=your-pinecone-api-key
-PINECONE_INDEX_NAME=your-index-name
-GROQ_API_KEY=your-groq-api-key
-LANGCHAIN_API_KEY=your-langchain-api-key
-SEMANTIC_TOP_K=10  # Number of results to fetch from vector store
-RERANK_TOP_K=5     # Number of results to keep after reranking
-```
+- `XAI_API_KEY`: Required for Grok LLM
+- `GOOGLE_API_KEY`: Required for Gemini LLM
+- `OPENAI_API_KEY`: Required for OpenAI embeddings
+- `COHERE_API_KEY`: Required for Cohere embeddings and reranking
+- `PINECONE_API_KEY`: Required for vector store access
+- `PINECONE_INDEX_NAME`: Required for vector store access
+- `GROQ_API_KEY`: Required for filter extraction
 
 ## Architecture
 

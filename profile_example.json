@@ -1,0 +1,292 @@
+{
+    "profile_id": "71060",
+    "consultant_description": "2025-01-21 (Mithun) excellent candidate via Vivek Meeting: Call Company: Rakuten Position: Data Scientist Current Salary: 10.2M total. 7M base plus 2.7M bonus 0.5M in stock Expected Salary: 12M minimum Age: Language Ability: N3, can interview in Japanese. fluent English Personality/presentation/communication skills: Decent candidate, but bit short and bit too direct at times, not the best attitude. Type of young guy who thinks he knows it all. Will need to temper his ego to ensure he doesn't come across arrogant in interviews. Career Summary: Been in Japan 3yrs, 9yrs as Data Scientist, doesn't have enough holidays at Rakuten, cannot go back to India. Work/life balance is very bad so looking outside. Working in customer analytics, campaigns, make algos to target customers, Insta, YT, send them ads to buy products. Also has recent work with Rakuten Insurance, so thinks MetLife can be good. Does some data engineering too, making pipelines, data extraction, live on the server, checking data drift and refreshing. Would like client facing role, talk to clients, basic requirement is remote work or holidays. When he was originally looking for a role 2yrs ago, had some rounds of interviews at MetLife, met Shashank. RFL: work life balance Position desired: Data Scientist Location desired: Tokyo Companies Applied for: has multiple interviews Companies pitched: MetLife, Data Scientist (in love with Data Visualization) with 8 years of experience in Pharmaceuticals, Telecom, and consultancy with leadership and communication capabilities that translated into revenue of millions of USD. Hold experience in executing end-to-end Data Science projects and mentoring budding Data Scientists. An expert in Python and other Data Science tools",
+    "created_at": "2025-01-21T18:59:18",
+    "updated_at": "2025-03-20",
+    "headline": "Data Scientist || MBA at Hitotsubashi University || YLP Scholar",
+    "nationality": "IN",
+    "employments": [
+      {
+        "company": "Rakuten",
+        "position": "Data Scientist",
+        "description": "Currently working on customer analytics and segmentation at Rakuten Insurance, leveraging advanced clustering techniques to drive personalized insurance product marketing, resulting in sales growth. Maintain data pipelines and ETL processes to support data science initiatives. Pioneered report automation using LLM technology, reducing report generation time by 8 hours while improving accuracy in client communications",
+        "skills": [],
+        "start": "1/1/2023",
+        "end": null
+      },
+      {
+        "company": "AstraZeneca",
+        "position": "Data Scientist",
+        "description": "Solved a variety of interesting problems in the Operations and Data Science domain and mentored budding Data Scientists. The problems involve different aspects of operations such as Safety Monitoring, Optimisation of operation lines and Storage, Designing of products, Complaints Analysis, and Energy & Emission Management. Performed Analytics, and developed Statistical models using statistics, Python, R, SQL and Tableau.",
+        "skills": [
+          "Biopharmaceuticals",
+          "Python (Programming Language)",
+          "Machine Learning",
+          "SQL",
+          "Operations Research"
+        ],
+        "start": "10/1/2019",
+        "end": "9/1/2021"
+      },
+      {
+        "company": "Verizon",
+        "position": "Data Scientist",
+        "description": "Solved problems within the Telecom Industry focusing on computer vision. This includes a self-service app to diagnose Digital Connection Problems and solve them. Performed Data Analysis with Data management to successfully deliver the projects.",
+        "skills": [],
+        "start": "10/1/2018",
+        "end": "10/1/2019"
+      },
+      {
+        "company": "Tata Consultancy Services",
+        "position": "Data Scientist",
+        "description": "Led an Industrial IoT project to optimize power plant operations and reduce pollution where I led a team of 7 to perform Data Analytics and delivered Artificial Intelligence (AI) projects. Built optimization-related Algorithms and worked in Java, C++, and MATLAB for supporting the projects. Apart from that, I have developed solutions for various problems in domains like Engineering and Telecom. The solutions included Optimization, Computer Vision, Natural Language Processing, and Deep Learning Techniques.",
+        "skills": [],
+        "start": "12/1/2014",
+        "end": "10/1/2018"
+      },
+      {
+        "company": "Orchid Pharma",
+        "position": "Intern",
+        "description": "Underwent In-plant training in Orchid Pharmaceutical and learnt functioning and functionalities of Pharma Industry.",
+        "skills": [],
+        "start": "11/1/2013",
+        "end": "12/1/2013"
+      },
+      {
+        "company": "Steel Authority of India Limited",
+        "position": "Intern",
+        "description": "Under went In-plant Training and learning working of a Steel Plant and how things are managed.",
+        "skills": [],
+        "start": "6/1/2013",
+        "end": "7/1/2013"
+      }
+    ],
+    "notes": [
+      {
+        "message": "Thank you for follow up Vivek, He is not interested in roles shared with him.",
+        "created_at": "2025-03-05T15:48:07"
+      },
+      {
+        "message": "Sru, did we got any buy-in for him for any AXA roles",
+        "created_at": "2025-03-05T15:22:08"
+      },
+      {
+        "message": "jp is weak, not able to float to consulting/SIer clients. also not able to float TCS due to their internal policy",
+        "created_at": "2025-02-19T18:51:28"
+      },
+      {
+        "message": "Taiki notes: I spoke with him and his Japanese was actually not enough to float clients unfortunately..also he mentioned that he can’t join TCS due to TCS policy as he used to work at TCS india.",
+        "created_at": "2025-02-19T17:38:33"
+      },
+      {
+        "message": "Taiki, He is ok to speak today at 16:30 or later at 8:00PM. Please advise",
+        "created_at": "2025-02-19T16:13:53"
+      },
+      {
+        "message": "Taiki, He is interested in applying for Data Scientist role EY, KPMG ALH, Abeam, and TCS. Please let me know if he is worth sending. His resume in already uploaded in Tamago",
+        "created_at": "2025-02-18T20:34:30"
+      },
+      {
+        "message": "VM - Pitched AXA - Data Manager and AI ML lead on linkedin",
+        "created_at": "2025-02-18T18:02:58"
+      },
+      {
+        "message": "Mithun, He was asking for update. I told him that there in one candidate in the offer stages. \" Hi Vivek. Was there any update from MetLife?",
+        "created_at": "2025-02-18T16:25:43"
+      },
+      {
+        "message": "I had the prep call with Avinash before his 1st CCM for GG11 - Data Scientist role in MetLife. He is good, has 8+ years of Data science experience. In his current company Rakuten - His team works for Rakuten Insurance which is very similar to the role in MetLife, but it is a different insurance product. With feedback from Vishwas, I prepped him on answering his experience by stating the problem statement first and detail the end-to-end approach all the way to CI/CD and MLOps. He understood it and I think he will do well. My biggest concern is his Japanese. He is not comfortable taking the interview in Japanese, which could be a big red flag, but lets see.",
+        "created_at": "2025-02-07T11:28:03"
+      },
+      {
+        "message": "@Mithun @LD Avinash (アヴィナシュ) Kumar/ Data Scientist Rakuten/ Business Level J./ 10.2M. I pitched him MetLife he is interested to apply if its a permanent role. Please let me know if he can be good for this role. PDF",
+        "created_at": "2025-01-21T19:10:48"
+      }
+    ],
+    "skills": {
+      "industry": [
+        "Technology",
+        "Pharma"
+      ],
+      "functional": [
+        "Machine Learning",
+        "Python",
+        "SQL",
+        "AWS",
+        "Azure",
+        "Kubernetes",
+        "Docker",
+        "Tableau",
+        "linux",
+        "Natural Language Processing"
+      ],
+      "general": [
+        "Data Scientist",
+        "Data Analyst"
+      ]
+    },
+    "education": [
+      {
+        "degree": "Master of Business Administration - MBA, Business Administration and Management, General",
+        "school": "Hitotsubashi ICS (Hitotsubashi University Business School)",
+        "start": "9/1/2021",
+        "end": "8/1/2022"
+      },
+      {
+        "degree": "Master of Business Administration - MBA",
+        "school": "Hitotsubashi University",
+        "start": "9/1/2021",
+        "end": "8/1/2022"
+      },
+      {
+        "degree": "Foreign Policy Analysis for Business Leaders",
+        "school": "Koç University",
+        "start": "5/1/2022",
+        "end": "5/1/2022"
+      },
+      {
+        "degree": "AI and Digital Strategy",
+        "school": "Renmin University of China",
+        "start": "3/1/2022",
+        "end": "5/1/2022"
+      },
+      {
+        "degree": "INNOVATION x SERVICE MANAGEMENT OMOTENASHI 3.0",
+        "school": "Hitotsubashi ICS (Hitotsubashi University Business School)",
+        "start": "3/1/2022",
+        "end": "3/1/2022"
+      },
+      {
+        "degree": "InnoLab Solving Innovation Challenges through Collective Intelligence",
+        "school": "Stockholm School of Economics",
+        "start": "1/1/2022",
+        "end": "3/1/2022"
+      },
+      {
+        "degree": "Bachelor of Engineering - BE, Electronics and Instrumentation",
+        "school": "Anna University Chennai",
+        "start": "1/1/2010",
+        "end": "1/1/2014"
+      },
+      {
+        "degree": "High School, Physics,Chemistry,Mathematics",
+        "school": "Zion Mat. Hr. Sec. School",
+        "start": "7/1/2008",
+        "end": "1/1/2010"
+      }
+    ],
+    "languages": {
+      "Hindi": "Native or Bilingual proficiency",
+      "English": "Native or Bilingual proficiency",
+      "Japanese": "Professional working proficiency",
+      "Tamil": "Limited working proficiency"
+    },
+    "certifications": [
+      {
+        "name": "Dataiku Core Designer"
+      },
+      {
+        "name": "Dataiku Core Designer"
+      },
+      {
+        "name": "Dataiku ML Practitioner"
+      },
+      {
+        "name": "Dataiku ML Practitioner"
+      },
+      {
+        "name": "Dataiku ML Practitioner"
+      },
+      {
+        "name": "Computer Vision: Introduction"
+      },
+      {
+        "name": "ConvNets: Introduction to Convolutional Neural Networks"
+      },
+      {
+        "name": "Convo Nets for Visual Recognition: Computer Vision & CNN Architectures"
+      },
+      {
+        "name": "Computer Vision: AI & Computer Vision"
+      },
+      {
+        "name": "Convolutional Neural Networks"
+      },
+      {
+        "name": "Convolutional Neural Networks in TensorFlow"
+      },
+      {
+        "name": "DeepLearning.AI TensorFlow Developer Specialization"
+      },
+      {
+        "name": "Improving Deep Neural Networks: Hyperparameter tuning, Regularization and Optimization"
+      },
+      {
+        "name": "Introduction to TensorFlow for Artificial Intelligence, Machine Learning, and Deep Learning"
+      },
+      {
+        "name": "Natural Language Processing in TensorFlow"
+      },
+      {
+        "name": "Sequence Models"
+      },
+      {
+        "name": "Sequences, Time Series and Prediction"
+      },
+      {
+        "name": "Convolutional Neural Networks"
+      },
+      {
+        "name": "Deep Learning Specialization"
+      },
+      {
+        "name": "Improving Deep Neural Networks: Hyperparameter tuning, Regularization and Optimization"
+      },
+      {
+        "name": "Improving Deep Neural Networks: Hyperparameter tuning, Regularization and Optimization"
+      },
+      {
+        "name": "Neural Networks and Deep Learning"
+      },
+      {
+        "name": "Structuring Machine Learning Projects"
+      },
+      {
+        "name": "Building Deep Learning Applications with Keras 2.0"
+      },
+      {
+        "name": "Learning Linux Command Line"
+      },
+      {
+        "name": "Learning Data Governance"
+      },
+      {
+        "name": "Python: Data Analysis"
+      },
+      {
+        "name": "Statistics Foundations: 1"
+      },
+      {
+        "name": "Introduction to Data Science"
+      },
+      {
+        "name": "Python: Data Analysis"
+      },
+      {
+        "name": "Linux: Bash Shell and Scripts"
+      },
+      {
+        "name": "Programming Fundamentals in the Real World"
+      },
+      {
+        "name": "Python 3 Essential Training"
+      },
+      {
+        "name": "Up and Running with Python"
+      },
+      {
+        "name": "Foundation Cetificate in Telcom Domain"
+      }
+    ],
+    "linkedin_description": "Data Scientist (in love with Data Visualization) with 8 years of experience in Pharmaceuticals, Telecom, and consultancy with leadership and communication capabilities that translated into revenue of millions of USD. Hold experience in executing end-to-end Data Science projects and mentoring budding Data Scientists. An expert in Python and other Data Science tools"
+}

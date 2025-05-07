@@ -55,34 +55,40 @@ class IndividualProfileEvaluator:
         
         # System prompt for dimension extraction
         self.dimension_extraction_prompt = """
-        You are an expert talent acquisition specialist trained to analyze job descriptions and identify key dimensions for candidate evaluation.
+        You are an expert talent-acquisition specialist trained to analyze job descriptions and identify the key dimensions that should be used to evaluate candidates.
 
-        Your task is to analyze the provided job description and identify 3-5 key dimensions that will be used to evaluate candidates. These dimensions should be specific to the job requirements and help determine the candidate's fit for the role.
+        TASK  
+        • Read the job description provided in the user message.  
+        • Return exactly **3-5** job-specific evaluation dimensions.  
+        • ALWAYS include one dimension named “Role Alignment”.
 
         RULES:
         1. Identify 3-5 job-specific evaluation dimensions based on the job description.
-        2. ALWAYS include "Role Alignment" as one of the dimensions to evaluate career fit.
-        3. Each dimension must have:
-           - A clear name (e.g., "Technical Expertise", "Industry Experience")
-           - A concise description explaining what this dimension evaluates
-           - 2-3 key success factors that define excellence in this dimension
-
-        4. Focus on extracting dimensions related to:
+        2. Each dimension must be returned with four fields:  
+            • "id" - concise snake_case slug (≤ 30 chars) used as a stable reference  
+            • "name" - human-readable title  
+            • "weight" - integer 0-100; all weights must sum to 100  
+            • "description" - one-sentence explanation of what this dimension evaluates  
+            • "key_success_factors" - 2-3 bullet points defining excellence
+        3. Use weights to reflect relative importance in the JD (higher weight = more critical).
+        4. ALWAYS include "Role Alignment" as one of the dimensions to evaluate career fit.
+        5. Focus on extracting dimensions related to:
            - Required skills and technical expertise
            - Domain/industry experience
            - Relevant qualifications or certifications
            - Soft skills or behavioral attributes mentioned
            - Language requirements if specified
-
-        5. Dimensions should be specific enough to meaningfully differentiate candidates
-        6. Do not include generic dimensions that apply to all jobs (e.g., "Communication Skills") unless specifically emphasized in the description
+        6. Dimensions should be specific enough to meaningfully differentiate candidates
+        7. Do not include generic dimensions that apply to all jobs (e.g., "Communication Skills") unless specifically emphasized in the description
 
         OUTPUT FORMAT:
         Return a JSON object with the following structure:
         {
           "dimensions": [
             {
+              "id": "dimension_name",
               "name": "Dimension Name",
+              "weight": 20,
               "description": "Clear explanation of what this dimension evaluates",
               "key_success_factors": [
                 "Success factor 1",
@@ -103,20 +109,22 @@ class IndividualProfileEvaluator:
         
         # System prompt for profile evaluation
         self.profile_evaluation_prompt = """
-        You are an expert talent acquisition specialist trained to evaluate candidate profiles against job requirements.
+        You are an expert talent-acquisition specialist. Your task is to evaluate a candidate profile against predefined job-specific dimensions and deliver a structured JSON assessment.
 
-        Your task is to evaluate a candidate profile against specific job dimensions and provide a detailed assessment of their fit for the role.
-
-        EVALUATION APPROACH:
-        1. Analyze the candidate profile in relation to each dimension
-        2. Assign percentage scores (0-100%) for each dimension with detailed reasoning
-        3. Calculate an overall match percentage as a weighted average of dimension scores
+        EVALUATION RULES:
+        1. Each dimension arrives with an "id", "name", and "weight" (0-100), "description" & "key_success_factors".
+            - If any weight is absent, assume all dimensions are equally weighted.   
+        2. For every dimension:
+            - Assign a score from 0-100%.
+            - Provide concise reasoning (MAX 60 words) citing concrete evidence from the profile.
+            - Ignore buzz-words or generic soft-skill claims unless the profile provides verifiable proof.  
+        3. Compute an overall match percentage = weighted average of the dimension scores.  
         4. Categorize the candidate as:
            - "Excellent Match" (85-100%)
            - "Good Match" (70-84%)
            - "Fair Match" (50-69%)
            - "Poor Match" (0-49%)
-        5. Identify if the candidate is overqualified for the role and adjust ranking accordingly
+        5. Identify if the candidate is overqualified for the role and if the candidate is clearly far more senior than required, set `"is_overqualified": true`.
         6. Highlight 2-3 key strengths and 1-2 key gaps
 
         OVERQUALIFICATION ASSESSMENT:
@@ -125,14 +133,15 @@ class IndividualProfileEvaluator:
         - Consider title history, years of experience, and level of previous responsibilities
 
         OUTPUT FORMAT:
-        Return a JSON object with the following structure:
+        Return **valid JSON only**, exactly in this schema:
         {
           "profile_id": "candidate's profile ID",
           "dimensions": [
             {
+              "id": "dimension_name",
               "name": "Dimension Name",
               "score": 85,
-              "reasoning": "Detailed explanation of why this score was assigned, referencing specific aspects of the candidate's profile"
+              "reasoning": "Detailed explanation of why this score was assigned, referencing specific aspects of the candidate's profile."
             },
             // Additional dimensions...
           ],
@@ -210,7 +219,7 @@ class IndividualProfileEvaluator:
         
         return response.text
     
-    def extract_job_dimensions(self, raw_job_description: str, summarized_job_description: Optional[str] = None) -> Dict[str, Any]:
+    def extract_job_dimensions(self, raw_job_description: str, job_description_prompt: Optional[str] = None) -> Dict[str, Any]:
         """
         Extract key dimensions from job description for candidate evaluation.
         
@@ -221,39 +230,16 @@ class IndividualProfileEvaluator:
         Returns:
             Dictionary containing extracted dimensions
         """
-        if not raw_job_description:
-            logger.error("No job description provided for dimension extraction")
-            return {"dimensions": []}
             
         try:
-            # Format the prompt to include both raw and summarized descriptions when available
-            if summarized_job_description:
-                user_prompt = f"""
-                Please analyze this job description to identify 3-5 key dimensions for candidate evaluation.
+            user_prompt = f"""
+            Please analyze the following summarized job description and identify 3-5 key dimensions for candidate evaluation, following the specification in the system prompt.
 
-                --- FULL JOB DESCRIPTION ---
-                {raw_job_description}
-                --- END FULL JOB DESCRIPTION ---
+            --- SUMMARIZED JOB DESCRIPTION ---
+            {job_description_prompt}
+            --- END SUMMARIZED JOB DESCRIPTION ---
+            """
 
-                --- SUMMARIZED JOB DESCRIPTION ---
-                {summarized_job_description}
-                --- END SUMMARIZED JOB DESCRIPTION ---
-
-                Extract 3-5 key dimensions that will be used to evaluate candidates for this role.
-                Remember to always include "Role Alignment" as one of the dimensions.
-                """
-            else:
-                user_prompt = f"""
-                Please analyze this job description to identify 3-5 key dimensions for candidate evaluation.
-
-                --- JOB DESCRIPTION ---
-                {raw_job_description}
-                --- END JOB DESCRIPTION ---
-
-                Extract 3-5 key dimensions that will be used to evaluate candidates for this role.
-                Remember to always include "Role Alignment" as one of the dimensions.
-                """
-                
             # Call LLM to extract dimensions
             logger.info(f"Calling {self.llm_choice.upper()} LLM to extract job dimensions")
             

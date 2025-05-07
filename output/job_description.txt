@@ -1,234 +1,152 @@
-Senior Full Stack Software Engineer (JavaScript/TypeScript)(P2/P3), Open Dev, Technology NEW !
+4/16/25,4:40 PM
+
+
+DevOps/SRE Engineer(P2/P3), Technology I アクサ生命保険株式会社
+
+
+アクサ生命保険株式会社
+
+
+IT / インフォメーション · テクノロジー
+
+
+DevOps/SRE Engineer(P2/P3), Technology
 
 
 職務内容
 Job description
 
 
-Background
+We are looking for a talented System Operations Engineer to join our team. This
+role is a mix of DevOps and Site Reliability Engineering (SRE) responsibilities,
+aimed at building and supporting business applications while ensuring uptime
+and system performance.
 
 
-As an AXA engineer, you will be working closely with product owners, business analysts,
-UI/UX designers and other developers to build web applications, and will handle all steps
-of software development, such as requirement analysis, system design, coding, testing,
-deployment, release and maintenance/enhancement.
-The primary programming language for this role is JavaScript/TypeScript, and additional
-proficiency in Java/SpringBoot is a major plus.
+Responsibilities:
 
 
-Responsibilities
+- Design, build, and maintain the infrastructure and configuration management
+needed for continuous integration, continuous deployment, and continuous
+delivery (CI/CD) pipelines.
 
 
-· Develop, thoroughly unit-tested, front-end and/or back-end applications using
-TypeScript.
+- Collaborate with development and operations teams to ensure smooth
 
 
-· Take architectural decisions and design scalable systems.
-· Continuously identify ways of enhancing the existing applications and work on the
-improvements.
+deployment and operation of systems.
 
 
-· Review code developed by other developers and provide feedback to ensure best
-practices, such as efficiency, testability, readability, maintainability and style guide
-compliance.
+- Monitor and optimize system performance, reliability, and scalability.
+- Implement best practices for security, monitoring, and alerting in all aspects of
+infrastructure and application development.
 
 
-· Contribute to our software engineering CoPs (Communities of Practice) by sharing
-knowledge and promoting best practices.
+- Automate repetitive tasks to improve efficiency and reduce human error.
+- Troubleshoot and resolve issues in development, testing, and production
+environments.
 
 
-· Mentor and support junior and mid-level engineers
+- Participate in on-call rotation to provide support for production systems.
 
 
-Tech Stack
+求めるスキル · 経験
 
 
-· Programming languages: TypeScript/JavaScript, HTML, CSS
-· Libraries/Frameworks: React.js/Next.js, Serverless Framework, Express.js/Fastify, Jest
-· Platforms: AWS, OpenShift
-· Databases: Aurora MySQL, DocumentDB, Redis
-· Monitoring: Kibana, Splunk, Dynatrace
-· CI/CD:Jenkins, ArgoCD, SonarQube
-· Other: GitHub, Microsoft Teams, Jira, Confluence
+Job qualification
 
 
-背景
+https://www.com/pring.or/ingmanyyinghtml/gh825
 
 
-AXA エンジニアとして、 プロダクトオーナー、 ビジネスアナリスト、 UI/UXデザ
-イナー、 その他の開発者と緊密に協力してWeb アプリケーションを構築し、 要
-件分析、 システム設計、 コーディング、 テスト、 デプロイ、 リ リース、 および
-メンテナンス(株式強化などソフトウェア開発の全保険を担当していただきます
-。 このポジションでは主なプログラミング言語は JavaScript/TypeScript ですが、
-Java/SpringBoot のスキルは大きなプラスとなり ます。
+1/3
 
 
-責任
+4/16/25,4:40 PM
 
 
-· TypeScript を使用して、 完全に単体テス ト済みのフロントエンドおよびバック
+DevOps/SRE Engineer(P2/P3), Technology I アクサ生命保険株式会社
 
 
-エンドのアプリケーションを開発します。
+Qualifications:
 
 
-· アーキテクチャに関する決定を下し、 スケーラブルなシステムを設計します
+in with focus and SRE
 
 
-。
+- Strong experience system operations, a on DevOps
+practices.
+- Proficiency in scripting and programming languages such as Python, Bash, or
+PowerShell.
+- Hands-on experience with cloud platforms, in particular AWS.
+- Hands-on experience with containerization and orchestration tools like Docker
+and Kubernetes.
+- Knowledge of monitoring and logging tools such as Prometheus, Grafana, ELK
+stack, Dynatrace, etc.
+- Understanding of infrastructure as code (laC) tools like Terraform, Ansible, or
+Chef.
+- Excellent problem-solving skills and the ability to work well in a team
+environment.
 
 
-· 既存のアプリケーションを継続的に改善する方法を特定し、 その改善に取 り
+- Strong communication and collaboration skills.
 
 
-組みます。
+Preferred Qualifications:
 
 
-· 他の開発者が作成したコードをレビューし、 効率、 テスト容易性、 可読性、
-保守性、 スタイルガイ ドへの単純などのベストプラクティスを確保するための
-フィードバックを提供します。
-· 知識を共有し、 ベストプラクティスを促進することで、 ソフトウェアエンジ
-ニアリングの CoP (実践のコミュニティ)に貢献します。
-· 若手 · 中堅エンジニアのメンターやサポートを行います。
+- Certification in relevant technologies (e.g., AWS Certified DevOps Engineer,
+Certified Kubernetes Administrator).
 
 
-技術スタック
+- Experience with enterprise architecture and distributed systems.
+- Bachelor's degree in computer science or equivalent.
 
 
-· プログラミング言語 : TypeScript/JavaScript, HTML, CSS
-
-
-· ライプラリ/フレームワーク : React.js/Next.js, Serverless Framework,
-
-
-Express.js/Fastify, Jest
-
-
-· プラ ッ ト フォーム : AWS、 OpenShift
-· データベース : Aurora MySQL、 DocumentDB、 Redis
-· モニタ リ ング : Kibana、 Splunk、 Dynatrace
-· CI/CD: Jenkins, ArgoCD, SonarQube
-· その他 : GitHub、 Microsoft Teams、 Jira、 Confluence
-
-
-Required skills and
-experienceJob
-qualification
-
-
-Minimum Qualifications
-
-
-· At least 7 years of relevant experience developing web applications using
-JavaScript/TypeScript.
-
-
-· Experience with front-end development using React and/or Next.js.
-· Ability to use HTML/CSS to implement clean and responsive user interfaces.
-· Experience with back-end development using Node.js and frameworks available for it,
-such as Express or Fastify.
-
-
-· Good understanding of RESTful APIs design and Swagger/Open API specification.
-· Understanding of relational databases, such as MySQL, and ability to design schemas,
-
-
-create efficient queries and add indexes as needed.
-
-
-· Interest and ability to learn new technologies as needed, such as Next.js or Serverless
-Framework.
-
-
-· Knowledge of software development best practices and ability to write readable and
-maintainable code.
-
-
-· Ability to take architectural decisions and design scalable systems.
-· Ability to take ownership and proactively implement improvements to the existing
-
-
-applications.
-
-
-· Ability to introduce new relevant libraries/frameworks as needed.
-· Experience with Agile/Scrum methodology.
-· Experience with AWS.
-· Ability to coach/mentor other software engineers
-· Good understanding of Git and ability to work collaboratively with other developers.
-· Business English (TOEIC 785 or above) and Business Japanese (JLPT N2 or above),
-
-
-ability in both languages is required
-
-
-· Degree in Computer Science or equivalent practical experience.
-
-
-Preferred Qualifications
-
-
-· Knowledge of Java/SpringBoot.
-
-
-· Understanding of NoSQL databases, such as DocumentDB and Redis.
-· Experience with OpenShift and/or Kubernetes.
-· Experience with serverless architecture.
-· Experience with service-oriented and/or micro service architecture.
-· Experience with CI/CD tools such as Jenkins and SonarQube.
-
-
-必須資格
-
-
-· Jkuarh://pebritoを使用したwarアプリケーション開発において、 少なく と
-も7年の関連経験。
-· React.jsお よび/またはNotipを使用したフロントエンド開発の経験。
-· HTML/CSSを使用して、 クリーンでレスポンシブなユーザーインターフェイス
-を実装する能力。
-· Nodelsおよびそれに対応するフレームワーク (ExpressやFastifyなど) を使用し
-たバックエンド開発の経験。
-· RESTful APIの設計とSwagger/Open API仕様に関する十分な理解。
-· MySQLなどのリ レーショナルデータベースの理解、 スキーマ設計、 効率的なク
-エ リ 作成、 必要に応じたインデックス追加の能力。
-· Next.jsやServerless famewortなどの新しい技術を必要に応じて学ぶ興味と能力
-。
-· ソフトウェア開発のベストプラクティスに関する知識と、 読みやすく保守し
-やすいコードを書く能力。
-· アーキテクチャに関する決定を下し、 スケーラブルなシステムを設計する能
-力。
-· 既存アプリケーションの改善に主体的に取り組み、 積極的に実施する能力。
-· 必要に応じて新しい関連ライプラ」/フレームワークを導入する能力。
-· アジャイル/Scrum手法の経験。
-· AWSの経験。
-· 他のソフトウェアエンジニアを指導 · メンターする能力。
-· Gitの良い理解と、 他の開発者と協力して作業する能力。
-· ビジネス英語 (TOEIC785点以上) およびビジネス日本語 (JLPT N2以上) の能
-力が必要。
-· Computer Science degree or equivalent work experience.
-Preferred Qualifications
-
-
-· Knowledge of Java/SpringBoot.
-· Understanding of NoSQL databases such as DocumentDB or Redis.
-· Experience with OpenShift and/or Kubernetes.
-· Experience with serverless architectures.
-· Experience with service-oriented and/or microservices architectures.
-· Experience with CI/CD tools such as Jenkins or SonarQube.
-
-
-Treatment
+待遇
 Condition
 
 
-[Wages] Preferential treatment according to company regulations based on current
-annual income, ability, and experience
+【賃金】 現年収、 能力、 経験に応じて当社規定により優遇
 
 
-[Working hours]
+【勤務時間】
+9:00~17:00 (休憩 12:00~13:00)
+フレックスタイムあり
 
 
-9:00-17:00 (break 12:00-13:00)
+勤務地
+Place
 
 
-Flextime available
+https://www.com/pring.or/ingmanyyinghtml/gh825
+
+
+2/3
+
+
+4/16/25,4:40 PM
+
+
+DevOps/SRE Engineer(P2/P3), Technology I アクサ生命保険株式会社
+
+
+(雇入れ直後) 白金本社
+
+
+(変更の範囲) 会社の定める就業場所へ異動を命じることがある。
+
+
+この職種へ登録 / Entry
+
+
+←職種一覧へ/Open Positions
+
+
+Copyright Ⓒ AXA Life Insurance Co. .,Ltd. All Rights Reserved.
+
+
+https://www.com/wring.nojojesanyying/indiei_d525
+
+
+3/3

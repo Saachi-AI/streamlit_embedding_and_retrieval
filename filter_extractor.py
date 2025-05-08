@@ -223,6 +223,10 @@ Extract metadata from this query and return ONLY a JSON object, with NO addition
             
             pinecone_filter = {"$and": []}
             
+            # Create the skills exclusion filter using $ne (not equal) operator
+            skills_exclusion_filter = {"section": {"$ne": "skills"}}
+            pinecone_filter["$and"].append(skills_exclusion_filter)
+            
             # Process gender filter
             if "gender" in extracted_filters:
                 try:
@@ -300,10 +304,10 @@ Extract metadata from this query and return ONLY a JSON object, with NO addition
             else:
                 debug_log("No languages found in extracted filters")
                 
-            # If no filters were applied, return empty object
-            if not pinecone_filter["$and"]:
-                debug_log("No filters applied, returning empty object")
-                return {}
+            # If no filters were applied, return only the skills exclusion filter
+            if len(pinecone_filter["$and"]) == 1:
+                debug_log("Only skills exclusion filter applied")
+                return skills_exclusion_filter
             
             debug_log(f"Final Pinecone filter: {json.dumps(pinecone_filter)}")
             return pinecone_filter

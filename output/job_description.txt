@@ -1,152 +1,262 @@
-4/16/25,4:40 PM
 
 
-DevOps/SRE Engineer(P2/P3), Technology I アクサ生命保険株式会社
+SYMBIOSIS INSTITUTE OF TECHNOLOGY
+Symbiosis International (Deemed University)
+(Established under section 3 of the UGC Act, 1956)
 
 
-アクサ生命保険株式会社
+Founder: Prof. Dr. S.B. Mujumdar, M. Sc., Ph. D. (Awarded Padma Bhushan and Padma Shriby President of India)
 
 
-IT / インフォメーション · テクノロジー
+--------
 
 
-DevOps/SRE Engineer(P2/P3), Technology
+Course Name: Management
+Distributed
+Systems
+and
+Resource
+Course Code:
+TE7008
+Faculty: Course Credit:
+Engineering 3
+3
+Course Level: Sub-Committee (Specialization): Computer Science
 
 
-職務内容
-Job description
+Learning Objectives:
 
 
-We are looking for a talented System Operations Engineer to join our team. This
-role is a mix of DevOps and Site Reliability Engineering (SRE) responsibilities,
-aimed at building and supporting business applications while ensuring uptime
-and system performance.
+The students will be able to:
 
 
-Responsibilities:
+1. Sketch the architecture of the multicomputer models and solve
+different design issues.
+2. Implement the clock synchronization algorithms in distributed
+system.
+3. Execute the deadlock detection techniques for the different resource and
+communication model.
+4. Use the recovery techniques of the single processor system, solve the
+recovery problems in distributed environments.
+5. Execute the shared memory solutions to build a coherent system in a
+distributed environment.
 
 
-- Design, build, and maintain the infrastructure and configuration management
-needed for continuous integration, continuous deployment, and continuous
-delivery (CI/CD) pipelines.
+Pre-requisites:
 
 
-- Collaborate with development and operations teams to ensure smooth
+Knowledge of Operating System and database fundamentals are
+desirable
 
 
-deployment and operation of systems.
+Unit No.
+Details
+Hours
+1
+Introduction Introduction to distributed systems, distributed computing system models, design issues, communication primitives.
+5
+2
+Synchronization Time and global states: clock synchronization, logical clocks, global state, coordination, election algorithms, mutual exclusion algorithms
+1 0
+3
+Distributed deadlock Detection Deadlock handling strategies in distributed system,
+1 0
+Course Outline:
 
 
-- Monitor and optimize system performance, reliability, and scalability.
-- Implement best practices for security, monitoring, and alerting in all aspects of
-infrastructure and application development.
 
 
-- Automate repetitive tasks to improve efficiency and reduce human error.
-- Troubleshoot and resolve issues in development, testing, and production
-environments.
+SYMBIOSIS INSTITUTE OF TECHNOLOGY
+Symbiosis International (Deemed University)
+(Established under section 3 of the UGC Act, 1956)
 
 
-- Participate in on-call rotation to provide support for production systems.
+Founder: Prof. Dr. S.B. Mujumdar, M. Sc., Ph. D. (Awarded Padma Bhushan and PadmaShribyPresident of India)
 
 
-求めるスキル · 経験
+---------
 
 
-Job qualification
+issues in deadlock detection and resolution, centralized deadlock detection algorithm, Ho Ramamurthy algorithm, distributed deadlock detection algorithms, hierarchical deadlock detection algorithm
+4
+Recovery and fault tolerance Failures and their classification, check points, recovery in distributed databases, process resilience, reliable client server communication, reliable group communication, distributed commit and recovery.
+1 0
+5
+Distributed shared memory Architecture, design issues, algorithms for implementing DSM, coherence protocol, case studies: IVY
+5
+6
+Distributed File Systems Distributed file systems, Issues: name services: name entities, locating mobile entities, removing unreferenced entities, replication, update protocols, scalability, organization. Case studies: DNS directory, global name service, X 500 DS
+5
 
 
-https://www.com/pring.or/ingmanyyinghtml/gh825
+Sr · N 0.
+Book title
+Authors
+Publishers
+1
+Advanced Concepts in Operating System
+Mukesh Singhal, Shivratri,
+Tata McGraw- Hill
+2
+Distributed Operating Systems Concepts and Design
+Pradeep K. Sinha
+PHI
+3
+Distributed Systems: Principles and Paradigms
+Andrew S. Tanenbaum, Maarten van Steen
+PHI
+Recommended Books:
 
 
-1/3
+Pedagogy:
 
 
-4/16/25,4:40 PM
+1. Class room teaching
+2. Seminars
 
 
-DevOps/SRE Engineer(P2/P3), Technology I アクサ生命保険株式会社
+Evaluation:
 
 
-Qualifications:
+A. Continuous Assessment
 
 
-in with focus and SRE
 
 
-- Strong experience system operations, a on DevOps
-practices.
-- Proficiency in scripting and programming languages such as Python, Bash, or
-PowerShell.
-- Hands-on experience with cloud platforms, in particular AWS.
-- Hands-on experience with containerization and orchestration tools like Docker
-and Kubernetes.
-- Knowledge of monitoring and logging tools such as Prometheus, Grafana, ELK
-stack, Dynatrace, etc.
-- Understanding of infrastructure as code (laC) tools like Terraform, Ansible, or
-Chef.
-- Excellent problem-solving skills and the ability to work well in a team
-environment.
+SYMBIOSIS INSTITUTE OF TECHNOLOGY
+Symbiosis International (Deemed University)
+(Established under section 3 of the UGC Act, 1956)
 
 
-- Strong communication and collaboration skills.
+Founder: Prof. Dr.S.B. Mujumdar, M. Sc., Ph. D. (Awarded Padma Bhushan and PadmaShribyPresident of India)
 
 
-Preferred Qualifications:
+----------
 
 
-- Certification in relevant technologies (e.g., AWS Certified DevOps Engineer,
-Certified Kubernetes Administrator).
+Unit tests
+Seminars
+Quizzes
+B. End Semester Examination
 
 
-- Experience with enterprise architecture and distributed systems.
-- Bachelor's degree in computer science or equivalent.
+Written Exam
 
 
-待遇
-Condition
+Course Outcomes:
 
 
-【賃金】 現年収、 能力、 経験に応じて当社規定により優遇
+CO1: Sketch the architecture of the multicomputer models and the different
+design issues
 
 
-【勤務時間】
-9:00~17:00 (休憩 12:00~13:00)
-フレックスタイムあり
+CO2: Implement the clock synchronization algorithms in distributed system
+CO3: Execute the deadlock detection techniques for the different resource
+and communication model.
+CO4: Use the recovery techniques of the single processor system, solving
+the recovery problems in distributed environment
+CO5: Execute the shared memory solutions to build a coherent system in
+distributed environment
+CO6: Demonstrate the working of a distributed file system with HDFS.
 
 
-勤務地
-Place
+CO
+PO1
+PO 2
+PO 3
+PO 4
+PO 5
+PO 6
+PO 7
+PO 8
+PO 9
+PO1 0
+PO1 1
+P01 2
+PSO 1
+PSO 2
+1
+1
+1
+2
+2
+1
+2
+2
+3
+1
+3
+2
+1
+4
+1
+3
+2
+1
+5
+1
+3
+2
+1
+6
+1
+3
+2
+1
+Articulation Matrix:
 
 
-https://www.com/pring.or/ingmanyyinghtml/gh825
+Benchmarked against similar courses in other national/
+international universities /organizations:
 
 
-2/3
+Sr. No.
+Name of the Course
+Name of University where it is offered
+1.
+Distributed Systems
+IIT, Kharagpur
+2.
+Distributed Systems
+Carnegie Mellon University
+Articulation Matrix:
 
 
-4/16/25,4:40 PM
 
 
-DevOps/SRE Engineer(P2/P3), Technology I アクサ生命保険株式会社
+Founder: Prof. Dr. S.B. Mujumdar, M. Sc., Ph. D. (Awarded Padma Bhushan and PadmaShribyPresident of India)
 
 
-(雇入れ直後) 白金本社
+---------
 
 
-(変更の範囲) 会社の定める就業場所へ異動を命じることがある。
+(CMU)
+3.
+Parallel and Distributed Computing
+Thapar University, Patiala
+SYMBIOSIS INSTITUTE OF TECHNOLOGY
+Symbiosis International (Deemed University)
+(Established under section 3oftheUGC Act, 1956)
 
 
-この職種へ登録 / Entry
-
-
-←職種一覧へ/Open Positions
-
-
-Copyright Ⓒ AXA Life Insurance Co. .,Ltd. All Rights Reserved.
-
-
-https://www.com/wring.nojojesanyying/indiei_d525
-
-
-3/3
+Sr. No.
+Name
+Designation
+Organization/ Institute
+1
+Dr. Shraddha Phansalkar
+Associate Professor (CS & IT)
+SIT
+2
+Dr. Preeti Mulay
+Associate Professor (CS & IT)
+SIT
+3
+Rutuja Kadam
+Assistant Professor (CS & IT)
+SIT
+4
+Mr. Vivek Gavhane
+Scientist
+CDAC, Pume
+Name of the experts designing the course

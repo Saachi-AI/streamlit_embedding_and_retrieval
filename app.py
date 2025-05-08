@@ -225,25 +225,13 @@ def retrieve_documents(query, model_name, top_k, metadata_filter=None):
     if not query:
         return [], total_chunks
     
-    # Create the skills exclusion filter using $ne (not equal) operator
-    skills_exclusion_filter = {"section": {"$ne": "skills"}}
-    
-    # If there's an existing metadata filter, combine it with the skills exclusion filter
+    # If there's an existing metadata filter, use it as is
     if metadata_filter:
-        if "$and" in metadata_filter:
-            # If $and already exists, add our condition to it
-            metadata_filter["$and"].append(skills_exclusion_filter)
-        else:
-            # If no $and exists, create one
-            metadata_filter = {
-                "$and": [
-                    metadata_filter,  # The original filter as is
-                    skills_exclusion_filter  # Our new exclusion
-                ]
-            }
+        # Use the metadata filter as provided
+        pass
     else:
-        # If no metadata filter exists, just use the skills exclusion
-        metadata_filter = skills_exclusion_filter
+        # If no metadata filter exists, use an empty one
+        metadata_filter = {}
     
     # Perform similarity search with metadata filter if provided
     # The metadata filter is applied FIRST at the database level

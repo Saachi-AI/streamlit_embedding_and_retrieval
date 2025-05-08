@@ -321,6 +321,9 @@ class ProfileRankProcessor:
                 tamago_data = profile_data[profile_id]["tamago_data"]
                 if tamago_data and tamago_data.get("linkedin"):
                     linkedin_url = tamago_data["linkedin"]
+                    # Ensure LinkedIn URL has https:// prefix
+                    if linkedin_url and not linkedin_url.startswith(('http://', 'https://')):
+                        linkedin_url = f"https://{linkedin_url}"
             
             # Construct Tamago URL using profile_id
             tamago_url = f"https://saachi.tamago-db.com/contact/{profile_id}/show"
@@ -559,6 +562,9 @@ class ProfileRankProcessor:
                 tamago_data = profile_data[profile_id]["tamago_data"]
                 if tamago_data and tamago_data.get("linkedin"):
                     linkedin_url = tamago_data["linkedin"]
+                    # Ensure LinkedIn URL has https:// prefix
+                    if linkedin_url and not linkedin_url.startswith(('http://', 'https://')):
+                        linkedin_url = f"https://{linkedin_url}"
             
             # Construct Tamago URL using profile_id
             tamago_url = f"https://saachi.tamago-db.com/contact/{profile_id}/show"

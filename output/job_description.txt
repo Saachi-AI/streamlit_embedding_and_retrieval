@@ -1,262 +1,129 @@
+MetLife
+メットライフ生命
 
 
-SYMBIOSIS INSTITUTE OF TECHNOLOGY
-Symbiosis International (Deemed University)
-(Established under section 3 of the UGC Act, 1956)
+Job Description
 
 
-Founder: Prof. Dr. S.B. Mujumdar, M. Sc., Ph. D. (Awarded Padma Bhushan and Padma Shriby President of India)
-
-
---------
-
-
-Course Name: Management
-Distributed
-Systems
-and
-Resource
-Course Code:
-TE7008
-Faculty: Course Credit:
-Engineering 3
-3
-Course Level: Sub-Committee (Specialization): Computer Science
-
-
-Learning Objectives:
-
-
-The students will be able to:
-
-
-1. Sketch the architecture of the multicomputer models and solve
-different design issues.
-2. Implement the clock synchronization algorithms in distributed
-system.
-3. Execute the deadlock detection techniques for the different resource and
-communication model.
-4. Use the recovery techniques of the single processor system, solve the
-recovery problems in distributed environments.
-5. Execute the shared memory solutions to build a coherent system in a
-distributed environment.
-
-
-Pre-requisites:
-
-
-Knowledge of Operating System and database fundamentals are
-desirable
-
-
-Unit No.
-Details
-Hours
+LOB/Group/Team
+Information Technology/App Dev/Digital Engineering
+Position Title
+Lead Full Stack Software Engineer
+Report Line
+Y. Senoo
+Location
+Tokyo
+Global Grade
+GG12
+# of Hiring
 1
-Introduction Introduction to distributed systems, distributed computing system models, design issues, communication primitives.
-5
-2
-Synchronization Time and global states: clock synchronization, logical clocks, global state, coordination, election algorithms, mutual exclusion algorithms
-1 0
-3
-Distributed deadlock Detection Deadlock handling strategies in distributed system,
-1 0
-Course Outline:
+FIex
+Yes
+Hiring Source
+External (MetLife Japan HP & Recruiting Agency) · Internal
+Position Information
 
 
+Job Summary
 
 
-SYMBIOSIS INSTITUTE OF TECHNOLOGY
-Symbiosis International (Deemed University)
-(Established under section 3 of the UGC Act, 1956)
+Looking for a Lead Full Stack Software Engineer to join our NextGen PAS team. This team
+is spearheading the effort to develop strategies for migrating multiple legacy applications
+from a mainframe environment and building new cloud-native applications in an open-
+source environment.
 
 
-Founder: Prof. Dr. S.B. Mujumdar, M. Sc., Ph. D. (Awarded Padma Bhushan and PadmaShribyPresident of India)
+We are seeking an engineer to take on a central role as the lead for application design and
+development. The ideal candidate must have extensive experience with open systems, from
+requirements definition through to development, design, testing, and release. The required
+skill set is correspondingly high, and the successful candidate must demonstrate excellence
+in several of the following areas:
 
 
----------
+Extensive experience in designing and developing open systems, including databases.
 
 
-issues in deadlock detection and resolution, centralized deadlock detection algorithm, Ho Ramamurthy algorithm, distributed deadlock detection algorithms, hierarchical deadlock detection algorithm
-4
-Recovery and fault tolerance Failures and their classification, check points, recovery in distributed databases, process resilience, reliable client server communication, reliable group communication, distributed commit and recovery.
-1 0
-5
-Distributed shared memory Architecture, design issues, algorithms for implementing DSM, coherence protocol, case studies: IVY
-5
-6
-Distributed File Systems Distributed file systems, Issues: name services: name entities, locating mobile entities, removing unreferenced entities, replication, update protocols, scalability, organization. Case studies: DNS directory, global name service, X 500 DS
-5
+· Code analysis of existing systems
+· Knowledge and experience with public clouds (Azure, AWS, GCP)
+· Experience in data and UML modeling
+· Ability to review code created by team members and provide appropriate feedback
+· Experience in the life insurance industry and related business knowledge
+· Communication with other teams primarily in Japanese
+· Ability to lead teams of up to "two pizzas" in size.
 
 
-Sr · N 0.
-Book title
-Authors
-Publishers
-1
-Advanced Concepts in Operating System
-Mukesh Singhal, Shivratri,
-Tata McGraw- Hill
-2
-Distributed Operating Systems Concepts and Design
-Pradeep K. Sinha
-PHI
-3
-Distributed Systems: Principles and Paradigms
-Andrew S. Tanenbaum, Maarten van Steen
-PHI
-Recommended Books:
+Responsibilities
 
 
-Pedagogy:
+To migrate the functions of existing applications currently running on a mainframe to
+an open system, the incumbent will be responsible for carrying out all necessary tasks
+from the architecture planning, design, development, testing, and deployment of new
+Java Batch/UI/API applications.
 
 
-1. Class room teaching
-2. Seminars
+We hope that in the future, ideal candidate will be able to take the lead in planning and
+developing teams, providing guidance to members, and conducting reviews of
+deliverables.
 
 
-Evaluation:
+MetLife
+メットライフ生命
 
 
-A. Continuous Assessment
+Requirements (Experience, Skills, Education)
 
 
+Experience:
 
 
-SYMBIOSIS INSTITUTE OF TECHNOLOGY
-Symbiosis International (Deemed University)
-(Established under section 3 of the UGC Act, 1956)
+· 5+ years of design experience and 10+ years of development experience with
+Java and RDB
+· General RDB (関係データベース/SQL (関係データベース:Structured Query Language)
+knowledge in programming
+Experience in designing, developing, and preparing operating environments for
+new applications
+· Ability to analyze application logs and troubleshoot issues
+· Development experience with cloud technologies (Azure, AWS, GCP) (Azure will be
+used)
+· Ability to understand the source code of open systems
+· Experience in reviewing code created by team members and providing appropriate
+feedback
+· Experience coding(SQL, Python, HTML/CSS) within the past 2 years
+· Japanese language proficiency (native or JLPT N2 level or above)
+· Knowledge of life insurance industry (not required for native Japanese speakers)
 
 
-Founder: Prof. Dr.S.B. Mujumdar, M. Sc., Ph. D. (Awarded Padma Bhushan and PadmaShribyPresident of India)
+○
 
 
-----------
+Education:
 
 
-Unit tests
-Seminars
-Quizzes
-B. End Semester Examination
+· Bachelor's degree in Computer Science, Information Technology, or equivalent
+knowledge.
 
 
-Written Exam
+Preferable
 
 
-Course Outcomes:
+· Experience in designing and developing batch applications
+· Ability to perform performance tuning on applications and databases
+· Experience in an Agile development environment
+· Experience implementing CICD (planned implementation using Azure DevOps)
+· Experience in developing with Mainframe
+· Understanding of COBOL, JCL, and Assembler languages
+· Ability to plan testing and rollout
+· Knowledge and experience in enterprise-level development
+· Business level English proficiency
 
 
-CO1: Sketch the architecture of the multicomputer models and the different
-design issues
+Qualification
+Language
+English (□ Advanced □ Intermediate □ Basic) Japanese ( □ Advanced □ Intermediate □ Basic) □ Not Required
+Others
 
 
-CO2: Implement the clock synchronization algorithms in distributed system
-CO3: Execute the deadlock detection techniques for the different resource
-and communication model.
-CO4: Use the recovery techniques of the single processor system, solving
-the recovery problems in distributed environment
-CO5: Execute the shared memory solutions to build a coherent system in
-distributed environment
-CO6: Demonstrate the working of a distributed file system with HDFS.
-
-
-CO
-PO1
-PO 2
-PO 3
-PO 4
-PO 5
-PO 6
-PO 7
-PO 8
-PO 9
-PO1 0
-PO1 1
-P01 2
-PSO 1
-PSO 2
-1
-1
-1
-2
-2
-1
-2
-2
-3
-1
-3
-2
-1
-4
-1
-3
-2
-1
-5
-1
-3
-2
-1
-6
-1
-3
-2
-1
-Articulation Matrix:
-
-
-Benchmarked against similar courses in other national/
-international universities /organizations:
-
-
-Sr. No.
-Name of the Course
-Name of University where it is offered
-1.
-Distributed Systems
-IIT, Kharagpur
-2.
-Distributed Systems
-Carnegie Mellon University
-Articulation Matrix:
-
-
-
-
-Founder: Prof. Dr. S.B. Mujumdar, M. Sc., Ph. D. (Awarded Padma Bhushan and PadmaShribyPresident of India)
-
-
----------
-
-
-(CMU)
-3.
-Parallel and Distributed Computing
-Thapar University, Patiala
-SYMBIOSIS INSTITUTE OF TECHNOLOGY
-Symbiosis International (Deemed University)
-(Established under section 3oftheUGC Act, 1956)
-
-
-Sr. No.
-Name
-Designation
-Organization/ Institute
-1
-Dr. Shraddha Phansalkar
-Associate Professor (CS & IT)
-SIT
-2
-Dr. Preeti Mulay
-Associate Professor (CS & IT)
-SIT
-3
-Rutuja Kadam
-Assistant Professor (CS & IT)
-SIT
-4
-Mr. Vivek Gavhane
-Scientist
-CDAC, Pume
-Name of the experts designing the course
+Date
+01-Jan-2025
+Prepared by
+Yoshimi Senoo

@@ -174,15 +174,19 @@ class ProfileRankProcessor:
                 if valid_experiences:
                     # Sort by: 1. Is current (end_date is None), 2. Start date (most recent first)
                     def experience_sort_key(exp):
-                        is_current = not exp.get('end')  # True for current positions
+                        # For current positions (no end date), use priority 1, otherwise 0
+                        current_priority = 1 if not exp.get('end') else 0
+                        
+                        # Get start date for sorting by recency
                         start_date = parse_date_for_sorting(exp.get('start'))
-                        # For current positions, we want is_current=True to come first
-                        # When reversed=True in the sort, False comes before True
-                        # So we negate is_current to get True values first
-                        return (not is_current, start_date if start_date else datetime.datetime.min)
+                        if not start_date:
+                            start_date = datetime.datetime.min
+                            
+                        # Return tuple where higher values come first when reverse=True
+                        return (current_priority, start_date)
                     
-                    # Sort experiences
-                    sorted_experiences = sorted(valid_experiences, key=experience_sort_key)
+                    # Sort experiences - most recent first with current positions prioritized
+                    sorted_experiences = sorted(valid_experiences, key=experience_sort_key, reverse=True)
                     
                     # Get the most relevant experience (first after sorting)
                     latest_job = sorted_experiences[0]
@@ -215,15 +219,19 @@ class ProfileRankProcessor:
                 if valid_experiences:
                     # Sort by: 1. Is current (end_date is None), 2. Start date (most recent first)
                     def experience_sort_key(exp):
-                        is_current = not exp.get('end_date')  # True for current positions
+                        # For current positions (no end date), use priority 1, otherwise 0
+                        current_priority = 1 if not exp.get('end_date') else 0
+                        
+                        # Get start date for sorting by recency
                         start_date = parse_date_for_sorting(exp.get('start_date'))
-                        # For current positions, we want is_current=True to come first
-                        # When reversed=True in the sort, False comes before True
-                        # So we negate is_current to get True values first
-                        return (not is_current, start_date if start_date else datetime.datetime.min)
+                        if not start_date:
+                            start_date = datetime.datetime.min
+                            
+                        # Return tuple where higher values come first when reverse=True
+                        return (current_priority, start_date)
                     
-                    # Sort experiences
-                    sorted_experiences = sorted(valid_experiences, key=experience_sort_key)
+                    # Sort experiences - most recent first with current positions prioritized
+                    sorted_experiences = sorted(valid_experiences, key=experience_sort_key, reverse=True)
                     
                     # Get the most relevant experience (first after sorting)
                     latest_job = sorted_experiences[0]

@@ -22,19 +22,23 @@ def render_filter_editor(extracted_filters):
         # Initialize session state with extracted values
         st.session_state.gender = "No Preference"
         st.session_state.years_experience = int(yoe) if yoe is not None else 0
+        st.session_state.original_jd_yoe = int(yoe) if yoe is not None else 0  # Store original JD value separately
         st.session_state.profile_type = "No Preference"
         
         # Process languages into a consistent format for the UI
         st.session_state.languages = {}
+        st.session_state.original_languages = {}  # Store original languages from JD
         
         # Handle case where detected_languages is a list of dictionaries
         if isinstance(detected_languages, list):
             for lang_obj in detected_languages:
                 if isinstance(lang_obj, dict) and "Language" in lang_obj and "Proficiency Level" in lang_obj:
                     st.session_state.languages[lang_obj["Language"]] = lang_obj["Proficiency Level"]
+                    st.session_state.original_languages[lang_obj["Language"]] = lang_obj["Proficiency Level"]
         # Handle case where detected_languages is already a dictionary
         elif isinstance(detected_languages, dict):
-            st.session_state.languages = detected_languages
+            st.session_state.languages = detected_languages.copy()
+            st.session_state.original_languages = detected_languages.copy()
     
     # Display header and info
     st.markdown("## Search Filters")
@@ -57,6 +61,8 @@ def render_filter_editor(extracted_filters):
         modified_filters = {
             "gender": st.session_state.gender if st.session_state.gender != "No Preference" else None,
             "years_of_experience": st.session_state.years_experience,
+            "min_years_experience": st.session_state.min_years_experience,
+            "max_years_experience": st.session_state.max_years_experience,
             "type": st.session_state.profile_type if st.session_state.profile_type != "No Preference" else None,
             "languages": st.session_state.languages if st.session_state.languages else None
         }
@@ -81,25 +87,61 @@ def render_gender_filter():
         key="gender_selectbox"
     )
 
+# Callback function for slider changes
+def update_yoe_values():
+    # Get the current slider values
+    min_val, max_val = st.session_state.yoe_range_slider
+    
+    # Update session state values
+    st.session_state.min_years_experience = min_val
+    st.session_state.max_years_experience = max_val
+    
+    # For backward compatibility, keep the years_experience field (set to min value)
+    st.session_state.years_experience = min_val
+
 def render_yoe_filter():
     """Render years of experience filter."""
     st.subheader("Years of Experience")
+    
+    # Initialize min_years_experience and max_years_experience if not already in session state
+    if "min_years_experience" not in st.session_state:
+        st.session_state.min_years_experience = st.session_state.years_experience
+        st.session_state.max_years_experience = min(st.session_state.years_experience + 5, 50)
+    
+    # Make sure original_jd_yoe is set
+    if "original_jd_yoe" not in st.session_state:
+        st.session_state.original_jd_yoe = st.session_state.years_experience
+    
+    # Display detected YOE from JD (using the original value, not the current slider value)
     st.markdown(f"""<div style="text-shadow: 0 0 5px rgba(255,255,255,0.3); font-size: 1.05em;">
                 <span style="color: white;">✨ Detected from JD: </span>
-                <span style="color: #FFCC80;">{st.session_state.years_experience} YOE</span>
+                <span style="color: #FFCC80;">{st.session_state.original_jd_yoe} YOE</span>
                 <span style="color: white;">. Adjust if needed</span>
                 </div>""", 
                 unsafe_allow_html=True)
-    st.caption("Search will return candidates with at least this many years of experience.")
-
-    st.session_state.years_experience = st.number_input(
-        label="Years of Experience",
+    
+    # Caption for the range slider
+    st.caption("Select the range of years of experience for candidate search.")
+    
+    # Use a range slider with two handles and on_change callback
+    st.slider(
+        "Experience Range (years)",
         min_value=0,
-        max_value=30,
-        value=st.session_state.years_experience,
+        max_value=50,
+        value=(st.session_state.min_years_experience, st.session_state.max_years_experience),
         step=1,
-        key="yoe_input"
+        key="yoe_range_slider",
+        on_change=update_yoe_values
     )
+    
+    # Display the selected range in a user-friendly format
+    st.markdown(f"""<div style="margin-top: 10px; margin-bottom: 15px;">
+                <span>Greater than </span>
+                <strong>{st.session_state.min_years_experience} years</strong>
+                <span>, Less than </span>
+                <strong>{st.session_state.max_years_experience} years</strong>
+                </div>""",
+                unsafe_allow_html=True)
 
 def render_type_filter():
     """Render profile type filter."""
@@ -113,13 +155,31 @@ def render_type_filter():
         key="type_selectbox"
     )
 
+# Callback function for language proficiency changes
+def update_language_proficiency():
+    # Get the widget key that triggered the callback
+    triggered_key = st.session_state.last_triggered_element
+    
+    # Extract language name from the key (format: "prof_i_Language")
+    if triggered_key and triggered_key.startswith("prof_"):
+        parts = triggered_key.split("_", 2)
+        if len(parts) >= 3:
+            language = parts[2]
+            # Update the language proficiency in session state
+            if language in st.session_state.languages:
+                st.session_state.languages[language] = st.session_state[triggered_key]
+
 def render_language_filters():
     """Render language and proficiency filters for detected languages only."""
     st.subheader("Required Languages")
     
-    # Display detected languages info
-    if st.session_state.languages:
-        detected_str = ", ".join([f"{lang} ({prof})" for lang, prof in st.session_state.languages.items()])
+    # Initialize original_languages if it doesn't exist
+    if "original_languages" not in st.session_state:
+        st.session_state.original_languages = st.session_state.languages.copy() if hasattr(st.session_state, "languages") else {}
+    
+    # Display detected languages info using the original values
+    if st.session_state.original_languages:
+        detected_str = ", ".join([f"{lang} ({prof})" for lang, prof in st.session_state.original_languages.items()])
         st.markdown(f"""<div style="text-shadow: 0 0 5px rgba(255,255,255,0.3); font-size: 1.05em;">
                     <span style="color: white;">✨ Detected from JD: </span>
                     <span style="color: #FFCC80;">{detected_str}</span>
@@ -143,6 +203,10 @@ def render_language_filters():
         st.warning("No languages were detected in the job description.")
         return
     
+    # Store last triggered element for callback
+    if "last_triggered_element" not in st.session_state:
+        st.session_state.last_triggered_element = None
+    
     # Render a row for each detected language
     for i, (language, proficiency) in enumerate(list(st.session_state.languages.items())):
         cols = st.columns([1, 2])
@@ -161,12 +225,16 @@ def render_language_filters():
                     best_match_index = j
                     break
             
-            # Render proficiency selection for this language
+            # Create a unique key for this selectbox
+            selectbox_key = f"prof_{i}_{language}"
+            
+            # Render proficiency selection for this language with callback
             new_proficiency = st.selectbox(
                 label=f"Proficiency for {language}",
                 options=proficiency_levels,
                 index=best_match_index,
-                key=f"prof_{i}_{language}"
+                key=selectbox_key,
+                on_change=lambda: setattr(st.session_state, "last_triggered_element", selectbox_key)
             )
             
             # Update the proficiency in session state
@@ -193,10 +261,28 @@ def convert_to_pinecone_filter(modified_filters):
             {"gender": "not_mentioned"}
         ]
     
-    # Handle Years of Experience filter
+    # Handle Years of Experience filter with range (min and max)
     if "years_of_experience" in modified_filters:
-        yoe = modified_filters["years_of_experience"]
-        pinecone_filter["years_of_experience"] = {"$gte": yoe}
+        # We need to create a filter with min and max values
+        min_years = modified_filters.get("min_years_experience", modified_filters["years_of_experience"])
+        max_years = modified_filters.get("max_years_experience", min_years + 5)
+        
+        # Create experience range filter
+        exp_filter = {"$and": []}
+        
+        # Add minimum years filter (greater than or equal to min_years)
+        if min_years > 0:
+            exp_filter["$and"].append({"years_of_experience": {"$gte": min_years}})
+        
+        # Add maximum years filter (less than or equal to max_years)
+        if max_years < 50:  # Only add the max filter if it's less than the max possible value
+            exp_filter["$and"].append({"years_of_experience": {"$lte": max_years}})
+        
+        # Add experience filter to pinecone_filter
+        if exp_filter["$and"]:
+            if "$and" not in pinecone_filter:
+                pinecone_filter["$and"] = []
+            pinecone_filter["$and"].append(exp_filter)
     
     # Handle Type filter (if present)
     if "type" in modified_filters and modified_filters["type"] != "No Preference":

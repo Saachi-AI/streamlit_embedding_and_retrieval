@@ -256,7 +256,31 @@ Extract metadata from this query and return ONLY a JSON object, with NO addition
                     debug_log(f"Processing years_of_experience: {extracted_filters['years_of_experience']}")
                     min_years = int(extracted_filters["years_of_experience"])
                     
-                    if min_years > 0:
+                    # Check if we have min and max years experience
+                    if "min_years_experience" in extracted_filters and "max_years_experience" in extracted_filters:
+                        debug_log(f"Processing min/max years experience range: {extracted_filters['min_years_experience']} to {extracted_filters['max_years_experience']}")
+                        min_years = int(extracted_filters["min_years_experience"])
+                        max_years = int(extracted_filters["max_years_experience"])
+                        
+                        # Create a range filter with min and max
+                        if min_years > 0 or max_years < 50:
+                            exp_filter = {"$and": []}
+                            
+                            # Add minimum years filter
+                            if min_years > 0:
+                                exp_filter["$and"].append({"years_of_experience": {"$gte": min_years}})
+                            
+                            # Add maximum years filter
+                            if max_years < 50:
+                                exp_filter["$and"].append({"years_of_experience": {"$lte": max_years}})
+                            
+                            # Include profiles with unknown years (0) if needed
+                            if not strict_mode:
+                                exp_filter = {"$or": [exp_filter, {"years_of_experience": {"$eq": 0}}]}
+                            
+                            pinecone_filter["$and"].append(exp_filter)
+                    # Traditional single value for minimum years
+                    elif min_years > 0:
                         # Include both profiles with minimum years AND profiles with unknown years (0)
                         exp_filter = {"$or": [
                             {"years_of_experience": {"$gte": min_years}},

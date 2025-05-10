@@ -148,6 +148,15 @@ def get_profile_evaluator():
     # Get LLM choice from query parameters or environment variable
     llm_choice = query_params.get("llm", "grok")
     
+    # Get batch size from query parameters (default is 6)
+    batch_size = 6
+    if "batch" in query_params:
+        try:
+            batch_size = int(query_params.get("batch"))
+            st.sidebar.info(f"Using batch size: {batch_size}")
+        except ValueError:
+            st.sidebar.warning(f"Invalid batch size: {query_params.get('batch')}. Using default: 6")
+    
     # Set API keys based on LLM choice
     api_key = None
     if llm_choice == "gemini":
@@ -165,7 +174,13 @@ def get_profile_evaluator():
     # Display LLM choice in sidebar
     st.sidebar.info(f"Using LLM: {llm_choice}")
     
-    return IndividualProfileEvaluator(api_key=api_key, llm_choice=llm_choice)
+    # Initialize the evaluator with the batch size
+    evaluator = IndividualProfileEvaluator(api_key=api_key, llm_choice=llm_choice)
+    
+    # Store the batch size for later use in evaluation
+    evaluator.batch_size = batch_size
+    
+    return evaluator
 
 try:
     profile_evaluator = get_profile_evaluator()

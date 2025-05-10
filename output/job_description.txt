@@ -1,129 +1,139 @@
-MetLife
-メットライフ生命
+Senior Data Scientist, GG11
 
 
-Job Description
+Position Overview:
 
 
-LOB/Group/Team
-Information Technology/App Dev/Digital Engineering
-Position Title
-Lead Full Stack Software Engineer
-Report Line
-Y. Senoo
-Location
-Tokyo
-Global Grade
-GG12
-# of Hiring
-1
-FIex
-Yes
-Hiring Source
-External (MetLife Japan HP & Recruiting Agency) · Internal
-Position Information
+The Senior Data Scientist will drive innovative approaches to understanding, interacting, and
+optimizing customer engagement by leveraging advanced analytics to derive actionable
+business insights. The successful candidate will work closely with business stakeholders,
+primarily in Japanese, to understand their requirements and the broader business context. This
+role entails leading data analytics initiatives from conception through implementation to delivery.
 
 
-Job Summary
+Responsibilities:
 
 
-Looking for a Lead Full Stack Software Engineer to join our NextGen PAS team. This team
-is spearheading the effort to develop strategies for migrating multiple legacy applications
-from a mainframe environment and building new cloud-native applications in an open-
-source environment.
+· Collaborate with business stakeholders to gather requirements, understand business
+context, and derive data-driven solutions.
 
 
-We are seeking an engineer to take on a central role as the lead for application design and
-development. The ideal candidate must have extensive experience with open systems, from
-requirements definition through to development, design, testing, and release. The required
-skill set is correspondingly high, and the successful candidate must demonstrate excellence
-in several of the following areas:
+· Oversee data analytics initiatives, including planning, execution, and delivery of high-
+quality analytical solutions.
 
 
-Extensive experience in designing and developing open systems, including databases.
+· Work closely with the data platform team and other IT teams, identifying dependencies,
+and resolving blockers to ensure smooth development processes.
 
 
-· Code analysis of existing systems
-· Knowledge and experience with public clouds (Azure, AWS, GCP)
-· Experience in data and UML modeling
-· Ability to review code created by team members and provide appropriate feedback
-· Experience in the life insurance industry and related business knowledge
-· Communication with other teams primarily in Japanese
-· Ability to lead teams of up to "two pizzas" in size.
+· Develop, deploy, and manage machine learning models and analytics projects, ensuring
+alignment with business objectives.
 
 
-Responsibilities
+· Utilize CI/CD, MLOps, Azure or similar cloud platforms, and DevOps to streamline
+development and deployment processes.
 
 
-To migrate the functions of existing applications currently running on a mainframe to
-an open system, the incumbent will be responsible for carrying out all necessary tasks
-from the architecture planning, design, development, testing, and deployment of new
-Java Batch/UI/API applications.
+· Apply hands-on expertise with SQL, Python, Pandas, PySpark, AzureML, and PowerBI to
+develop and implement data models and analytics.
 
 
-We hope that in the future, ideal candidate will be able to take the lead in planning and
-developing teams, providing guidance to members, and conducting reviews of
-deliverables.
+· Leverage domain expertise in financial or insurance sectors, especially in distribution,
+operations and marketing, to ensure successful project outcomes.
 
 
-MetLife
-メットライフ生命
+· Prepare detailed documentation for analytics and ML initiatives, including project
+deliverables and technical specifications.
 
 
-Requirements (Experience, Skills, Education)
+· Communicate effectively with team members and leadership through presentations and
+reports detailing analytics and machine learning requirements, progress, and outcomes.
 
 
-Experience:
+· Ensure the responsible use of AI practices, adhering to ethical guidelines and compliance
+standards.
 
 
-· 5+ years of design experience and 10+ years of development experience with
-Java and RDB
-· General RDB (関係データベース/SQL (関係データベース:Structured Query Language)
-knowledge in programming
-Experience in designing, developing, and preparing operating environments for
-new applications
-· Ability to analyze application logs and troubleshoot issues
-· Development experience with cloud technologies (Azure, AWS, GCP) (Azure will be
-used)
-· Ability to understand the source code of open systems
-· Experience in reviewing code created by team members and providing appropriate
-feedback
-· Experience coding(SQL, Python, HTML/CSS) within the past 2 years
-· Japanese language proficiency (native or JLPT N2 level or above)
-· Knowledge of life insurance industry (not required for native Japanese speakers)
+· Employ best practices and methodologies from other markets to improve analytics and
+data solutions.
 
 
-○
+· Proactively propose new solutions and enhancements based on emerging technologies
+and business needs.
+
+
+Requirements:
+
+
+· 3+ years of experience in advanced analytics roles, delivering successful business
+outcomes.
+
+
+· Proven experience in managing data science or analytics projects.
+
+
+Technical Skills:
+
+
+· Proficiency in quantitative methods and business analytics with strong problem-solving
+skills.
+
+
+· Expertise in building and applying data models using machine learning techniques such as
+classification, regression, clustering, time-series analysis, and dimensionality reduction.
+
+
+· Competent programming skills with Python and SQL.
+
+
+· Strong understanding of data visualization tools, particularly PowerBI.
+
+
+· Experience with CI/CD, MLOps, and cloud platforms such as Azure for deploying analytics
+and ML solutions.
+
+
+· Hands-on experience with data analytics tools and libraries such as Pandas, PySpark, and
+AzureML.
+
+
+· Background in financial or insurance domains, particularly in distribution, operations and
+marketing.
+
+
+· Continuous learning of new tools and technologies, such as Generative AI (GenAI), to stay
+ahead of industry trends and enhance analytics capabilities.
 
 
 Education:
 
 
-· Bachelor's degree in Computer Science, Information Technology, or equivalent
-knowledge.
+· Bachelor's degree in a quantitative modeling-focused discipline such as Statistics,
+Marketing Science, Operations Research, Econometrics, Machine Learning, or a related
+field.
 
 
-Preferable
+· An advanced degree in similar disciplines is a plus. Courses or specialization in data &
+analytics.
 
 
-· Experience in designing and developing batch applications
-· Ability to perform performance tuning on applications and databases
-· Experience in an Agile development environment
-· Experience implementing CICD (planned implementation using Azure DevOps)
-· Experience in developing with Mainframe
-· Understanding of COBOL, JCL, and Assembler languages
-· Ability to plan testing and rollout
-· Knowledge and experience in enterprise-level development
-· Business level English proficiency
+· Azure certifications, especially Azure Data Scientist, Azure Enterprise Data Analyst, Azure
+Data Engineer.
 
 
-Qualification
-Language
-English (□ Advanced □ Intermediate □ Basic) Japanese ( □ Advanced □ Intermediate □ Basic) □ Not Required
-Others
+Language Requirements:
 
 
-Date
-01-Jan-2025
-Prepared by
-Yoshimi Senoo
+· Japanese: Advanced.
+
+
+· English: Intermediate.
+
+
+Additional Information:
+
+
+The role requires a proactive individual with a strong analytical background, capable of driving
+data initiatives while collaborating effectively with cross-functional teams. The ideal candidate
+will have financial or insurance expertise, technical prowess with relevant tools, and the ability to
+navigate complex business environments to deliver impactful analytics solutions.

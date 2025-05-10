@@ -3,6 +3,7 @@ import json
 import logging
 import re
 import argparse
+import asyncio
 from typing import List, Dict, Any, Optional, Union
 from openai import OpenAI
 from google import genai
@@ -60,7 +61,7 @@ class IndividualProfileEvaluator:
         TASK  
         • Read the job description provided in the user message.  
         • Return exactly **3-5** job-specific evaluation dimensions.  
-        • ALWAYS include one dimension named “Role Alignment”.
+        • ALWAYS include one dimension named "Role Alignment".
 
         RULES:
         1. Identify 3-5 job-specific evaluation dimensions based on the job description.
@@ -170,6 +171,9 @@ class IndividualProfileEvaluator:
         - Be thorough in your reasoning, explaining exactly why scores were assigned
         - Ensure the overall match percentage is a weighted average of the dimension scores
         """
+        
+        # Default batch size for parallel processing (can be overridden)
+        self.batch_size = 6
     
     def _call_grok_llm(self, system_prompt: str, user_prompt: str, temperature: float = 0.2, max_tokens: int = 4096) -> str:
         """
@@ -218,6 +222,27 @@ class IndividualProfileEvaluator:
         )
         
         return response.text
+    
+    async def _call_gemini_llm_async_wrapper(self, system_prompt: str, user_prompt: str, temperature: float = 0.2, max_tokens: int = 4096) -> str:
+        """
+        Call Gemini LLM API with asyncio compatibility.
+        This is a wrapper around the synchronous method to make it work with asyncio.
+        
+        Args:
+            system_prompt: System prompt text
+            user_prompt: User prompt text
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens to generate
+            
+        Returns:
+            LLM response text
+        """
+        # Use run_in_executor to run the synchronous method in a thread pool
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(
+            None, 
+            lambda: self._call_gemini_llm(system_prompt, user_prompt, temperature, max_tokens)
+        )
     
     def extract_job_dimensions(self, raw_job_description: str, job_description_prompt: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -374,12 +399,142 @@ class IndividualProfileEvaluator:
         except Exception as e:
             logger.error(f"Error evaluating profile {profile_id}: {str(e)}")
             return {"profile_id": profile_id, "error": str(e)}
+
+    async def evaluate_profile_async(
+        self,
+        profile_data: Dict[str, Any],
+        raw_job_description: str,
+        dimensions: List[Dict[str, Any]],
+        profile_id: str
+    ) -> Dict[str, Any]:
+        """
+        Evaluate a single profile against extracted job dimensions asynchronously.
+        
+        Args:
+            profile_data: Processed profile data
+            raw_job_description: Full job description
+            dimensions: Extracted job dimensions
+            profile_id: Profile ID
+            
+        Returns:
+            Dictionary containing detailed evaluation results
+        """
+        if not profile_data or not dimensions:
+            logger.error("Missing profile data or dimensions for evaluation")
+            return {}
+            
+        try:
+            # Format dimensions as string for the prompt
+            dimensions_str = json.dumps(dimensions, ensure_ascii=False)
+            
+            # Format profile data as string
+            profile_str = json.dumps(profile_data, ensure_ascii=False)
+            
+            # Format the user prompt
+            user_prompt = f"""
+            Your task is to evaluate this candidate profile against the job requirements and dimensions.
+
+            --- JOB DESCRIPTION ---
+            {raw_job_description}
+            --- END JOB DESCRIPTION ---
+
+            --- EVALUATION DIMENSIONS ---
+            {dimensions_str}
+            --- END EVALUATION DIMENSIONS ---
+
+            --- CANDIDATE PROFILE ---
+            {profile_str}
+            --- END CANDIDATE PROFILE ---
+
+            Please evaluate this candidate (profile_id: {profile_id}) against each dimension, providing percentage scores, reasoning, and an overall assessment.
+            """
+            
+            # Call LLM for profile evaluation
+            logger.info(f"Calling {self.llm_choice.upper()} LLM to evaluate profile {profile_id} (async)")
+            
+            if self.llm_choice == "grok":
+                # For Grok, we'll use the synchronous method for now
+                llm_response = self._call_grok_llm(
+                    system_prompt=self.profile_evaluation_prompt,
+                    user_prompt=user_prompt,
+                    temperature=0.3,
+                    max_tokens=8192
+                )
+            else:  # gemini
+                # Use the async wrapper for Gemini
+                llm_response = await self._call_gemini_llm_async_wrapper(
+                    system_prompt=self.profile_evaluation_prompt,
+                    user_prompt=user_prompt,
+                    temperature=0.3,
+                    max_tokens=8192
+                )
+            
+            logger.info(f"Profile evaluation response received from {self.llm_choice.upper()} LLM for profile {profile_id} (async)")
+            
+            # Extract JSON from the response
+            evaluation_results = self._extract_json_from_response(llm_response)
+            
+            # Ensure profile_id is included
+            if "profile_id" not in evaluation_results:
+                evaluation_results["profile_id"] = profile_id
+                
+            return evaluation_results
+                
+        except Exception as e:
+            logger.error(f"Error evaluating profile {profile_id} asynchronously: {str(e)}")
+            return {"profile_id": profile_id, "error": str(e)}
+    
+    async def evaluate_profiles_parallel(
+        self,
+        processed_profiles: List[Dict[str, Any]],
+        raw_job_description: str,
+        dimensions: List[Dict[str, Any]],
+        batch_size: int = 6
+    ) -> List[Dict[str, Any]]:
+        """
+        Evaluate multiple profiles in parallel using async.
+        
+        Args:
+            processed_profiles: List of processed profile data
+            raw_job_description: Full job description
+            dimensions: Extracted job dimensions
+            batch_size: Number of profiles to process in parallel
+            
+        Returns:
+            List of evaluation results
+        """
+        all_results = []
+        
+        # Process profiles in batches
+        for i in range(0, len(processed_profiles), batch_size):
+            batch = processed_profiles[i:i+batch_size]
+            logger.info(f"Processing batch of {len(batch)} profiles (profiles {i+1}-{i+len(batch)})")
+            
+            # Create tasks for this batch
+            tasks = []
+            for profile in batch:
+                profile_id = profile.get("profile_id", "unknown")
+                tasks.append(self.evaluate_profile_async(
+                    profile_data=profile,
+                    raw_job_description=raw_job_description,
+                    dimensions=dimensions,
+                    profile_id=profile_id
+                ))
+            
+            # Process batch concurrently
+            batch_results = await asyncio.gather(*tasks)
+            all_results.extend(batch_results)
+            
+            logger.info(f"Completed batch of {len(batch)} profiles")
+        
+        return all_results
     
     def evaluate_profiles(
         self,
         processed_profiles: List[Dict[str, Any]],
         raw_job_description: str,
-        summarized_job_description: Optional[str] = None
+        summarized_job_description: Optional[str] = None,
+        batch_size: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         Evaluate multiple profiles against job description.
@@ -388,6 +543,7 @@ class IndividualProfileEvaluator:
             processed_profiles: List of processed profile data
             raw_job_description: Full job description
             summarized_job_description: Optional summarized job description
+            batch_size: Optional batch size override (default: uses self.batch_size)
             
         Returns:
             Dictionary containing evaluation results for all profiles
@@ -401,6 +557,9 @@ class IndividualProfileEvaluator:
             return {"profiles": []}
             
         try:
+            # Use provided batch_size or fall back to self.batch_size
+            actual_batch_size = batch_size if batch_size is not None else self.batch_size
+            
             # Extract job dimensions if not already cached
             if not self.job_dimensions:
                 logger.info("Extracting job dimensions")
@@ -410,21 +569,32 @@ class IndividualProfileEvaluator:
             if not dimensions:
                 logger.error("Failed to extract job dimensions")
                 return {"profiles": []}
-                
-            # Evaluate each profile
-            evaluated_profiles = []
-            for profile in processed_profiles:
-                profile_id = profile.get("profile_id", "unknown")
-                logger.info(f"Evaluating profile {profile_id}")
-                
-                evaluation = self.evaluate_profile(
-                    profile_data=profile,
+            
+            # For Gemini, use parallel evaluation
+            if self.llm_choice == "gemini":
+                logger.info(f"Evaluating {len(processed_profiles)} profiles in parallel with batch size {actual_batch_size}")
+                # We need to run the async code in an event loop
+                evaluated_profiles = asyncio.run(self.evaluate_profiles_parallel(
+                    processed_profiles=processed_profiles,
                     raw_job_description=raw_job_description,
                     dimensions=dimensions,
-                    profile_id=profile_id
-                )
-                
-                evaluated_profiles.append(evaluation)
+                    batch_size=actual_batch_size
+                ))
+            else:
+                # For Grok, use sequential evaluation
+                evaluated_profiles = []
+                for profile in processed_profiles:
+                    profile_id = profile.get("profile_id", "unknown")
+                    logger.info(f"Evaluating profile {profile_id}")
+                    
+                    evaluation = self.evaluate_profile(
+                        profile_data=profile,
+                        raw_job_description=raw_job_description,
+                        dimensions=dimensions,
+                        profile_id=profile_id
+                    )
+                    
+                    evaluated_profiles.append(evaluation)
                 
             # Sort profiles: First by overqualification status, then by match percentage (descending)
             evaluated_profiles.sort(
@@ -452,7 +622,8 @@ class IndividualProfileEvaluator:
     def evaluate_profiles_custom_query(
         self,
         processed_profiles: List[Dict[str, Any]],
-        custom_query: str
+        custom_query: str,
+        batch_size: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         Evaluate profiles based on custom query.
@@ -460,6 +631,7 @@ class IndividualProfileEvaluator:
         Args:
             processed_profiles: List of processed profile data
             custom_query: Custom query text
+            batch_size: Optional batch size override (default: uses self.batch_size)
             
         Returns:
             Dictionary containing evaluation results for all profiles
@@ -468,7 +640,7 @@ class IndividualProfileEvaluator:
         self.job_dimensions = None
         
         # Use the same evaluation method but with custom query as job description
-        return self.evaluate_profiles(processed_profiles, custom_query)
+        return self.evaluate_profiles(processed_profiles, custom_query, batch_size=batch_size)
     
     def _extract_json_from_response(self, response_text: str) -> Dict[str, Any]:
         """
@@ -497,47 +669,54 @@ class IndividualProfileEvaluator:
                     json_str = cleaned_response[start_idx:end_idx]
                 else:
                     # If no JSON found, use the entire cleaned response
-                    json_str = cleaned_response.strip()
+                    json_str = cleaned_response
             
-            # Parse the JSON
-            parsed_json = json.loads(json_str)
-            return parsed_json
-            
+            # Parse JSON
+            result = json.loads(json_str)
+            return result
+                
         except json.JSONDecodeError as e:
-            logger.error(f"Error parsing JSON from LLM response: {str(e)}")
-            logger.debug(f"Problematic response: {response_text[:1000]}")
+            logger.error(f"Failed to parse JSON from response: {str(e)}")
+            # Return empty dict on failure
             return {}
-        except Exception as e:
-            logger.error(f"Error extracting JSON from LLM response: {str(e)}")
-            return {}
-
 
 def parse_args():
-    """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(description="Profile Evaluator using LLM")
-    parser.add_argument(
-        "--llm",
-        type=str,
-        default="grok",
-        choices=["grok", "gemini"],
-        help="LLM model to use (default: grok)"
-    )
-    parser.add_argument(
-        "--job",
-        type=str,
-        help="Path to job description file"
-    )
-    parser.add_argument(
-        "--profiles",
-        type=str,
-        help="Path to profiles file or directory"
-    )
+    """Parse command-line arguments for CLI operation."""
+    parser = argparse.ArgumentParser(description="Profile Evaluator CLI Tool")
+    parser.add_argument("--llm", choices=["grok", "gemini"], default="grok", help="LLM to use for evaluation")
+    parser.add_argument("--batch-size", type=int, default=6, help="Batch size for parallel processing (default: 6)")
+    parser.add_argument("--job-description", type=str, required=True, help="Path to job description file")
+    parser.add_argument("--profiles", type=str, required=True, help="Path to profiles JSON file")
+    parser.add_argument("--output", type=str, required=True, help="Path to output JSON file")
+    
     return parser.parse_args()
-
 
 if __name__ == "__main__":
     args = parse_args()
+    
+    # Set up logging
+    logging.basicConfig(level=logging.INFO, 
+                       format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    
+    logger.info(f"Starting Profile Evaluator with {args.llm} LLM")
+    
+    # Initialize evaluator
     evaluator = IndividualProfileEvaluator(llm_choice=args.llm)
-    print(f"Initialized profile evaluator with LLM: {args.llm}")
-    print("Note: For full functionality, use this class within your application.")
-    print("For streamlit integration, pass LLM choice via config or environment variables.") 
+    evaluator.batch_size = args.batch_size
+    
+    # Load job description
+    with open(args.job_description, 'r', encoding='utf-8') as f:
+        job_description = f.read()
+    
+    # Load profiles
+    with open(args.profiles, 'r', encoding='utf-8') as f:
+        profiles = json.load(f)
+    
+    # Evaluate profiles
+    results = evaluator.evaluate_profiles(profiles, job_description, batch_size=args.batch_size)
+    
+    # Save results
+    with open(args.output, 'w', encoding='utf-8') as f:
+        json.dump(results, f, ensure_ascii=False, indent=2)
+    
+    logger.info(f"Evaluation complete. Results saved to {args.output}") 

@@ -240,7 +240,8 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
                         if profile_evaluator:
                             evaluation_results = profile_evaluator.evaluate_profiles_custom_query(
                                 processed_profiles=processed_profiles,
-                                custom_query=custom_query_text
+                                custom_query=custom_query_text,
+                                batch_size=getattr(profile_evaluator, 'batch_size', 6)
                             )
                         else:
                             # Fall back to creating a new one if not available

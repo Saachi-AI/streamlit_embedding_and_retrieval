@@ -284,7 +284,8 @@ def process_job_description_query(query, settings, filter_extractor, embedders, 
                             evaluation_results = profile_evaluator.evaluate_profiles(
                                 processed_profiles=processed_profiles,
                                 raw_job_description=raw_jd,
-                                summarized_job_description=summarized_jd
+                                summarized_job_description=summarized_jd,
+                                batch_size=getattr(profile_evaluator, 'batch_size', 6)
                             )
                         else:
                             # Fall back to creating a new one if not available

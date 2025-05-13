@@ -217,7 +217,7 @@ class IndividualProfileEvaluator:
         
         # Generate content with parameters directly
         response = self.client.models.generate_content(
-            model="gemini-2.5-pro-exp-03-25",
+            model="models/gemini-2.5-pro-preview-03-25",
             contents=combined_prompt,
         )
         

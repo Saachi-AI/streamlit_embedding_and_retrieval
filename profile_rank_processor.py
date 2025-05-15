@@ -107,6 +107,9 @@ class ProfileRankProcessor:
                     match = re.match(r'(\d+)/(\d+)/(\d+)', date_str)
                     if match:
                         month, day, year = match.groups()
+                        # Fix for days with value '00'
+                        if day == '00':
+                            day = '01'
                         return datetime(int(year), int(month), int(day))
                 
                 # Handle Tamago format (YYYY-MM-DD)
@@ -114,6 +117,9 @@ class ProfileRankProcessor:
                     match = re.match(r'(\d+)-(\d+)-(\d+)', date_str)
                     if match:
                         year, month, day = match.groups()
+                        # Fix for days with value '00'
+                        if day == '00':
+                            day = '01'
                         return datetime(int(year), int(month), int(day))
                 
                 # Return None if format not recognized

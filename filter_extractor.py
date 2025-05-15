@@ -227,6 +227,17 @@ Extract metadata from this query and return ONLY a JSON object, with NO addition
             skills_exclusion_filter = {"section": {"$ne": "skills"}}
             pinecone_filter["$and"].append(skills_exclusion_filter)
             
+            # last_contacted filter for the last 8 years
+            try:
+                current_time = int(time.time())
+                eight_years_ago = current_time - (8 * 365 * 24 * 60 * 60)  # 8 years in seconds
+                debug_log(f"Adding last_contacted filter: timestamps >= {eight_years_ago}")
+                
+                last_contacted_filter = {"last_contacted": {"$gte": eight_years_ago}}
+                pinecone_filter["$and"].append(last_contacted_filter)
+            except Exception as e:
+                debug_log(f"Error adding last_contacted filter: {str(e)}")
+            
             # Process gender filter
             if "gender" in extracted_filters:
                 try:

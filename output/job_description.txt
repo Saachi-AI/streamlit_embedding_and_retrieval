@@ -1,95 +1,55 @@
-Job description and Required specification
+Saachi Partners
 
 
-Date:
-2025.03.03
-Prepared by:
-Yusuke Aoki
-Dept. / Section
-Core Insurance Group / Corporate systems Team
-Position
-Lead Full Stack Software Engineer
-Report line
-Expected Global Grade
-GG11
-Location
-Tokyo - OLINAS
-Target Start Date
-4/1/2024
-No. of positions
-2025-R-003
-Headcount
-Yes
-Replacement of
-Click or tap here to enter text.
-Job Description: Please describe the job, role and responsibilities to be assigned.
-Job Summary: Responsible for a team that monitors, analyzes, design and develops applications. In charge of maintaining, supporting, and upgrading existing systems and applications needed to keep business running. Managing development projects to ensure they meet the company's business requirements and goals, as well as working with other departments to establish their software needs. Responsibilities: 1.Creates and executes project work plans and revises as appropriate to meet changing needs and requirements 2.Leading complex projects that require a deep understanding of Java, Azure, and cloud-native applications. 3.Excellent work experience in relevant areas and ability to visualize a solution and possible issues 4.Communicating with stakeholders, business, and development teams to enable quality deliverables 5.Experience managing effective software development methodologies & tools managing both internal & 3rd party development/delivery onsite 7.Experience delivering multi-channel customer experience initiatives on the PaaS platform. 8.Ability and willingness to engage in all phases and levels of the delivery process 9.Familiarity with leveraging Agile methodologies for development and delivery 10.Strong problem-solving skills with the ability to cross-functionally in a fast-paced and rapidly changing work environment 11.Identifies resources needed and assigns individual responsibilities 12.Review deliverables prepared by the team before passing them to other teams 13.Prepares for engagement reviews and quality assurance procedures
-6.Experience teams, & offshore. 14.Identifies and manages project risks and
-issues. Requirements: Please describe the required competencies, including experience, skill sets,
+S
 
 
-etc.
+Insurance - Senior BA (Cloud)
 
 
-· Bilingual with strong communication skills to interact with all relevant stakeholders. Native-
-level Japanese and Business level Japanese
-· 10+ years' experience in Project Management and application development
-·5+ years managing Java & Microservice projects
-· Min 5+ years of experience leading a development team
-· Strong customer-facing and communication skills
-· Experience working within an established PMO process
-· Experience managing 3rd party implementation vendors
-· Have a thorough understanding of OOP, design patterns, and enterprise application integration,
-having a very strong Service Oriented Architecture and integration background
-· Excellent analysis and problem-solving skills and ability to think through problems creatively
-· Experience in design and development of highly scalable APIs and services that are used by
-web and mobile clients
-· Able to handle multiple projects simultaneously
-· Experience with Cloud services like Azure
-· Strong understanding of UX/UI, Microservices, Spring boot, JavaScript, ReactJS and NodeJS
-etc.
-· Experience and understanding of Agile Project Methodologies
-· Experience working both with onshore and offshore development teams and vendor
-management.
-Preferable
-Past experience in Life Insurance domain.
-Others Qualification
-BS or MS in Computer Science or a related field Language
-English (ⓧ Advanced □ Intermediate □ Basic)
-Japanese (ⓧ Advanced □ Intermediate Basic) □ Not Required"
+Job Description
 
 
-Terms of Employment:
+Duties & Responsibilities:
 
 
-◇Annual Salary : Commensurate with experience and skills.
+Analyzing and understanding the business processes, gathering requirements, and designing
+solutions that improve operational efficiency and drive business success. The BA will work
+closely with various stakeholders to understand their needs, document functional requirements,
+and provide recommendations for system and process improvements.
 
 
-◇Wage Payment : Monthly
+Job Description - Grade Specific
 
 
-◇Working Hours
-· 09:00~17:00 7 Working hour per day ※1 hour break
-· Overtime work Yes
+Requirements & Qualifications:
 
 
-◇Holiday
+Experience:
 
 
-· 121 days (Saturday, Sunday, and National holiday、 Year-end and New Year holidays 5 days)
-· Paid Leave: 5 or 10 days (it depends by starting date)
-· Other: Funeral leaves、 Special Leaves 5 consecutives days
+- 3-5+ years of experience as a Business Analyst or in a similar role.
+- Experience working with cross-functional teams.
+- Strong understanding of business processes and the ability to translate business needs into
+technical solutions.
 
 
-◇Working Location : Kinshicho / Kioicho / Otemachi
+Technical Skills:
 
 
-◇Commuting Allowance : According with the provisions fully guaranteed
-◇Retirement Allowance : Yes ※Confirmed by "Other" as below.
-◇Dormitory/Company owned house : Depend on the hiring conditions
-◇Social Insurance : Health Insurance、 Welfare Pension、 Employment Insurance、 Industrial
+- Proficient in Cloud technologies (Azure, AWS)
 
 
-Accident Insurance
-◇Other : Defined-Contribution Pension (Cash Balance Plan) 、 Defined-Benefit
-Pension、 Property Accumulation Savings
+Soft Skills:
+
+
+- Native level Japanese and Business level English.
+
+
+- Strong problem-solving and critical thinking abilities.
+- Excellent communication in both Japanese and English and interpersonal skills for liaising with
+stakeholders.
+
+
+- Attention to detail and the ability to work under pressure and meet deadlines.
+- Strong organizational and time management skills.

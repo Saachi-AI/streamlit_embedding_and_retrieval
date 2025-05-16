@@ -62,12 +62,13 @@ def handle_document_upload(uploaded_file, document_parser, prompt_generator):
                 generated_prompt = prompt_data.get("prompt", "")
                 set_tab_state("tab0", "generated_prompt", generated_prompt)
                 
-                # Automatically set the query and trigger search
+                # Don't automatically execute the search - user should edit the prompt first
+                # Still set the query, but don't mark it as executed yet
                 set_tab_state("tab0", "query", generated_prompt)
-                set_tab_state("tab0", "query_executed", True)
+                set_tab_state("tab0", "query_executed", False)
                 
                 # Success message
-                st.success("Job description parsed and prompt generated successfully!")
+                st.success("Job description parsed and prompt generated successfully! Please review and edit the summary below if needed.")
         else:
             st.error(message)
 
@@ -79,14 +80,39 @@ def display_parsed_document():
             st.text_area("Job Description", parsed_text, height=300)
 
 def display_generated_prompt():
-    """Display the generated prompt and prompt data if available."""
+    """Display the generated prompt and allow user to edit it before extraction."""
     prompt_data = get_tab_state("tab0", "prompt_data")
     generated_prompt = get_tab_state("tab0", "generated_prompt")
+    query_executed = get_tab_state("tab0", "query_executed")
     
     if prompt_data and generated_prompt:
         # Display generated prompt with AI prefix and increased height
         st.subheader("AI Generated Search Prompt")
-        st.text_area("Prompt for Semantic Search", generated_prompt, height=250)
+        st.markdown("You can edit this prompt to add or remove details before extracting metadata filters.")
+        
+        # Create an editable text area with the generated prompt
+        edited_prompt = st.text_area(
+            "Edit Prompt for Semantic Search",
+            value=generated_prompt,
+            height=250,
+            key="edited_prompt_text"
+        )
+        
+        # Only show the apply button if the query hasn't been executed yet
+        # or if the prompt has been edited
+        if not query_executed or edited_prompt != generated_prompt:
+            if st.button("Apply Edits and Extract Filters", type="primary", use_container_width=True):
+                # Update the prompt in session state with edited version
+                set_tab_state("tab0", "generated_prompt", edited_prompt)
+                # Use this as the query for search
+                set_tab_state("tab0", "query", edited_prompt)
+                # Mark query as ready to execute
+                set_tab_state("tab0", "query_executed", True)
+                
+                # Show success message
+                st.success("Edits applied! Proceeding to metadata extraction...")
+                # Force a rerun to show the extraction UI
+                st.rerun()
 
 def process_job_description_query(query, settings, filter_extractor, embedders, retrieve_documents, cohere_reranker, profile_aggregator, profile_retriever, profile_evaluator):
     """Process the job description query and display results."""
@@ -259,6 +285,7 @@ def process_job_description_query(query, settings, filter_extractor, embedders, 
                 status_text.text("Falling back to alternative ranking method...")
                 logger.info("Falling back to legacy LLM profile ranking")
                 llm_ranker = LLMProfileRanker()
+                # Use the edited/summarized JD here as well
                 llm_ranking_results = llm_ranker.rank_profiles_job_description(
                     processed_profiles=processed_profiles,
                     raw_job_description=raw_jd,
@@ -333,7 +360,7 @@ def render_job_description_tab(
     # Display parsed document if available
     display_parsed_document()
     
-    # Display generated prompt data if available
+    # Display generated prompt data if available and allow for editing
     display_generated_prompt()
     
     # Get sidebar configuration without rendering UI elements

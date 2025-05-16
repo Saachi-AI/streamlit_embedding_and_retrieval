@@ -323,7 +323,8 @@ class IndividualProfileEvaluator:
         profile_data: Dict[str, Any],
         raw_job_description: str,
         dimensions: List[Dict[str, Any]],
-        profile_id: str
+        profile_id: str,
+        summarized_job_description: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Evaluate a single profile against extracted job dimensions.
@@ -333,6 +334,7 @@ class IndividualProfileEvaluator:
             raw_job_description: Full job description
             dimensions: Extracted job dimensions
             profile_id: Profile ID
+            summarized_job_description: Optional summarized/edited job description
             
         Returns:
             Dictionary containing detailed evaluation results
@@ -348,12 +350,15 @@ class IndividualProfileEvaluator:
             # Format profile data as string
             profile_str = json.dumps(profile_data, ensure_ascii=False)
             
+            # Use summarized job description if available, otherwise fall back to raw
+            job_description_to_use = summarized_job_description if summarized_job_description else raw_job_description
+            
             # Format the user prompt
             user_prompt = f"""
             Your task is to evaluate this candidate profile against the job requirements and dimensions.
 
             --- JOB DESCRIPTION ---
-            {raw_job_description}
+            {job_description_to_use}
             --- END JOB DESCRIPTION ---
 
             --- EVALUATION DIMENSIONS ---
@@ -405,7 +410,8 @@ class IndividualProfileEvaluator:
         profile_data: Dict[str, Any],
         raw_job_description: str,
         dimensions: List[Dict[str, Any]],
-        profile_id: str
+        profile_id: str,
+        summarized_job_description: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Evaluate a single profile against extracted job dimensions asynchronously.
@@ -415,6 +421,7 @@ class IndividualProfileEvaluator:
             raw_job_description: Full job description
             dimensions: Extracted job dimensions
             profile_id: Profile ID
+            summarized_job_description: Optional summarized/edited job description
             
         Returns:
             Dictionary containing detailed evaluation results
@@ -430,12 +437,15 @@ class IndividualProfileEvaluator:
             # Format profile data as string
             profile_str = json.dumps(profile_data, ensure_ascii=False)
             
+            # Use summarized job description if available, otherwise fall back to raw
+            job_description_to_use = summarized_job_description if summarized_job_description else raw_job_description
+            
             # Format the user prompt
             user_prompt = f"""
             Your task is to evaluate this candidate profile against the job requirements and dimensions.
 
             --- JOB DESCRIPTION ---
-            {raw_job_description}
+            {job_description_to_use}
             --- END JOB DESCRIPTION ---
 
             --- EVALUATION DIMENSIONS ---
@@ -489,7 +499,8 @@ class IndividualProfileEvaluator:
         processed_profiles: List[Dict[str, Any]],
         raw_job_description: str,
         dimensions: List[Dict[str, Any]],
-        batch_size: int = 6
+        batch_size: int = 6,
+        summarized_job_description: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         Evaluate multiple profiles in parallel using async.
@@ -498,28 +509,38 @@ class IndividualProfileEvaluator:
             processed_profiles: List of processed profile data
             raw_job_description: Full job description
             dimensions: Extracted job dimensions
-            batch_size: Number of profiles to process in parallel
+            batch_size: Number of profiles to evaluate concurrently
+            summarized_job_description: Optional summarized/edited job description
             
         Returns:
-            List of evaluation results
+            List of evaluation results for each profile
         """
-        all_results = []
+        if not processed_profiles:
+            logger.info("No profiles to evaluate in parallel")
+            return []
+            
+        logger.info(f"Evaluating {len(processed_profiles)} profiles in parallel with batch size {batch_size}")
         
-        # Process profiles in batches
+        # Split profiles into batches
+        all_results = []
         for i in range(0, len(processed_profiles), batch_size):
             batch = processed_profiles[i:i+batch_size]
-            logger.info(f"Processing batch of {len(batch)} profiles (profiles {i+1}-{i+len(batch)})")
+            logger.info(f"Processing batch of {len(batch)} profiles (batch {i//batch_size + 1})")
             
-            # Create tasks for this batch
+            # Create tasks for each profile in the batch
             tasks = []
             for profile in batch:
                 profile_id = profile.get("profile_id", "unknown")
-                tasks.append(self.evaluate_profile_async(
+                logger.info(f"Creating async task for profile {profile_id}")
+                
+                task = self.evaluate_profile_async(
                     profile_data=profile,
                     raw_job_description=raw_job_description,
                     dimensions=dimensions,
-                    profile_id=profile_id
-                ))
+                    profile_id=profile_id,
+                    summarized_job_description=summarized_job_description
+                )
+                tasks.append(task)
             
             # Process batch concurrently
             batch_results = await asyncio.gather(*tasks)
@@ -563,7 +584,9 @@ class IndividualProfileEvaluator:
             # Extract job dimensions if not already cached
             if not self.job_dimensions:
                 logger.info("Extracting job dimensions")
-                self.job_dimensions = self.extract_job_dimensions(raw_job_description, summarized_job_description)
+                # Use summarized job description for extracting dimensions if available
+                job_description_for_dimensions = summarized_job_description if summarized_job_description else raw_job_description
+                self.job_dimensions = self.extract_job_dimensions(raw_job_description, job_description_for_dimensions)
             
             dimensions = self.job_dimensions.get("dimensions", [])
             if not dimensions:
@@ -578,7 +601,8 @@ class IndividualProfileEvaluator:
                     processed_profiles=processed_profiles,
                     raw_job_description=raw_job_description,
                     dimensions=dimensions,
-                    batch_size=actual_batch_size
+                    batch_size=actual_batch_size,
+                    summarized_job_description=summarized_job_description
                 ))
             else:
                 # For Grok, use sequential evaluation
@@ -591,7 +615,8 @@ class IndividualProfileEvaluator:
                         profile_data=profile,
                         raw_job_description=raw_job_description,
                         dimensions=dimensions,
-                        profile_id=profile_id
+                        profile_id=profile_id,
+                        summarized_job_description=summarized_job_description
                     )
                     
                     evaluated_profiles.append(evaluation)

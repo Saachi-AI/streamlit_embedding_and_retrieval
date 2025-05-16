@@ -27,23 +27,111 @@ from core.filter_editor_components import render_filter_editor
 # Configure logging
 logger = logging.getLogger(__name__)
 
+# Helper function for session state keys (if not already in a shared core module)
+def get_tab_state_key(tab_id: str, key: str) -> str:
+    return f"{tab_id}_{key}"
+
 def initialize_custom_query_state():
     """Initialize custom query tab-specific state variables."""
-    # Use hardcoded defaults instead of environment variables
     defaults = {
         "semantic_top_k": 15,
         "rerank_top_k": 10,
         "enable_metadata_filtering": True,
         "query_executed": False,
-        "query": None
+        "query": None,
+        "editable_custom_dimensions": None, # For custom query tab
+        "custom_weights_editor_initialized": False,
+        "custom_weights_confirmed": False,
     }
     initialize_tab_state("tab1", defaults)
+
+def adjust_custom_dimension_weights(changed_dim_id: str):
+    """Callback to adjust custom query dimension weights proportionally."""
+    editable_dims_key = get_tab_state_key("tab1", "editable_custom_dimensions")
+    dims = st.session_state.get(editable_dims_key)
+
+    if not dims or not isinstance(dims, list):
+        logger.warning("adjust_custom_dimension_weights called with no dimensions in session state for tab1.")
+        return
+
+    changed_dim_widget_key = get_tab_state_key("tab1", f"dim_weight_{changed_dim_id}")
+    new_weight_for_changed_dim = st.session_state.get(changed_dim_widget_key, None)
+
+    if new_weight_for_changed_dim is None:
+        logger.warning(f"Could not find new weight for {changed_dim_id} in session state via key {changed_dim_widget_key} for tab1")
+        return
+        
+    new_weight_for_changed_dim = float(new_weight_for_changed_dim)
+
+    changed_idx = -1
+    for i, dim in enumerate(dims):
+        if dim.get('id') == changed_dim_id:
+            changed_idx = i
+            break
+    
+    if changed_idx == -1:
+        logger.warning(f"Dimension with id {changed_dim_id} not found in editable_custom_dimensions for tab1.")
+        return
+
+    dims[changed_idx]['weight'] = max(0.0, min(100.0, new_weight_for_changed_dim))
+    
+    num_dims = len(dims)
+    if num_dims == 0:
+        return
+
+    if num_dims == 1:
+        dims[0]['weight'] = 100.0
+        st.session_state[editable_dims_key] = dims
+        return
+
+    current_weight_changed_dim = dims[changed_idx]['weight']
+    sum_others_before_adjustment = sum(
+        d.get('weight', 0.0) for i, d in enumerate(dims) if i != changed_idx
+    )
+    target_sum_others = 100.0 - current_weight_changed_dim
+
+    for i, dim in enumerate(dims):
+        if i == changed_idx:
+            continue
+        if sum_others_before_adjustment == 0:
+            dim['weight'] = target_sum_others / (num_dims - 1) if (num_dims - 1) > 0 else 0.0
+        else:
+            dim['weight'] = (dim.get('weight', 0.0) / sum_others_before_adjustment) * target_sum_others
+        dim['weight'] = max(0.0, min(100.0, dim['weight']))
+
+    for dim in dims:
+        dim['weight'] = round(dim['weight'])
+
+    sum_rounded_weights = sum(dim.get('weight', 0) for dim in dims)
+    error = 100 - sum_rounded_weights
+
+    if error != 0 and num_dims > 0:
+        potential_new_weight_changed_dim = dims[changed_idx]['weight'] + error
+        if 0 <= potential_new_weight_changed_dim <= 100:
+            dims[changed_idx]['weight'] = potential_new_weight_changed_dim
+        else:
+            for i, dim in enumerate(dims):
+                if error > 0 and dim['weight'] < 100:
+                    dim['weight'] += error
+                    break
+                elif error < 0 and dim['weight'] > 0:
+                    dim['weight'] += error
+                    break
+    
+    for dim in dims:
+        dim['weight'] = int(round(dim.get('weight',0)))
+
+    st.session_state[editable_dims_key] = dims
 
 def handle_query_submission(query):
     """Handle query submission."""
     if query:
         set_tab_state("tab1", "query", query)
         set_tab_state("tab1", "query_executed", True)
+        # Reset states for dimension editing for the new custom query
+        set_tab_state("tab1", "editable_custom_dimensions", None)
+        set_tab_state("tab1", "custom_weights_editor_initialized", False)
+        set_tab_state("tab1", "custom_weights_confirmed", False)
         return True
     return False
 
@@ -63,27 +151,127 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
     metadata_filter = None
     extracted_filters = None
     
-    with st.spinner("Extracting metadata filters..."):
+    # STEP 1: Extract metadata filters and allow user to edit them
+    with st.status("Step 1: Processing Custom Query for Filters...", expanded=True):
         try:
+            st.write("Extracting metadata filters from your custom query...")
             filter_result = filter_extractor.process_query(query, strict_mode=False)
             metadata_filter = filter_result["pinecone_filter"]
             extracted_filters = filter_result["extracted_filters"]
             
-            # Pass extracted filters to the filter editor
-            modified_filters = render_filter_editor(extracted_filters)
+            st.write("Please review and confirm the extracted filters below.")
+            modified_filters = render_filter_editor(extracted_filters) # Pass tab_id for unique keys - REMOVED tab_id
             
-            # If user hasn't confirmed yet, stop here
             if modified_filters is None:
-                st.info("Please review the filters above and click 'Confirm & Proceed' to continue with the search.")
-                return
+                st.info("Please review and adjust filters above, then click 'Confirm Filters & Proceed' to continue.")
+                return # Stop if filters not confirmed
             
-            # User has confirmed, build new Pinecone filter with modified filters
             metadata_filter = filter_extractor.build_pinecone_filter(modified_filters, strict_mode=False)
-            st.success("Filters confirmed! Proceeding with search...")
+            st.success("Filters confirmed!")
                 
         except Exception as e:
             st.error(f"Error extracting metadata filters: {str(e)}")
-    
+            logger.error(f"Error during filter extraction for custom query: {str(e)}")
+            return
+    add_section_separator()
+
+    # STEP 2: Extract Custom Query Dimensions and Allow Weight Customization
+    custom_weights_editor_initialized = get_tab_state("tab1", "custom_weights_editor_initialized")
+    custom_weights_confirmed = get_tab_state("tab1", "custom_weights_confirmed")
+    editable_custom_dimensions = get_tab_state("tab1", "editable_custom_dimensions")
+
+    if not custom_weights_editor_initialized:
+        with st.spinner("Extracting key evaluation dimensions from your Custom Query..."):
+            try:
+                # For custom query, the query itself is used as both raw and summarized for dimension extraction
+                extracted_dimensions_data = profile_evaluator.extract_job_dimensions(raw_job_description=query, job_description_prompt=query)
+                profile_evaluator.job_dimensions = extracted_dimensions_data # Ensure evaluator instance has it
+                initial_dimensions = extracted_dimensions_data.get("dimensions", [])
+                
+                if not initial_dimensions:
+                    st.error("Could not extract evaluation dimensions from your custom query. Please refine your query or try again.")
+                    logger.error("Failed to extract initial dimensions for custom query.")
+                    return
+
+                # Initialize weights (similar logic to job_description.py)
+                current_total_weight = sum(dim.get('weight', 0) for dim in initial_dimensions)
+                if current_total_weight == 0 and initial_dimensions:
+                    equal_weight = round(100 / len(initial_dimensions))
+                    for dim in initial_dimensions: dim['weight'] = equal_weight
+                current_total_weight = sum(dim.get('weight', 0) for dim in initial_dimensions)
+                if current_total_weight != 100 and current_total_weight != 0 and initial_dimensions:
+                    for dim in initial_dimensions: dim['weight'] = round((dim.get('weight',0) / current_total_weight) * 100)
+                final_sum_check = sum(dim.get('weight', 0) for dim in initial_dimensions)
+                if final_sum_check != 100 and initial_dimensions:
+                    diff = 100 - final_sum_check
+                    initial_dimensions[0]['weight'] = initial_dimensions[0].get('weight',0) + diff
+                for dim in initial_dimensions: dim['weight'] = int(dim.get('weight',0))
+
+                set_tab_state("tab1", "editable_custom_dimensions", initial_dimensions)
+                set_tab_state("tab1", "custom_weights_editor_initialized", True)
+                st.rerun()
+            except Exception as e:
+                st.error(f"Error extracting dimensions for custom query: {str(e)}")
+                logger.error(f"Error during dimension extraction for custom query: {str(e)}")
+                return
+
+    if not custom_weights_confirmed and custom_weights_editor_initialized and editable_custom_dimensions:
+        with st.container():
+            st.subheader("Step 2: Customize Evaluation Weights for Custom Query")
+            st.markdown("Review and adjust the weights for each evaluation dimension. The total must sum to 100%.")
+            
+            total_current_weight = 0
+            for dim in editable_custom_dimensions:
+                dim_id = dim.get('id', 'unknown_id_custom') # Ensure unique IDs if structure is same
+                dim_name = dim.get('name', 'Unknown Dimension')
+                dim_weight = int(dim.get('weight', 0))
+                total_current_weight += dim_weight
+
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.markdown(f"**{dim_name}**")
+                with col2:
+                    st.number_input(
+                        label=f"Weight for {dim_name}", 
+                        value=dim_weight, 
+                        min_value=0, 
+                        max_value=100, 
+                        step=1, 
+                        key=get_tab_state_key("tab1", f"dim_weight_{dim_id}"),
+                        on_change=adjust_custom_dimension_weights,
+                        args=(dim_id,),
+                        label_visibility="collapsed"
+                    )
+                with st.expander(f"Details for {dim_name}", expanded=False):
+                    st.markdown(f"**Description:** {dim.get('description', 'N/A')}")
+                    st.markdown("**Key Success Factors:**")
+                    for factor in dim.get('key_success_factors', []):
+                        st.markdown(f"- {factor}")
+                add_section_separator()
+
+            st.markdown(f"**Total Weight: {total_current_weight}%**")
+            if total_current_weight != 100:
+                st.warning("Total weight does not sum to 100%. Please adjust the weights.")
+
+            if st.button("Confirm Weights and Proceed to Evaluation", type="primary", use_container_width=True, key=get_tab_state_key("tab1", "confirm_weights_button")):
+                final_dims_to_use = get_tab_state("tab1", "editable_custom_dimensions")
+                if sum(d.get('weight',0) for d in final_dims_to_use) != 100:
+                    st.error("Cannot proceed. Weights must sum to 100%.")
+                else:
+                    profile_evaluator.job_dimensions = {"dimensions": final_dims_to_use} # Set for the evaluator
+                    set_tab_state("tab1", "custom_weights_confirmed", True)
+                    logger.info(f"Custom query dimension weights confirmed by user: {final_dims_to_use}")
+                    st.rerun()
+            return
+
+    # Proceed with search and evaluation only if filters and weights are confirmed
+    if not (get_tab_state("tab1", "query_executed") and custom_weights_confirmed):
+        if not custom_weights_confirmed and get_tab_state("tab1", "custom_weights_editor_initialized"):
+            logger.debug("Waiting for custom query weight confirmation.")
+        else:
+            logger.debug("Custom query or its weights not confirmed. Halting before search.")
+        return
+
     # Create a progress bar and message display area for showing process steps
     progress_bar = st.progress(0)
     status_text = st.empty()

@@ -1,55 +1,129 @@
-Saachi Partners
-
-
-S
-
-
-Insurance - Senior BA (Cloud)
+MetLife
+メットライフ生命
 
 
 Job Description
 
 
-Duties & Responsibilities:
+LOB/Group /Team
+Information Technology/ App Dev/Digital Engineering
+Position Title
+Lead Full Stack Software Engineer
+Report Line
+Y. Senoo
+Location
+Tokyo
+Global Grade
+GG12
+# of Hiring
+1
+FIex
+Yes
+Hiring Source
+External (MetLife Japan HP & Recruiting Agency) · Internal
+Position Information
 
 
-Analyzing and understanding the business processes, gathering requirements, and designing
-solutions that improve operational efficiency and drive business success. The BA will work
-closely with various stakeholders to understand their needs, document functional requirements,
-and provide recommendations for system and process improvements.
+Job Summary
 
 
-Job Description - Grade Specific
+Looking for a Lead Full Stack Software Engineer to join our NextGen PAS team. This team
+is spearheading the effort to develop strategies for migrating multiple legacy applications
+from a mainframe environment and building new cloud-native applications in an open-
+source environment.
 
 
-Requirements & Qualifications:
+We are seeking an engineer to take on a central role as the lead for application design and
+development. The ideal candidate must have extensive experience with open systems, from
+requirements definition through to development, design, testing, and release. The required
+skill set is correspondingly high, and the successful candidate must demonstrate excellence
+in several of the following areas:
+
+
+Extensive experience in designing and developing open systems, including databases.
+
+
+· Code analysis of existing systems
+· Knowledge and experience with public clouds (Azure, AWS, GCP)
+· Experience in data and UML modeling
+· Ability to review code created by team members and provide appropriate feedback
+· Experience in the life insurance industry and related business knowledge
+· Communication with other teams primarily in Japanese
+· Ability to lead teams of up to "two pizzas" in size.
+
+
+Responsibilities
+
+
+To migrate the functions of existing applications currently running on a mainframe to
+an open system, the incumbent will be responsible for carrying out all necessary tasks
+from the architecture planning, design, development, testing, and deployment of new
+Java Batch/UI/API applications.
+
+
+We hope that in the future, ideal candidate will be able to take the lead in planning and
+developing teams, providing guidance to members, and conducting reviews of
+deliverables.
+
+
+MetLife
+メットライフ生命
+
+
+Requirements (Experience, Skills, Education)
 
 
 Experience:
 
 
-- 3-5+ years of experience as a Business Analyst or in a similar role.
-- Experience working with cross-functional teams.
-- Strong understanding of business processes and the ability to translate business needs into
-technical solutions.
+· 5+ years of design experience and 10+ years of development experience with
+Java and RDB
+· General RDB (関係データベース/SQL (関係データベース:Structured Query Language)
+knowledge in programming
+· Experience in designing, developing, and preparing operating environments for
+new applications
+· Ability to analyze application logs and troubleshoot issues
+· Development experience with cloud technologies (Azure, AWS, GCP) (Azure will be
+used)
+· Ability to understand the source code of open systems
+· Experience in reviewing code created by team members and providing appropriate
+feedback
+Experience coding(SQL, Python, HTML/CSS) within the past 2 years
+Japanese language proficiency (native or JLPT N2 level or above)
+· Knowledge of life insurance industry (not required for native Japanese speakers)
 
 
-Technical Skills:
+○
 
 
-- Proficient in Cloud technologies (Azure, AWS)
+Education:
 
 
-Soft Skills:
+· Bachelor's degree in Computer Science, Information Technology, or equivalent
+knowledge.
 
 
-- Native level Japanese and Business level English.
+Preferable
 
 
-- Strong problem-solving and critical thinking abilities.
-- Excellent communication in both Japanese and English and interpersonal skills for liaising with
-stakeholders.
+· Experience in designing and developing batch applications
+Ability to perform performance tuning on applications and databases
+· Experience in an Agile development environment
+· Experience implementing CICD (planned implementation using Azure DevOps)
+· Experience in developing with Mainframe
+· Understanding of COBOL, JCL, and Assembler languages
+· Ability to plan testing and rollout
+· Knowledge and experience in enterprise-level development
+· Business level English proficiency
 
 
-- Attention to detail and the ability to work under pressure and meet deadlines.
-- Strong organizational and time management skills.
+Qualification
+Language
+English ( Advanced Intermediate Basic) Japanese ( Advanced Intermediate Basic) Not Required
+Others
+
+
+Date
+01-Jan-2025
+Prepared by
+Yoshimi Senoo

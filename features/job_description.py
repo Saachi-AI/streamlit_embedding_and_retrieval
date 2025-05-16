@@ -28,9 +28,12 @@ from core.filter_editor_components import render_filter_editor
 # Configure logging
 logger = logging.getLogger(__name__)
 
+# Helper function for session state keys
+def get_tab_state_key(tab_id: str, key: str) -> str:
+    return f"{tab_id}_{key}"
+
 def initialize_job_description_state():
     """Initialize job description tab-specific state variables."""
-    # Use hardcoded defaults instead of environment variables
     defaults = {
         "semantic_top_k": 15,
         "rerank_top_k": 10,
@@ -39,9 +42,118 @@ def initialize_job_description_state():
         "parsed_text": None,
         "generated_prompt": None,
         "prompt_data": None,
-        "query": None
+        "query": None,
+        "editable_job_dimensions": None,
+        "jd_weights_editor_initialized": False,
+        "jd_weights_confirmed": False,
     }
     initialize_tab_state("tab0", defaults)
+
+def adjust_job_dimension_weights(changed_dim_id: str):
+    """Callback to adjust job dimension weights proportionally."""
+    # Construct the session state key for editable_job_dimensions for tab0
+    editable_dims_key = get_tab_state_key("tab0", "editable_job_dimensions")
+    dims = st.session_state.get(editable_dims_key)
+
+    if not dims or not isinstance(dims, list):
+        logger.warning("adjust_job_dimension_weights called with no dimensions in session state.")
+        return
+
+    # Find the changed dimension and its new weight from the widget's state
+    changed_dim_widget_key = get_tab_state_key("tab0", f"dim_weight_{changed_dim_id}")
+    new_weight_for_changed_dim = st.session_state.get(changed_dim_widget_key, None)
+
+    if new_weight_for_changed_dim is None:
+        logger.warning(f"Could not find new weight for {changed_dim_id} in session state via key {changed_dim_widget_key}")
+        return
+        
+    # Convert to float for calculations, then will be rounded to int.
+    new_weight_for_changed_dim = float(new_weight_for_changed_dim)
+
+    changed_idx = -1
+    for i, dim in enumerate(dims):
+        if dim.get('id') == changed_dim_id:
+            changed_idx = i
+            break
+    
+    if changed_idx == -1:
+        logger.warning(f"Dimension with id {changed_dim_id} not found in editable_job_dimensions.")
+        return
+
+    # Update the weight of the dimension that was directly changed by the user
+    # Clamp it to be within [0, 100]
+    dims[changed_idx]['weight'] = max(0.0, min(100.0, new_weight_for_changed_dim))
+    
+    num_dims = len(dims)
+    if num_dims == 0:
+        return
+
+    if num_dims == 1:
+        dims[0]['weight'] = 100.0 # Single dimension must be 100%
+        st.session_state[editable_dims_key] = dims
+        return
+
+    # Current weight of the changed dimension (after clamping)
+    current_weight_changed_dim = dims[changed_idx]['weight']
+
+    # Calculate the sum of weights of OTHER dimensions (before this adjustment round)
+    sum_others_before_adjustment = sum(
+        d.get('weight', 0.0) for i, d in enumerate(dims) if i != changed_idx
+    )
+
+    # Target sum for other dimensions
+    target_sum_others = 100.0 - current_weight_changed_dim
+
+    # Adjust other dimensions
+    for i, dim in enumerate(dims):
+        if i == changed_idx:
+            continue  # Skip the dimension that was manually changed
+
+        if sum_others_before_adjustment == 0: # If all other weights were zero
+            # Distribute target_sum_others equally among them (num_dims - 1 of them)
+            dim['weight'] = target_sum_others / (num_dims - 1) if (num_dims - 1) > 0 else 0.0
+        else:
+            # Distribute proportionally based on their original share of sum_others_before_adjustment
+            dim['weight'] = (dim.get('weight', 0.0) / sum_others_before_adjustment) * target_sum_others
+        
+        # Clamp individual weights during adjustment too
+        dim['weight'] = max(0.0, min(100.0, dim['weight']))
+
+    # Final pass to round and ensure sum is exactly 100 due to potential float inaccuracies
+    # Round all weights first
+    for dim in dims:
+        dim['weight'] = round(dim['weight'])
+
+    # Calculate sum of rounded weights
+    sum_rounded_weights = sum(dim.get('weight', 0) for dim in dims)
+    error = 100 - sum_rounded_weights
+
+    if error != 0 and num_dims > 0:
+        # Distribute the error. Add to the largest weight, subtract from largest (if error negative) or smallest.
+        # A simpler way: add/subtract from the dimension that was changed, if it doesn't violate bounds.
+        # Or distribute among all dimensions that can absorb it.
+        # For simplicity, try to add to the changed dimension first.
+        potential_new_weight_changed_dim = dims[changed_idx]['weight'] + error
+        if 0 <= potential_new_weight_changed_dim <= 100:
+            dims[changed_idx]['weight'] = potential_new_weight_changed_dim
+        else:
+            # If that fails, try to distribute among others that can take the change
+            # This can get complicated. For now, let's add to the first one that can take it.
+            for i, dim in enumerate(dims):
+                if error > 0 and dim['weight'] < 100:
+                    dim['weight'] += error
+                    break
+                elif error < 0 and dim['weight'] > 0:
+                    dim['weight'] += error # error is negative
+                    break
+            # Re-check sum one last time and if still off, it's a minor rounding issue typically ignorable for display
+            # or log a warning. The impact of +/- 1 on 3-5 items is often minimal.
+    
+    # Ensure all weights are integers as final step for display
+    for dim in dims:
+        dim['weight'] = int(round(dim.get('weight',0)))
+
+    st.session_state[editable_dims_key] = dims
 
 def handle_document_upload(uploaded_file, document_parser, prompt_generator):
     """Handle document upload and parsing."""
@@ -66,6 +178,11 @@ def handle_document_upload(uploaded_file, document_parser, prompt_generator):
                 # Still set the query, but don't mark it as executed yet
                 set_tab_state("tab0", "query", generated_prompt)
                 set_tab_state("tab0", "query_executed", False)
+                
+                # Reset states for dimension editing for the new JD
+                set_tab_state("tab0", "editable_job_dimensions", None)
+                set_tab_state("tab0", "jd_weights_editor_initialized", False)
+                set_tab_state("tab0", "jd_weights_confirmed", False)
                 
                 # Success message
                 st.success("Job description parsed and prompt generated successfully! Please review and edit the summary below if needed.")
@@ -130,27 +247,147 @@ def process_job_description_query(query, settings, filter_extractor, embedders, 
     metadata_filter = None
     extracted_filters = None
     
-    with st.spinner("Extracting metadata filters..."):
+    # STEP 1: Extract metadata filters and allow user to edit them
+    with st.status("Step 1: Processing Job Description for Filters...", expanded=True):
         try:
+            st.write("Extracting metadata filters from the job description...")
             filter_result = filter_extractor.process_query(query, strict_mode=False)
             metadata_filter = filter_result["pinecone_filter"]
             extracted_filters = filter_result["extracted_filters"]
             
-            # Pass extracted filters to the filter editor
+            st.write("Please review and confirm the extracted filters below.")
+            # Pass extracted filters to the filter editor - removed tab_id as it's not an accepted argument
             modified_filters = render_filter_editor(extracted_filters)
             
-            # If user hasn't confirmed yet, stop here
             if modified_filters is None:
-                st.info("Please review the filters above and click 'Confirm & Proceed' to continue with the search.")
-                return
+                st.info("Please review and adjust filters above, then click 'Confirm Filters & Proceed' to continue.")
+                return # Stop if filters not confirmed
             
             # User has confirmed, build new Pinecone filter with modified filters
             metadata_filter = filter_extractor.build_pinecone_filter(modified_filters, strict_mode=False)
-            st.success("Filters confirmed! Proceeding with search...")
+            st.success("Filters confirmed!")
                 
         except Exception as e:
             st.error(f"Error extracting metadata filters: {str(e)}")
+            logger.error(f"Error during filter extraction: {str(e)}")
+            return
+    add_section_separator()
+
+    # STEP 2: Extract Job Dimensions and Allow Weight Customization
+    jd_weights_editor_initialized = get_tab_state("tab0", "jd_weights_editor_initialized")
+    jd_weights_confirmed = get_tab_state("tab0", "jd_weights_confirmed")
+    editable_job_dimensions = get_tab_state("tab0", "editable_job_dimensions")
+
+    if not jd_weights_editor_initialized:
+        with st.spinner("Extracting key evaluation dimensions from Job Description..."):
+            try:
+                # raw_jd for dimension extraction context, summarized_jd for primary content
+                raw_jd_for_context = get_tab_state("tab0", "parsed_text")
+                summarized_jd_for_extraction = query # This is the (potentially edited) summary
+                
+                # Call extract_job_dimensions and get the result
+                extracted_dimensions_data = profile_evaluator.extract_job_dimensions(raw_jd_for_context, summarized_jd_for_extraction)
+                
+                # Explicitly set the job_dimensions attribute on the profile_evaluator instance
+                # This ensures the instance holds the latest extracted dimensions for consistency
+                # and for any internal uses within the evaluator before weights are confirmed.
+                profile_evaluator.job_dimensions = extracted_dimensions_data
+                
+                # Now get initial_dimensions from the result we obtained
+                initial_dimensions = extracted_dimensions_data.get("dimensions", [])
+                
+                if not initial_dimensions:
+                    st.error("Could not extract evaluation dimensions. Please check the job description or try again.")
+                    logger.error("Failed to extract initial job dimensions from returned data.")
+                    return
+
+                # Initialize weights to be integers and sum to 100 if not already
+                current_total_weight = sum(dim.get('weight', 0) for dim in initial_dimensions)
+                if current_total_weight == 0 and initial_dimensions:
+                    equal_weight = round(100 / len(initial_dimensions))
+                    for dim in initial_dimensions: dim['weight'] = equal_weight
+                # Normalize to 100
+                current_total_weight = sum(dim.get('weight', 0) for dim in initial_dimensions)
+                if current_total_weight != 100 and current_total_weight != 0 and initial_dimensions:
+                    for dim in initial_dimensions: dim['weight'] = round((dim.get('weight',0) / current_total_weight) * 100)
+                # Final adjustment for sum to 100
+                final_sum_check = sum(dim.get('weight', 0) for dim in initial_dimensions)
+                if final_sum_check != 100 and initial_dimensions:
+                    diff = 100 - final_sum_check
+                    initial_dimensions[0]['weight'] = initial_dimensions[0].get('weight',0) + diff
+                for dim in initial_dimensions: dim['weight'] = int(dim.get('weight',0))
+
+                set_tab_state("tab0", "editable_job_dimensions", initial_dimensions)
+                set_tab_state("tab0", "jd_weights_editor_initialized", True)
+                st.rerun() # Rerun to display the editor with initialized dimensions
+            except Exception as e:
+                st.error(f"Error extracting job dimensions: {str(e)}")
+                logger.error(f"Error during job dimension extraction: {str(e)}")
+                return
+
+    if not jd_weights_confirmed and jd_weights_editor_initialized and editable_job_dimensions:
+        with st.container():
+            st.subheader("Step 2: Customize Evaluation Weights")
+            st.markdown("Review and adjust the weights for each evaluation dimension. The total must sum to 100%.")
+            
+            total_current_weight = 0
+            for dim in editable_job_dimensions:
+                dim_id = dim.get('id', 'unknown_id')
+                dim_name = dim.get('name', 'Unknown Dimension')
+                dim_weight = int(dim.get('weight', 0)) # Ensure integer for number_input
+                total_current_weight += dim_weight
+
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.markdown(f"**{dim_name}**")
+                with col2:
+                    st.number_input(
+                        label=f"Weight for {dim_name}", 
+                        value=dim_weight, 
+                        min_value=0, 
+                        max_value=100, 
+                        step=1, 
+                        key=get_tab_state_key("tab0", f"dim_weight_{dim_id}"),
+                        on_change=adjust_job_dimension_weights,
+                        args=(dim_id,),
+                        label_visibility="collapsed"
+                    )
+                with st.expander(f"Details for {dim_name}", expanded=False):
+                    st.markdown(f"**Description:** {dim.get('description', 'N/A')}")
+                    st.markdown("**Key Success Factors:**")
+                    for factor in dim.get('key_success_factors', []):
+                        st.markdown(f"- {factor}")
+                add_section_separator()
+
+            st.markdown(f"**Total Weight: {total_current_weight}%**")
+            if total_current_weight != 100:
+                st.warning("Total weight does not sum to 100%. Please adjust the weights.")
+
+            if st.button("Confirm Weights and Proceed to Evaluation", type="primary", use_container_width=True, key=get_tab_state_key("tab0", "confirm_weights_button")):
+                # Final check and ensure profile_evaluator gets updated dimensions
+                final_dims_to_use = get_tab_state("tab0", "editable_job_dimensions")
+                if sum(d.get('weight',0) for d in final_dims_to_use) != 100:
+                    st.error("Cannot proceed. Weights must sum to 100%.")
+                else:
+                    profile_evaluator.job_dimensions = {"dimensions": final_dims_to_use}
+                    set_tab_state("tab0", "jd_weights_confirmed", True)
+                    logger.info(f"Job dimension weights confirmed by user: {final_dims_to_use}")
+                    st.rerun()
+            return # Stop further processing until weights are confirmed
     
+    # Proceed with search and evaluation only if filters and weights are confirmed
+    if not (get_tab_state("tab0", "query_executed") and jd_weights_confirmed):
+         # This case should be handled by returns above, but as a safeguard.
+         # query_executed might be true from prompt editing, but weights not confirmed yet.
+         if not jd_weights_confirmed and get_tab_state("tab0", "jd_weights_editor_initialized"):
+            # If editor is initialized but weights not confirmed, we are in the editing step.
+            # The return above inside the editing UI block should catch this.
+            logger.debug("Waiting for weight confirmation.")
+         else:
+            # This means the prompt wasn't even confirmed, or some other state issue.
+            logger.debug("Query or weights not confirmed. Halting before search.")
+         return
+
     # Create a progress bar and message display area for showing process steps
     progress_bar = st.progress(0)
     status_text = st.empty()

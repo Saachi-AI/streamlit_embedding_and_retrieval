@@ -29,8 +29,8 @@ etc.
 
 
 Required skills
-More than 8 years of experience in application support or development Comfortable being individual contributor when required Experience in knowledge transitions principles
-Understanding of SRE Excellent communication skill to explain and ask right questions to right person on right time in
+More than 8 years of experience in application support or development Comfortable being individual contributor when required Experience in knowledge transitions
+Understanding of SRE principles Excellent communication skill to explain and ask right questions to right person on right time in
 a blameless manner
 Business level Japanese and English
 Understanding of distributed architecture, cloud infrastructure, middleware components, authentication, web technologies
@@ -46,17 +46,16 @@ Understanding of relational and non-relational databases
 Terms of Employment:
 
 
-◇Annual Salary : Commensurate with experience and skills.
-◇Wage Payment : Monthly · 09:00~17:00 7 Working per day ※1 hour break · Overtime work Yes
-◇Working Hours hour
-◇Holiday · 121 days (Saturday, Sunday, and National holiday、 Year-end and New Year holidays 5 days) · Paid Leave: 5 or 10 days (it depends by starting date) days
-Other: Funeral Leaves 5 consecutives
-· leaves、 Special
-◇Working Location : Kinshicho / Kioicho / Otemachi
-◇Commuting Allowance : According with the provisions fully guaranteed
-◇Retirement Allowance : Yes ※Confirmed by "Other" as below.
-◇Dormitory/Company owned house : Depend on the hiring conditions
-◇Social Insurance : Health Insurance、 Welfare Pension、 Employment Insurance、 Industrial
-Accident Insurance
-◇Other : Defined-Contribution Pension (Cash Balance Plan) 、
-Defined-Benefit Pension、 Property Accumulation Savings
+◇Annual Salary : Commensurate with experience and skills. ◇Wage Payment : Monthly
+◇Working Hours · 09:00~17:00 7 Working hour per day ※1 hour break · Overtime work Yes
+◇Holiday 121 Sunday, and National holiday、 Year-end and
+· days (Saturday, New Year holidays 5 days) · Paid Leave: 5 or 10 days (it depends by starting date)
+· Other: Funeral leaves、 Special Leaves 5 consecutives days
+◇Working Location : Otemachi
+Kinshicho / Kioicho /
+◇Commuting Allowance : According with the provisions fully guaranteed ◇Retirement Allowance : Yes ※Confirmed by "Other" as below.
+owned house : Depend on the hiring conditions
+◇Dormitory/Company
+◇Social Insurance : Health Insurance、 Welfare Pension、 Employment
+Insurance、 Industrial Accident Insurance
+◇Other : Defined-Contribution Pension (Cash Balance Plan) 、 Defined-Benefit Pension、 Property Accumulation Savings

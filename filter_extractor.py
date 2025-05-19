@@ -89,6 +89,11 @@ Rules:
 6. IMPORTANT: For languages, always use an array of objects as shown above, never a dictionary or other format.
 7. If proficiency level is not specified for a language, assume "Professional working proficiency"
 8. Only include human/natural languages like English, French, Japanese, etc. Do not include programming languages.
+9. ALWAYS include English and Japanese in the languages array, even if not mentioned in the query:
+   - If English is not mentioned in the query, add it with "Limited working proficiency" (Conversational)
+   - If Japanese is not mentioned in the query, add it with "Limited working proficiency" (Conversational)
+   - If English or Japanese are explicitly mentioned, use their specified proficiency levels instead
+   - Any other languages mentioned should be included alongside English and Japanese
 
 CRITICAL: Return a JSON object with only the fields that were EXPLICITLY mentioned in the query. 
 DO NOT include fields that are not mentioned.

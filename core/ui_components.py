@@ -181,8 +181,7 @@ def create_sidebar_configuration(tab_name):
 
 def add_section_separator():
     """Add a visual separator between sections."""
-    st.markdown("<div style='margin: 40px 0;'></div>", unsafe_allow_html=True)
-    st.markdown("<hr style='margin: 30px 0; border-top: 1px solid #555;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='margin: 30px 0; border: 0; border-top: 1px solid rgba(107, 114, 128, 0.3);'>", unsafe_allow_html=True)
 
 def display_profile_retrieval_and_preprocessing(profile_data, processed_profiles):
     """
@@ -540,3 +539,37 @@ def display_ranked_candidates(processed_candidates):
                     
             # Add a separator between candidates
             st.markdown("<hr style='margin-top: 30px; margin-bottom: 30px;'>", unsafe_allow_html=True)
+
+def display_reference_dimensions(dimensions, title="Reference Evaluation Weights"):
+    """
+    Display previously confirmed job dimensions as a read-only reference.
+    
+    Args:
+        dimensions: List of dimension objects with name, weight, description, and key_success_factors
+        title: Optional title for the reference panel (default: "Reference Evaluation Weights")
+    """
+    if not dimensions:
+        return
+    
+    # Create a container with a subtle background
+    with st.container():
+        st.markdown(f"<h4>{title}</h4>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 0.9em;'>These weights are being used for candidate evaluation:</div>", unsafe_allow_html=True)
+        
+        # Display each dimension with its weight
+        for dim in dimensions:
+            dim_name = dim.get('name', 'Unknown Dimension')
+            dim_weight = int(dim.get('weight', 0))
+            
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.markdown(f"**{dim_name}**")
+            with col2:
+                st.markdown(f"<div style='text-align: right;'><strong>{dim_weight}%</strong></div>", unsafe_allow_html=True)
+            
+            # Make details available via expander
+            with st.expander(f"Details for {dim_name}", expanded=False):
+                st.markdown(f"**Description:** {dim.get('description', 'N/A')}")
+                st.markdown("**Key Success Factors:**")
+                for factor in dim.get('key_success_factors', []):
+                    st.markdown(f"- {factor}")

@@ -1,129 +1,62 @@
-MetLife
-メットライフ生命
+Job description and Required specification
 
 
-Job Description
-
-
-LOB/Group /Team
-Information Technology/ App Dev/Digital Engineering
-Position Title
-Lead Full Stack Software Engineer
-Report Line
-Y. Senoo
+Date:
+2025/3/5 Prepared Kohei Tamagawa by:
+Dept. / Section
+Information Technology / Customer Service and Operation Systems Group / Customer Engagement Team
+Position
+Lead Platform Engineer
+Report line
+Bhalodia, Hardik
+Expected Global Grade
+GG12
 Location
 Tokyo
-Global Grade
-GG12
-# of Hiring
+Target Start Date
+2025/5/1
+No. of positions
 1
-FIex
-Yes
-Hiring Source
-External (MetLife Japan HP & Recruiting Agency) · Internal
-Position Information
+Headcount
+1
+Job Description: Please describe the job, role and responsibilities to be assigned.
+Job Summary · Accountable for end-to-end platform's operational support. Do whatever it takes to keep running 24x7 customer and agents facing system. Focus on observability for fast detection, fast resolution and preventive measures. Navigate through complex incidents, unfamiliar problems. · Continuous learning of unforeseen/unpredicted challenges
+technologies, processes improvement through different and known issues. Responsibilities · Investigate and resolve production incidents, problems, and service requests. · Responsible for ensuring disaster recovery, privacy and security are aligned to enable application/platform stability Responsible to co-ordinate with multiple teams to solve the post incident problem, known issues which are not limited to technical but process, governance etc. as well. Understand how platforms are evolving by monthly release & improve stability, observability continuously. Manage and work with a team of 6-7 platform support engineers at offshore. Prioritize multiple tasks in day-to-day work and multiple incident situation. · Review changes of dependent systems, able to assess the impact,
+Requirements: Please describe the required competencies, including experience, skill sets,
 
 
-Job Summary
+etc.
 
 
-Looking for a Lead Full Stack Software Engineer to join our NextGen PAS team. This team
-is spearheading the effort to develop strategies for migrating multiple legacy applications
-from a mainframe environment and building new cloud-native applications in an open-
-source environment.
+Required skills
+More than 8 years of experience in application support or development Comfortable being individual contributor when required Experience in knowledge transitions principles
+Understanding of SRE Excellent communication skill to explain and ask right questions to right person on right time in
+a blameless manner
+Business level Japanese and English
+Understanding of distributed architecture, cloud infrastructure, middleware components, authentication, web technologies
+Nice to have
+Cloud hosted application support or administrations Understanding to work in Agile Delivery Model
+Familiar with pager duty concept in 24x7 application support
+working in a large organization
+Experience
+Understanding of ITSM principles and processes
+Understanding of relational and non-relational databases
 
 
-We are seeking an engineer to take on a central role as the lead for application design and
-development. The ideal candidate must have extensive experience with open systems, from
-requirements definition through to development, design, testing, and release. The required
-skill set is correspondingly high, and the successful candidate must demonstrate excellence
-in several of the following areas:
+Terms of Employment:
 
 
-Extensive experience in designing and developing open systems, including databases.
-
-
-· Code analysis of existing systems
-· Knowledge and experience with public clouds (Azure, AWS, GCP)
-· Experience in data and UML modeling
-· Ability to review code created by team members and provide appropriate feedback
-· Experience in the life insurance industry and related business knowledge
-· Communication with other teams primarily in Japanese
-· Ability to lead teams of up to "two pizzas" in size.
-
-
-Responsibilities
-
-
-To migrate the functions of existing applications currently running on a mainframe to
-an open system, the incumbent will be responsible for carrying out all necessary tasks
-from the architecture planning, design, development, testing, and deployment of new
-Java Batch/UI/API applications.
-
-
-We hope that in the future, ideal candidate will be able to take the lead in planning and
-developing teams, providing guidance to members, and conducting reviews of
-deliverables.
-
-
-MetLife
-メットライフ生命
-
-
-Requirements (Experience, Skills, Education)
-
-
-Experience:
-
-
-· 5+ years of design experience and 10+ years of development experience with
-Java and RDB
-· General RDB (関係データベース/SQL (関係データベース:Structured Query Language)
-knowledge in programming
-· Experience in designing, developing, and preparing operating environments for
-new applications
-· Ability to analyze application logs and troubleshoot issues
-· Development experience with cloud technologies (Azure, AWS, GCP) (Azure will be
-used)
-· Ability to understand the source code of open systems
-· Experience in reviewing code created by team members and providing appropriate
-feedback
-Experience coding(SQL, Python, HTML/CSS) within the past 2 years
-Japanese language proficiency (native or JLPT N2 level or above)
-· Knowledge of life insurance industry (not required for native Japanese speakers)
-
-
-○
-
-
-Education:
-
-
-· Bachelor's degree in Computer Science, Information Technology, or equivalent
-knowledge.
-
-
-Preferable
-
-
-· Experience in designing and developing batch applications
-Ability to perform performance tuning on applications and databases
-· Experience in an Agile development environment
-· Experience implementing CICD (planned implementation using Azure DevOps)
-· Experience in developing with Mainframe
-· Understanding of COBOL, JCL, and Assembler languages
-· Ability to plan testing and rollout
-· Knowledge and experience in enterprise-level development
-· Business level English proficiency
-
-
-Qualification
-Language
-English ( Advanced Intermediate Basic) Japanese ( Advanced Intermediate Basic) Not Required
-Others
-
-
-Date
-01-Jan-2025
-Prepared by
-Yoshimi Senoo
+◇Annual Salary : Commensurate with experience and skills.
+◇Wage Payment : Monthly · 09:00~17:00 7 Working per day ※1 hour break · Overtime work Yes
+◇Working Hours hour
+◇Holiday · 121 days (Saturday, Sunday, and National holiday、 Year-end and New Year holidays 5 days) · Paid Leave: 5 or 10 days (it depends by starting date) days
+Other: Funeral Leaves 5 consecutives
+· leaves、 Special
+◇Working Location : Kinshicho / Kioicho / Otemachi
+◇Commuting Allowance : According with the provisions fully guaranteed
+◇Retirement Allowance : Yes ※Confirmed by "Other" as below.
+◇Dormitory/Company owned house : Depend on the hiring conditions
+◇Social Insurance : Health Insurance、 Welfare Pension、 Employment Insurance、 Industrial
+Accident Insurance
+◇Other : Defined-Contribution Pension (Cash Balance Plan) 、
+Defined-Benefit Pension、 Property Accumulation Savings

@@ -107,7 +107,9 @@ class ProfileRankProcessor:
                     match = re.match(r'(\d+)/(\d+)/(\d+)', date_str)
                     if match:
                         month, day, year = match.groups()
-                        # Fix for days with value '00'
+                        # Fix for invalid month/day values
+                        if month == '00':
+                            month = '01'
                         if day == '00':
                             day = '01'
                         return datetime(int(year), int(month), int(day))
@@ -117,7 +119,9 @@ class ProfileRankProcessor:
                     match = re.match(r'(\d+)-(\d+)-(\d+)', date_str)
                     if match:
                         year, month, day = match.groups()
-                        # Fix for days with value '00'
+                        # Fix for invalid month/day values
+                        if month == '00':
+                            month = '01'
                         if day == '00':
                             day = '01'
                         return datetime(int(year), int(month), int(day))

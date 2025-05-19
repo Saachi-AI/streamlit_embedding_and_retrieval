@@ -16,7 +16,8 @@ from core.ui_components import (
     display_fallback_results_header,
     display_fallback_results,
     display_profile_retrieval_and_preprocessing,
-    display_ranked_candidates
+    display_ranked_candidates,
+    display_reference_dimensions
 )
 from core.state_management import initialize_tab_state, get_tab_state, set_tab_state
 from llm_profile_ranking import LLMProfileRanker
@@ -272,6 +273,11 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
             logger.debug("Custom query or its weights not confirmed. Halting before search.")
         return
 
+    # Display the confirmed dimensions as a reference
+    if custom_weights_confirmed and editable_custom_dimensions:
+        display_reference_dimensions(editable_custom_dimensions, title="Reference Custom Query Weights")
+        add_section_separator()
+    
     # Create a progress bar and message display area for showing process steps
     progress_bar = st.progress(0)
     status_text = st.empty()

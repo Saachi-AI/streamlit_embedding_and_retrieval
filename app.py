@@ -9,6 +9,9 @@ import time
 import warnings
 import sys
 
+# Import authentication
+from auth_config import setup_authentication, create_login_page, show_user_info
+
 from utils import load_environment, get_vector_store
 from embedders.openai_embedder import OpenAIEmbedder
 from embedders.cohere_embedder import CohereEmbedder
@@ -39,6 +42,28 @@ st.set_page_config(
 
 # Ignore specific warning from langchain
 warnings.filterwarnings("ignore", message="You are trying to use a chat model")
+
+# ===== AUTHENTICATION SECTION =====
+# Set up authentication
+authenticator = setup_authentication()
+
+# Create login form - streamlit-authenticator v0.4.2 format
+authenticator.login()
+
+# Check authentication status from session state 
+if st.session_state.get("authentication_status") == False:
+    st.error('Username/password is incorrect')
+    create_login_page()
+    st.stop()
+elif st.session_state.get("authentication_status") == None:
+    st.warning('Please enter your username and password')
+    create_login_page() 
+    st.stop()
+elif st.session_state.get("authentication_status"):
+    # User is authenticated - show logout button and user info
+    authenticator.logout(location='sidebar')
+    show_user_info(st.session_state["name"], st.session_state["username"])
+# ===== END AUTHENTICATION SECTION =====
 
 # Set up the Streamlit app and display custom title with logo
 st.markdown("""
@@ -146,10 +171,10 @@ query_params = get_streamlit_query_params()
 @st.cache_resource
 def get_profile_evaluator():
     # Get LLM choice from query parameters or environment variable
-    llm_choice = query_params.get("llm", "grok")
+    llm_choice = query_params.get("llm", "gemini")  # Changed default to Gemini
     
-    # Get batch size from query parameters (default is 6)
-    batch_size = 6
+    # Get batch size from query parameters (default is 20)
+    batch_size = 20  # Changed default to 20
     if "batch" in query_params:
         try:
             batch_size = int(query_params.get("batch"))
@@ -163,10 +188,8 @@ def get_profile_evaluator():
         # For Gemini, use GOOGLE_API_KEY
         api_key = os.environ.get("GOOGLE_API_KEY")
         if not api_key:
-            # Use the provided key 
-            api_key = "AIzaSyCrctPuG21p0SRA82ex3EXegBVQGp3a6B0"
-            os.environ["GOOGLE_API_KEY"] = api_key
-            st.sidebar.info(f"Using default Google API key")
+            st.error("GOOGLE_API_KEY not found in environment variables")
+            st.warning("Please add your Google API key to your .env file or Streamlit secrets")
     else:
         # For Grok, use XAI_API_KEY
         api_key = env_vars["xai_api_key"]

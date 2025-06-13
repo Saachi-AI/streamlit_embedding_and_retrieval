@@ -105,7 +105,7 @@ def create_tab_specific_sidebar(active_tab_index):
     st.sidebar.title("Settings")
     
     # Show the fixed embedding model
-    st.sidebar.markdown("**Embedding Model:** Cohere")
+    # st.sidebar.markdown("**Embedding Model:** Cohere")
     
     # Get current values from session state with hardcoded defaults
     semantic_top_k_key = f"{tab_name}_semantic_top_k"
@@ -113,9 +113,9 @@ def create_tab_specific_sidebar(active_tab_index):
     
     # Initialize session state values if they don't exist yet
     if semantic_top_k_key not in st.session_state:
-        st.session_state[semantic_top_k_key] = 100
+        st.session_state[semantic_top_k_key] = 475
     if rerank_top_k_key not in st.session_state:
-        st.session_state[rerank_top_k_key] = 90
+        st.session_state[rerank_top_k_key] = 250
     
     # Read current values from session state
     semantic_top_k = st.session_state[semantic_top_k_key]
@@ -171,8 +171,8 @@ def create_sidebar_configuration(tab_name):
     This function is used by feature modules to get their configuration.
     """
     # Use session state values with hardcoded defaults instead of environment variables
-    semantic_top_k = st.session_state.get(f"{tab_name}_semantic_top_k", 100)
-    rerank_top_k = st.session_state.get(f"{tab_name}_rerank_top_k", 90)
+    semantic_top_k = st.session_state.get(f"{tab_name}_semantic_top_k", 475)
+    rerank_top_k = st.session_state.get(f"{tab_name}_rerank_top_k", 250)
     
     return {
         "semantic_top_k": semantic_top_k,

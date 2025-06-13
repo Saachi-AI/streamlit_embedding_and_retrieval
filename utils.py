@@ -1,36 +1,55 @@
 import os
+import streamlit as st
 from typing import Dict, List, Any
 from dotenv import load_dotenv
 from langchain_pinecone import PineconeVectorStore
 from pinecone import Pinecone
 
 def load_environment():
-    """Load environment variables from .env file"""
-    load_dotenv()
-    required_vars = [
-        "PINECONE_API_KEY",
-        "PINECONE_INDEX_NAME"
-    ]
+    """Load configuration from Streamlit secrets first, then environment variables"""
     
-    # Check if all required variables are set
-    missing_vars = [var for var in required_vars if not os.getenv(var)]
-    if missing_vars:
-        raise EnvironmentError(f"Missing required environment variables: {', '.join(missing_vars)}")
-    
-    # Return environment variables as a dictionary
-    return {
-        "pinecone_api_key": os.getenv("PINECONE_API_KEY"),
-        "pinecone_environment": os.getenv("PINECONE_ENVIRONMENT", "us-east-1"),  # Default to us-east-1 if not specified
-        "pinecone_index_name": os.getenv("PINECONE_INDEX_NAME"),
-        "pinecone_host": os.getenv("PINECONE_HOST"),  # Add host information
-        "openai_api_key": os.getenv("OPENAI_API_KEY"),
-        "cohere_api_key": os.getenv("COHERE_API_KEY"),
-        "langchain_api_key": os.getenv("LANGCHAIN_API_KEY"),
-        "langchain_project": os.getenv("LANGCHAIN_PROJECT"),
-        "groq_api_key": os.getenv("GROQ_API_KEY"),  # Add Groq API key
-        "upstage_api_key": os.getenv("UPSTAGE_API_KEY"),  # Add Upstage API key
-        "xai_api_key": os.getenv("XAI_API_KEY"),  # Add X AI API key
-    }
+    # Try to load from Streamlit secrets first
+    try:
+        return {
+            "pinecone_api_key": st.secrets["PINECONE_API_KEY"],
+            "pinecone_environment": st.secrets.get("PINECONE_ENVIRONMENT", "us-east-1"),
+            "pinecone_index_name": st.secrets["PINECONE_INDEX_NAME"],
+            "pinecone_host": st.secrets.get("PINECONE_HOST"),
+            "openai_api_key": st.secrets.get("OPENAI_API_KEY"),
+            "cohere_api_key": st.secrets.get("COHERE_API_KEY"),
+            "langchain_api_key": st.secrets.get("LANGCHAIN_API_KEY"),
+            "langchain_project": st.secrets.get("LANGCHAIN_PROJECT"),
+            "groq_api_key": st.secrets.get("GROQ_API_KEY"),
+            "upstage_api_key": st.secrets.get("UPSTAGE_API_KEY"),
+            "xai_api_key": st.secrets.get("XAI_API_KEY"),
+        }
+    except (KeyError, FileNotFoundError):
+        # Fallback to environment variables for local development
+        load_dotenv()
+        required_vars = [
+            "PINECONE_API_KEY",
+            "PINECONE_INDEX_NAME"
+        ]
+        
+        # Check if all required variables are set
+        missing_vars = [var for var in required_vars if not os.getenv(var)]
+        if missing_vars:
+            raise EnvironmentError(f"Missing required configuration: {', '.join(missing_vars)}. Please set in secrets.toml or environment variables.")
+        
+        # Return environment variables as a dictionary
+        return {
+            "pinecone_api_key": os.getenv("PINECONE_API_KEY"),
+            "pinecone_environment": os.getenv("PINECONE_ENVIRONMENT", "us-east-1"),
+            "pinecone_index_name": os.getenv("PINECONE_INDEX_NAME"),
+            "pinecone_host": os.getenv("PINECONE_HOST"),
+            "openai_api_key": os.getenv("OPENAI_API_KEY"),
+            "cohere_api_key": os.getenv("COHERE_API_KEY"),
+            "langchain_api_key": os.getenv("LANGCHAIN_API_KEY"),
+            "langchain_project": os.getenv("LANGCHAIN_PROJECT"),
+            "groq_api_key": os.getenv("GROQ_API_KEY"),
+            "upstage_api_key": os.getenv("UPSTAGE_API_KEY"),
+            "xai_api_key": os.getenv("XAI_API_KEY"),
+        }
 
 def init_pinecone(env_vars: Dict[str, str], embedding_model_name: str):
     """Initialize Pinecone client and ensure index exists"""

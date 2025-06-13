@@ -47,17 +47,18 @@ warnings.filterwarnings("ignore", message="You are trying to use a chat model")
 # Set up authentication
 authenticator = setup_authentication()
 
+# Show header before login form if not authenticated
+if not st.session_state.get("authentication_status"):
+    create_login_page()
+
 # Create login form - streamlit-authenticator v0.4.2 format
 authenticator.login()
 
 # Check authentication status from session state 
 if st.session_state.get("authentication_status") == False:
     st.error('Username/password is incorrect')
-    create_login_page()
     st.stop()
 elif st.session_state.get("authentication_status") == None:
-    st.warning('Please enter your username and password')
-    create_login_page() 
     st.stop()
 elif st.session_state.get("authentication_status"):
     # User is authenticated - show logout button and user info
@@ -195,13 +196,17 @@ def get_profile_evaluator():
         api_key = env_vars["xai_api_key"]
     
     # Display LLM choice in sidebar
-    st.sidebar.info(f"Using LLM: {llm_choice}")
+    # st.sidebar.info(f"Using LLM: {llm_choice}")
     
     # Initialize the evaluator with the batch size
     evaluator = IndividualProfileEvaluator(api_key=api_key, llm_choice=llm_choice)
     
     # Store the batch size for later use in evaluation
     evaluator.batch_size = batch_size
+    
+    # Make the evaluator more flexible for UI parameter updates
+    evaluator.original_llm_choice = llm_choice
+    evaluator.original_batch_size = batch_size
     
     return evaluator
 
@@ -214,7 +219,7 @@ except Exception as e:
 
 # Display traceable information about the retrieval process
 @traceable(name="retrieve_documents")
-def retrieve_documents(query, model_name, top_k, metadata_filter=None):
+def retrieve_documents(query, model_name, top_k, metadata_filter=None, threshold=None):
     """
     Retrieve documents from vector store.
     
@@ -286,10 +291,29 @@ def retrieve_documents(query, model_name, top_k, metadata_filter=None):
     # Explicitly limit results to k just to be sure
     results = results[:k]
     
+    # Apply threshold filtering if provided (temporarily disabled to debug)
+    # TODO: Re-enable threshold filtering once we understand the score ranges better
+    # if threshold is not None:
+    #     # For cosine similarity, scores range from 0 (perfect match) to 2 (opposite)
+    #     # Threshold should be interpreted as "similarity level" where higher is more restrictive
+    #     # Convert threshold (0.0-1.0) to distance threshold: lower threshold = accept more results
+    #     # Using threshold directly as max distance since typical cosine distances are 0.0-1.0
+    #     results = [result for result in results if result[1] <= threshold]
+    
     # Sort results by relevance (higher percentage first)
     results.sort(key=lambda x: x[1])
     
     return results, total_chunks
+
+# Add Search Parameters section right below main header
+from core.search_parameters import render_search_parameters
+
+# Determine which tab is currently active to show appropriate search parameters
+current_tab_id = "tab0" if st.session_state.get("active_tab_index", 0) == 0 else "tab1"
+current_key_prefix = "jd_search_params" if current_tab_id == "tab0" else "custom_search_params"
+
+# Render search parameters for the current tab
+search_params = render_search_parameters(tab_id=current_tab_id, key_prefix=current_key_prefix)
 
 # Set up a simple mechanism to track the active tab
 # Use a radio button with the same options as the tabs

@@ -24,6 +24,8 @@ from llm_profile_ranking import LLMProfileRanker
 from profile_evaluator import IndividualProfileEvaluator
 from profile_rank_processor import ProfileRankProcessor
 from core.filter_editor_components import render_filter_editor
+from core.search_parameters import render_search_parameters, get_search_parameters
+from core.llm_handler import update_profile_evaluator_settings
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -35,8 +37,8 @@ def get_tab_state_key(tab_id: str, key: str) -> str:
 def initialize_custom_query_state():
     """Initialize custom query tab-specific state variables."""
     defaults = {
-        "semantic_top_k": 15,
-        "rerank_top_k": 10,
+        "semantic_top_k": 30,
+        "rerank_top_k": 30,
         "enable_metadata_filtering": True,
         "query_executed": False,
         "query": None,
@@ -141,9 +143,16 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
     if not query:
         return
     
-    # Get values directly from session state (highest priority)
-    semantic_top_k = st.session_state.get("tab1_semantic_top_k", 15)  # Use our new default value
-    rerank_top_k = st.session_state.get("tab1_rerank_top_k", 10)  # Use our new default value
+    # Get search parameters (highest priority)
+    search_params = get_search_parameters(tab_id="tab1", key_prefix="custom_search_params")
+    semantic_top_k = search_params["top_k_profiles"]
+    rerank_top_k = search_params["top_k_profiles"]  # Use the full top_k_profiles value
+    threshold = search_params["threshold"]
+    
+    # Update profile evaluator settings based on user choice
+    if not update_profile_evaluator_settings(profile_evaluator, search_params):
+        st.error("Failed to update LLM settings. Please check your API keys.")
+        return
     
     # Fixed model choice for custom query tab
     model_choice = "cohere"
@@ -288,7 +297,7 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
         
         # Get the total vector count first
         _, total_chunks = retrieve_documents("", model_choice, 1, None)
-        results, _ = retrieve_documents(query, model_choice, semantic_top_k, metadata_filter)
+        results, _ = retrieve_documents(query, model_choice, semantic_top_k, metadata_filter, threshold=threshold)
         
         if not results:
             progress_bar.empty()
@@ -316,7 +325,7 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
         
         # Step 3: Aggregate profiles (60%)
         status_text.text("Scoring and aggregating profiles...")
-        profile_scores = profile_aggregator.aggregate_profiles(reranked_results)
+        profile_scores = profile_aggregator.aggregate_profiles(reranked_results, threshold=threshold, top_k=semantic_top_k)
         
         # Prepare profile entries for retrieval
         profile_entries = profile_aggregator.prepare_for_profile_retrieval(profile_scores)

@@ -1,11 +1,23 @@
 import os
 import logging
+import streamlit as st
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import List, Dict, Tuple, Any, Optional
 
 # Configure logging
-logging.basicConfig(level=os.getenv("LOG_LEVEL") if os.getenv("LOG_LEVEL") in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] else "INFO")
+def get_log_level():
+    try:
+        return st.secrets.get("LOG_LEVEL", "INFO")
+    except:
+        return os.getenv("LOG_LEVEL", "INFO")
+
+log_level = get_log_level()
+if log_level in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
+    logging.basicConfig(level=log_level)
+else:
+    logging.basicConfig(level="INFO")
+    
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -24,16 +36,23 @@ class ProfileAggregator:
     """
     
     def __init__(self):
-        """Initialize the ProfileAggregator with configurable parameters from environment variables."""
-        # Load parameters from environment variables with defaults
-        self.alpha = float(os.getenv("PROFILE_BONUS_ALPHA", "0.05"))
-        self.threshold = float(os.getenv("PROFILE_SCORE_THRESHOLD", "0.70"))
-        self.top_k_profiles = int(os.getenv("TOP_K_PROFILES", "20"))
-        self.min_score_threshold = float(os.getenv("MIN_PROFILE_SCORE", "0.80"))
+        """Initialize the ProfileAggregator with configurable parameters from secrets or environment variables."""
+        # Load parameters from secrets first, then environment variables with defaults
+        try:
+            self.alpha = float(st.secrets.get("PROFILE_BONUS_ALPHA", "0.05"))
+            self.default_threshold = float(st.secrets.get("PROFILE_SCORE_THRESHOLD", "0.70"))
+            self.top_k_profiles = int(st.secrets.get("TOP_K_PROFILES", "20"))
+            self.min_score_threshold = float(st.secrets.get("MIN_PROFILE_SCORE", "0.80"))
+        except:
+            # Fallback to environment variables
+            self.alpha = float(os.getenv("PROFILE_BONUS_ALPHA", "0.05"))
+            self.default_threshold = float(os.getenv("PROFILE_SCORE_THRESHOLD", "0.70"))
+            self.top_k_profiles = int(os.getenv("TOP_K_PROFILES", "20"))
+            self.min_score_threshold = float(os.getenv("MIN_PROFILE_SCORE", "0.80"))
         
         logger.debug(
             f"ProfileAggregator initialized with: "
-            f"alpha={self.alpha}, threshold={self.threshold}, top_k_profiles={self.top_k_profiles}, "
+            f"alpha={self.alpha}, default_threshold={self.default_threshold}, top_k_profiles={self.top_k_profiles}, "
             f"min_score_threshold={self.min_score_threshold}"
         )
     
@@ -41,7 +60,8 @@ class ProfileAggregator:
         self, 
         reranked_results: List[Tuple[Any, float]], 
         profile_id_field: str = "profile_id", 
-        top_k: Optional[int] = None
+        top_k: Optional[int] = None,
+        threshold: Optional[float] = None
     ) -> List[ProfileScore]:
         """
         Aggregate reranked chunks by profile using the "Max + Bonus" approach.
@@ -53,6 +73,7 @@ class ProfileAggregator:
             reranked_results: List of (document, score) tuples from reranking
             profile_id_field: The metadata field name containing the profile ID (default: "profile_id")
             top_k: Number of top profiles to return (overrides the default from environment)
+            threshold: Profile score threshold for bonus counting (overrides the default from environment)
             
         Returns:
             List of ProfileScore objects for the top profiles, sorted by final_score descending
@@ -65,6 +86,12 @@ class ProfileAggregator:
         # If no custom top_k is provided, use the value from environment
         if top_k is None:
             top_k = self.top_k_profiles
+            
+        # If no custom threshold is provided, use the default from environment
+        if threshold is None:
+            threshold = self.default_threshold
+            
+        logger.debug(f"Using profile score threshold: {threshold}")
             
         # Group chunks by profile ID
         profile_chunks_map = defaultdict(list)
@@ -95,8 +122,8 @@ class ProfileAggregator:
             # Calculate the best chunk score
             best_chunk_score = max(scores) if scores else 0
             
-            # Count chunks above threshold
-            above_threshold = sum(1 for s in scores if s >= self.threshold)
+            # Count chunks above threshold (using the passed threshold parameter)
+            above_threshold = sum(1 for s in scores if s >= threshold)
             
             # Calculate final score using the formula
             final_score = best_chunk_score + self.alpha * above_threshold
@@ -181,18 +208,22 @@ class ProfileAggregator:
         
         return profile_entries
     
-    def get_explanation(self, profile_score: ProfileScore) -> str:
+    def get_explanation(self, profile_score: ProfileScore, threshold: Optional[float] = None) -> str:
         """
         Generate an explanation of how the profile score was calculated.
         
         Args:
             profile_score: A ProfileScore object
+            threshold: The threshold used for calculation (if None, uses default)
             
         Returns:
             A string explaining the score calculation
         """
+        if threshold is None:
+            threshold = self.default_threshold
+            
         return (
             f"Best chunk score ({profile_score.best_chunk_score:.3f}) + "
-            f"Bonus ({self.alpha} × {profile_score.above_threshold_count} chunks above {self.threshold}) = "
+            f"Bonus ({self.alpha} × {profile_score.above_threshold_count} chunks above {threshold}) = "
             f"{profile_score.final_score:.3f}"
         ) 

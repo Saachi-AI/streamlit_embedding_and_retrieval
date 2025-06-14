@@ -417,7 +417,7 @@ def display_ranked_candidates(processed_candidates):
                     st.markdown(f"###### 🤝 Type: <span {color_style}>{type_value}</span>", unsafe_allow_html=True)
                 elif candidate.get('is_candidate') is not None:
                     is_candidate = candidate['is_candidate']
-                    type_value = "Candidate" if is_candidate else "Unknown"
+                    type_value = "Candidate" if is_candidate else "Lead"
                     color_style = "style='color: #FFCC80;'" if is_candidate else ""
                     st.markdown(f"###### 🤝 Type: <span {color_style}>{type_value}</span>", unsafe_allow_html=True)
                 

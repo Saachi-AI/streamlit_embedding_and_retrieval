@@ -286,7 +286,7 @@ class LLMProfileRanker:
                 import time
                 start_time = time.time()
                 response = self.client.chat.completions.create(
-                    model="grok-3-beta",
+                    model="grok-3",
                     messages=[
                         {"role": "system", "content": self.system_prompt},
                         {"role": "user", "content": user_prompt}
@@ -385,7 +385,7 @@ class LLMProfileRanker:
                 import time
                 start_time = time.time()
                 response = self.client.chat.completions.create(
-                    model="grok-3-beta",
+                    model="grok-3",
                     messages=[
                         {"role": "system", "content": self.system_prompt},
                         {"role": "user", "content": user_prompt}

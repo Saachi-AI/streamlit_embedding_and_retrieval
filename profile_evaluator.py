@@ -188,16 +188,39 @@ class IndividualProfileEvaluator:
         Returns:
             LLM response text
         """
-        response = self.client.chat.completions.create(
-            model="grok-3-beta",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=temperature,
-            max_tokens=max_tokens
-        )
-        return response.choices[0].message.content
+        try:
+            logger.debug(f"Calling Grok API with system prompt length: {len(system_prompt)}")
+            logger.debug(f"Calling Grok API with user prompt length: {len(user_prompt)}")
+            
+            if not self.api_key:
+                raise ValueError("XAI_API_KEY not found. Cannot call Grok API.")
+        
+            response = self.client.chat.completions.create(
+                model="grok-3",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+            
+            if not response or not response.choices or len(response.choices) == 0:
+                logger.error("Invalid response structure from Grok API")
+                return ""
+            
+            content = response.choices[0].message.content
+            if not content:
+                logger.error("Empty content in Grok API response")
+                return ""
+                
+            logger.debug(f"Grok API response length: {len(content)}")
+            return content
+            
+        except Exception as e:
+            logger.error(f"Error calling Grok API: {str(e)}")
+            logger.exception("Full Grok API error details:")
+            return ""
     
     def _call_gemini_llm(self, system_prompt: str, user_prompt: str, temperature: float = 0.2, max_tokens: int = 4096) -> str:
         """
@@ -267,12 +290,14 @@ class IndividualProfileEvaluator:
 
             # Call LLM to extract dimensions
             logger.info(f"Calling {self.llm_choice.upper()} LLM to extract job dimensions")
+            logger.debug(f"Job description prompt length: {len(job_description_prompt) if job_description_prompt else 0}")
             
             if self.llm_choice == "grok":
+                # Try with different temperature for Grok
                 llm_response = self._call_grok_llm(
                     system_prompt=self.dimension_extraction_prompt,
                     user_prompt=user_prompt,
-                    temperature=0.2,
+                    temperature=0.1,  # Lower temperature for more consistent JSON
                     max_tokens=4096
                 )
             else:  # gemini
@@ -284,14 +309,36 @@ class IndividualProfileEvaluator:
                 )
             
             logger.info(f"Job dimension extraction response received from {self.llm_choice.upper()} LLM")
+            logger.debug(f"Response length: {len(llm_response) if llm_response else 0}")
+            
+            if not llm_response or len(llm_response.strip()) == 0:
+                logger.error("Empty response from LLM")
+                return {"dimensions": []}
             
             # Extract JSON from the response
             extracted_dimensions = self._extract_json_from_response(llm_response)
             
             # Validate dimensions format
-            if "dimensions" not in extracted_dimensions or not isinstance(extracted_dimensions["dimensions"], list):
-                logger.error("Invalid format in extracted dimensions response")
+            if not extracted_dimensions:
+                logger.error("Failed to extract any JSON from LLM response")
                 return {"dimensions": []}
+            
+            if "dimensions" not in extracted_dimensions:
+                logger.error(f"No 'dimensions' key in extracted JSON. Keys found: {list(extracted_dimensions.keys())}")
+                return {"dimensions": []}
+                
+            if not isinstance(extracted_dimensions["dimensions"], list):
+                logger.error(f"'dimensions' is not a list. Type: {type(extracted_dimensions['dimensions'])}")
+                return {"dimensions": []}
+            
+            if len(extracted_dimensions["dimensions"]) == 0:
+                logger.error("Empty dimensions list extracted")
+                return {"dimensions": []}
+                
+            # Log extracted dimensions for debugging
+            logger.info(f"Extracted {len(extracted_dimensions['dimensions'])} dimensions:")
+            for i, dim in enumerate(extracted_dimensions["dimensions"]):
+                logger.debug(f"Dimension {i+1}: {dim.get('name', 'NO_NAME')} - {dim.get('description', 'NO_DESC')[:50]}...")
                 
             # Ensure Role Alignment dimension is included
             has_role_alignment = any(
@@ -302,7 +349,9 @@ class IndividualProfileEvaluator:
             if not has_role_alignment:
                 logger.warning("Role Alignment dimension not found, adding it manually")
                 extracted_dimensions["dimensions"].append({
+                    "id": "role_alignment",
                     "name": "Role Alignment",
+                    "weight": 20,  # Add default weight
                     "description": "Evaluates how well the candidate's career trajectory, seniority, and aspirations align with this specific role",
                     "key_success_factors": [
                         "Appropriate seniority level for the position",
@@ -316,6 +365,7 @@ class IndividualProfileEvaluator:
                 
         except Exception as e:
             logger.error(f"Error extracting job dimensions: {str(e)}")
+            logger.exception("Full exception details:")
             return {"dimensions": []}
     
     def evaluate_profile(
@@ -678,30 +728,77 @@ class IndividualProfileEvaluator:
             Parsed JSON as dictionary
         """
         try:
-            # Remove thinking part
-            cleaned_response = re.sub(r"<think>.*?</think>", "", response_text, flags=re.DOTALL)
+            # Log the raw response for debugging
+            logger.debug(f"Raw {self.llm_choice.upper()} response: {response_text[:500]}...")
             
-            # Try to find JSON in code blocks
+            # Remove thinking part and other common patterns
+            cleaned_response = re.sub(r"<think>.*?</think>", "", response_text, flags=re.DOTALL)
+            cleaned_response = re.sub(r"<thinking>.*?</thinking>", "", cleaned_response, flags=re.DOTALL)
+            
+            # Try multiple JSON extraction methods
+            json_str = None
+            
+            # Method 1: Try to find JSON in code blocks
             json_match = re.search(r"```(?:json)?\s*([\s\S]*?)```", cleaned_response)
             if json_match:
                 json_str = json_match.group(1).strip()
-            else:
-                # If no code blocks, try to find JSON using braces
-                start_idx = cleaned_response.find('{')
-                end_idx = cleaned_response.rfind('}') + 1
+                logger.debug("Found JSON in code blocks")
+            
+            # Method 2: If no code blocks, try to find JSON using braces with better matching
+            if not json_str:
+                # Find all potential JSON objects
+                brace_matches = []
+                depth = 0
+                start_idx = -1
                 
-                if start_idx >= 0 and end_idx > start_idx:
-                    json_str = cleaned_response[start_idx:end_idx]
-                else:
-                    # If no JSON found, use the entire cleaned response
-                    json_str = cleaned_response
+                for i, char in enumerate(cleaned_response):
+                    if char == '{':
+                        if depth == 0:
+                            start_idx = i
+                        depth += 1
+                    elif char == '}':
+                        depth -= 1
+                        if depth == 0 and start_idx >= 0:
+                            brace_matches.append(cleaned_response[start_idx:i+1])
+                
+                # Try the longest match first
+                if brace_matches:
+                    json_str = max(brace_matches, key=len)
+                    logger.debug("Found JSON using brace matching")
+            
+            # Method 3: Try to clean and extract JSON more aggressively
+            if not json_str:
+                # Remove common non-JSON prefixes/suffixes
+                cleaned = cleaned_response.strip()
+                patterns_to_remove = [
+                    r"^.*?(?=\{)",  # Remove everything before first {
+                    r"\}.*?$",      # Remove everything after last }
+                ]
+                
+                for pattern in patterns_to_remove:
+                    cleaned = re.sub(pattern, "", cleaned, flags=re.DOTALL)
+                
+                if cleaned.startswith('{') and cleaned.endswith('}'):
+                    json_str = cleaned
+                    logger.debug("Found JSON using aggressive cleaning")
+            
+            # Final fallback: use the entire cleaned response
+            if not json_str:
+                json_str = cleaned_response.strip()
+                logger.debug("Using entire cleaned response as JSON")
+            
+            # Log what we're trying to parse
+            logger.debug(f"Attempting to parse JSON: {json_str[:200]}...")
             
             # Parse JSON
             result = json.loads(json_str)
+            logger.info(f"Successfully parsed JSON from {self.llm_choice.upper()} response")
             return result
                 
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse JSON from response: {str(e)}")
+            logger.error(f"Failed to parse JSON from {self.llm_choice.upper()} response: {str(e)}")
+            logger.error(f"Attempted JSON string: {json_str[:500] if json_str else 'None'}...")
+            logger.error(f"Full response: {response_text}")
             # Return empty dict on failure
             return {}
 

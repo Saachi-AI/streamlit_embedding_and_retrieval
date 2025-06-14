@@ -1,5 +1,7 @@
 import streamlit as st
 import os
+from openai import OpenAI
+from google import genai
 
 def update_profile_evaluator_settings(profile_evaluator, search_params):
     """
@@ -24,28 +26,38 @@ def update_profile_evaluator_settings(profile_evaluator, search_params):
     new_llm = search_params["llm_choice"]
     
     if current_llm != new_llm:
-        # LLM choice has changed, need to update API key
+        # LLM choice has changed, need to update API key and recreate client
         if new_llm == "gemini":
             api_key = os.environ.get("GOOGLE_API_KEY")
             if not api_key:
                 st.error("GOOGLE_API_KEY not found in environment variables")
                 st.warning("Please add your Google API key to your .env file or Streamlit secrets")
                 return False
+            
+            # Update evaluator settings
+            profile_evaluator.llm_choice = new_llm
+            profile_evaluator.api_key = api_key
+            
+            # Recreate the Gemini client
+            profile_evaluator.client = genai.Client(api_key=api_key)
+            
         else:  # grok
             api_key = os.environ.get("XAI_API_KEY")
             if not api_key:
                 st.error("XAI_API_KEY not found in environment variables") 
                 st.warning("Please add your X AI API key to your .env file or Streamlit secrets")
                 return False
-        
-        # Update the evaluator
-        if hasattr(profile_evaluator, 'llm_choice'):
+            
+            # Update evaluator settings
             profile_evaluator.llm_choice = new_llm
-        if hasattr(profile_evaluator, 'api_key'):
             profile_evaluator.api_key = api_key
+            
+            # Recreate the OpenAI client for X.AI
+            profile_evaluator.client = OpenAI(api_key=api_key, base_url="https://api.x.ai/v1")
         
         # Show info about the change
         st.info(f"LLM switched to: {new_llm.capitalize()}")
+        st.success(f"✅ Client recreated for {new_llm.capitalize()}")
     
     return True
 

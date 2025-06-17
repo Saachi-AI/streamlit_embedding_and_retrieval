@@ -308,12 +308,9 @@ def retrieve_documents(query, model_name, top_k, metadata_filter=None, threshold
 # Add Search Parameters section right below main header
 from core.search_parameters import render_search_parameters
 
-# Determine which tab is currently active to show appropriate search parameters
-current_tab_id = "tab0" if st.session_state.get("active_tab_index", 0) == 0 else "tab1"
-current_key_prefix = "jd_search_params" if current_tab_id == "tab0" else "custom_search_params"
-
-# Render search parameters for the current tab
-search_params = render_search_parameters(tab_id=current_tab_id, key_prefix=current_key_prefix)
+# Use shared search parameters across all tabs - no need for different prefixes
+# This ensures search parameters persist when switching between modes
+search_params = render_search_parameters(tab_id="shared", key_prefix="search_params")
 
 # Set up a simple mechanism to track the active tab
 # Use a radio button with the same options as the tabs

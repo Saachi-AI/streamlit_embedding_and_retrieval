@@ -240,7 +240,7 @@ def process_job_description_query(query, settings, filter_extractor, embedders, 
         return
     
     # Get search parameters (highest priority)
-    search_params = get_search_parameters(tab_id="tab0", key_prefix="jd_search_params")
+    search_params = get_search_parameters(tab_id="shared", key_prefix="search_params")
     semantic_top_k = search_params["top_k_profiles"]
     rerank_top_k = search_params["top_k_profiles"]  # Use the full top_k_profiles value
     threshold = search_params["threshold"]

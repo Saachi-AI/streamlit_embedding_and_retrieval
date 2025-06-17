@@ -26,6 +26,7 @@ def render_search_parameters(tab_id="", key_prefix="search_params"):
         key_suffix = ""
     
     # Initialize session state with defaults if not present
+    # Only initialize if the key doesn't exist to avoid conflicts with widget defaults
     for param, default_value in defaults.items():
         state_key = f"{key_prefix}_{param}{key_suffix}"
         if state_key not in st.session_state:
@@ -72,34 +73,44 @@ def render_search_parameters(tab_id="", key_prefix="search_params"):
             )
         
         with col2:
-            # Define callback functions for selectboxes
+            # LLM Selection - Use separate widget key to avoid session state conflicts
+            current_llm = st.session_state[f"{key_prefix}_llm_choice{key_suffix}"]
+            llm_index = 0 if current_llm == "gemini" else 1
+            
+            # Define callback for LLM choice
             def on_llm_change():
-                st.session_state[f"{key_prefix}_llm_choice{key_suffix}"] = st.session_state[f"{key_prefix}_llm_input{key_suffix}"]
+                st.session_state[f"{key_prefix}_llm_choice{key_suffix}"] = st.session_state[f"{key_prefix}_llm_widget{key_suffix}"]
             
-            def on_batch_change():
-                st.session_state[f"{key_prefix}_batch_size{key_suffix}"] = st.session_state[f"{key_prefix}_batch_input{key_suffix}"]
-            
-            # LLM Selection
             llm_choice = st.selectbox(
                 "LLM Model",
                 options=["gemini", "grok"],
-                index=0 if st.session_state[f"{key_prefix}_llm_choice{key_suffix}"] == "gemini" else 1,
+                index=llm_index,
                 help="Choose the Large Language Model for profile evaluation",
-                key=f"{key_prefix}_llm_input{key_suffix}",
+                key=f"{key_prefix}_llm_widget{key_suffix}",  # Use separate widget key
                 on_change=on_llm_change
             )
             
-            # Batch Size
+            # Batch Size - Use separate widget key to avoid session state conflicts
             batch_options = [5, 10, 15, 20]
             current_batch = st.session_state[f"{key_prefix}_batch_size{key_suffix}"]
-            batch_index = batch_options.index(current_batch) if current_batch in batch_options else batch_options.index(20)
+            
+            # Ensure current_batch is in the options, otherwise default to 20
+            if current_batch not in batch_options:
+                current_batch = 20
+                st.session_state[f"{key_prefix}_batch_size{key_suffix}"] = current_batch
+            
+            batch_index = batch_options.index(current_batch)
+            
+            # Define callback for batch size
+            def on_batch_change():
+                st.session_state[f"{key_prefix}_batch_size{key_suffix}"] = st.session_state[f"{key_prefix}_batch_widget{key_suffix}"]
             
             batch_size = st.selectbox(
                 "Batch Size",
                 options=batch_options,
                 index=batch_index,
                 help="Number of profiles to process in each batch",
-                key=f"{key_prefix}_batch_input{key_suffix}",
+                key=f"{key_prefix}_batch_widget{key_suffix}",  # Use separate widget key
                 on_change=on_batch_change
             )
         
@@ -115,13 +126,7 @@ def render_search_parameters(tab_id="", key_prefix="search_params"):
                 # Rerun to refresh the widgets with new values
                 st.rerun()
     
-    # Update session state with current values
-    st.session_state[f"{key_prefix}_top_k_profiles{key_suffix}"] = top_k
-    st.session_state[f"{key_prefix}_threshold{key_suffix}"] = threshold
-    st.session_state[f"{key_prefix}_llm_choice{key_suffix}"] = llm_choice
-    st.session_state[f"{key_prefix}_batch_size{key_suffix}"] = batch_size
-    
-    # Return current parameter values
+    # Return current parameter values (no need to manually update session state since we're using direct keys)
     return {
         "top_k_profiles": top_k,
         "threshold": threshold,

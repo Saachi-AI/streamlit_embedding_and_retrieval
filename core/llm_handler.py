@@ -52,8 +52,10 @@ def update_profile_evaluator_settings(profile_evaluator, search_params):
             profile_evaluator.llm_choice = new_llm
             profile_evaluator.api_key = api_key
             
-            # Recreate the OpenAI client for X.AI
+            # Recreate both sync and async OpenAI clients for X.AI
+            from openai import AsyncOpenAI
             profile_evaluator.client = OpenAI(api_key=api_key, base_url="https://api.x.ai/v1")
+            profile_evaluator.async_client = AsyncOpenAI(api_key=api_key, base_url="https://api.x.ai/v1")
         
         # Show info about the change
         st.info(f"LLM switched to: {new_llm.capitalize()}")

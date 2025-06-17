@@ -144,7 +144,7 @@ def process_custom_query(query, settings, filter_extractor, embedders, retrieve_
         return
     
     # Get search parameters (highest priority)
-    search_params = get_search_parameters(tab_id="tab1", key_prefix="custom_search_params")
+    search_params = get_search_parameters(tab_id="shared", key_prefix="search_params")
     semantic_top_k = search_params["top_k_profiles"]
     rerank_top_k = search_params["top_k_profiles"]  # Use the full top_k_profiles value
     threshold = search_params["threshold"]

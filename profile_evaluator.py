@@ -5,7 +5,7 @@ import re
 import argparse
 import asyncio
 from typing import List, Dict, Any, Optional, Union
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 from google import genai
 
 # Configure logging
@@ -28,8 +28,10 @@ class IndividualProfileEvaluator:
             if not self.api_key:
                 logger.warning("XAI_API_KEY not found in environment. Grok LLM evaluation will not work.")
             
-            # Initialize the OpenAI client with X AI API base URL
+            # Initialize both sync and async OpenAI clients with X AI API base URL
             self.client = OpenAI(api_key=self.api_key, base_url="https://api.x.ai/v1")
+            self.async_client = AsyncOpenAI(api_key=self.api_key, base_url="https://api.x.ai/v1")
+            logger.info("Grok sync and async clients initialized successfully")
         elif self.llm_choice == "gemini":
             self.api_key = api_key or os.environ.get("GOOGLE_API_KEY")
             if not self.api_key:
@@ -48,8 +50,10 @@ class IndividualProfileEvaluator:
             if not self.api_key:
                 logger.warning("XAI_API_KEY not found in environment. Grok LLM evaluation will not work.")
             
-            # Initialize the OpenAI client with X AI API base URL
+            # Initialize both sync and async OpenAI clients with X AI API base URL
             self.client = OpenAI(api_key=self.api_key, base_url="https://api.x.ai/v1")
+            self.async_client = AsyncOpenAI(api_key=self.api_key, base_url="https://api.x.ai/v1")
+            logger.info("Grok sync and async clients initialized successfully (fallback)")
         
         # Initialize job dimensions cache
         self.job_dimensions = None
@@ -220,6 +224,59 @@ class IndividualProfileEvaluator:
         except Exception as e:
             logger.error(f"Error calling Grok API: {str(e)}")
             logger.exception("Full Grok API error details:")
+            return ""
+    
+    async def _call_grok_llm_async(self, system_prompt: str, user_prompt: str, temperature: float = 0.2, max_tokens: int = 4096) -> str:
+        """
+        Call Grok LLM API asynchronously.
+        
+        Args:
+            system_prompt: System prompt text
+            user_prompt: User prompt text
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens to generate
+            
+        Returns:
+            LLM response text
+        """
+        try:
+            logger.debug(f"Calling Grok API async with system prompt length: {len(system_prompt)}")
+            logger.debug(f"Calling Grok API async with user prompt length: {len(user_prompt)}")
+            
+            if not self.api_key:
+                raise ValueError("XAI_API_KEY not found. Cannot call Grok API.")
+        
+            # Initialize async_client if it doesn't exist (for cached instances)
+            if not hasattr(self, 'async_client') or self.async_client is None:
+                logger.info("Initializing async_client for cached Grok instance")
+                self.async_client = AsyncOpenAI(api_key=self.api_key, base_url="https://api.x.ai/v1")
+                logger.info("Async_client initialized successfully for cached instance")
+        
+            response = await self.async_client.chat.completions.create(
+                model="grok-3",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+            
+            if not response or not response.choices or len(response.choices) == 0:
+                logger.error("Invalid response structure from Grok API async")
+                return ""
+            
+            content = response.choices[0].message.content
+            if not content:
+                logger.error("Empty content in Grok API async response")
+                return ""
+                
+            logger.debug(f"Grok API async response length: {len(content)}")
+            return content
+            
+        except Exception as e:
+            logger.error(f"Error calling Grok API async: {str(e)}")
+            logger.exception("Full Grok API async error details:")
             return ""
     
     def _call_gemini_llm(self, system_prompt: str, user_prompt: str, temperature: float = 0.2, max_tokens: int = 4096) -> str:
@@ -513,8 +570,8 @@ class IndividualProfileEvaluator:
             logger.info(f"Calling {self.llm_choice.upper()} LLM to evaluate profile {profile_id} (async)")
             
             if self.llm_choice == "grok":
-                # For Grok, we'll use the synchronous method for now
-                llm_response = self._call_grok_llm(
+                # Use the true async method for Grok
+                llm_response = await self._call_grok_llm_async(
                     system_prompt=self.profile_evaluation_prompt,
                     user_prompt=user_prompt,
                     temperature=0.3,
@@ -643,33 +700,16 @@ class IndividualProfileEvaluator:
                 logger.error("Failed to extract job dimensions")
                 return {"profiles": []}
             
-            # For Gemini, use parallel evaluation
-            if self.llm_choice == "gemini":
-                logger.info(f"Evaluating {len(processed_profiles)} profiles in parallel with batch size {actual_batch_size}")
-                # We need to run the async code in an event loop
-                evaluated_profiles = asyncio.run(self.evaluate_profiles_parallel(
-                    processed_profiles=processed_profiles,
-                    raw_job_description=raw_job_description,
-                    dimensions=dimensions,
-                    batch_size=actual_batch_size,
-                    summarized_job_description=summarized_job_description
-                ))
-            else:
-                # For Grok, use sequential evaluation
-                evaluated_profiles = []
-                for profile in processed_profiles:
-                    profile_id = profile.get("profile_id", "unknown")
-                    logger.info(f"Evaluating profile {profile_id}")
-                    
-                    evaluation = self.evaluate_profile(
-                        profile_data=profile,
-                        raw_job_description=raw_job_description,
-                        dimensions=dimensions,
-                        profile_id=profile_id,
-                        summarized_job_description=summarized_job_description
-                    )
-                    
-                    evaluated_profiles.append(evaluation)
+            # Both Grok and Gemini now support parallel evaluation
+            logger.info(f"Evaluating {len(processed_profiles)} profiles in parallel with batch size {actual_batch_size} using {self.llm_choice.upper()}")
+            # We need to run the async code in an event loop
+            evaluated_profiles = asyncio.run(self.evaluate_profiles_parallel(
+                processed_profiles=processed_profiles,
+                raw_job_description=raw_job_description,
+                dimensions=dimensions,
+                batch_size=actual_batch_size,
+                summarized_job_description=summarized_job_description
+            ))
                 
             # Sort profiles: First by overqualification status, then by match percentage (descending)
             evaluated_profiles.sort(

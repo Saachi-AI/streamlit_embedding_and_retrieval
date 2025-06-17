@@ -91,6 +91,7 @@ class ProfileAggregator:
         if threshold is None:
             threshold = self.default_threshold
             
+        logger.info(f"UI threshold parameter: {threshold}, hardcoded min_score_threshold: {self.min_score_threshold}")
         logger.debug(f"Using profile score threshold: {threshold}")
             
         # Group chunks by profile ID
@@ -142,16 +143,20 @@ class ProfileAggregator:
         # Sort profiles by final score in descending order
         profile_scores.sort(key=lambda x: x.final_score, reverse=True)
         
-        # Filter profiles by minimum score threshold
+        # Use the threshold parameter passed from UI instead of hardcoded min_score_threshold
+        # This allows the UI threshold to be respected for profile filtering
+        effective_threshold = threshold if threshold is not None else self.min_score_threshold
+        
+        # Filter profiles by the effective threshold
         filtered_profiles = [
             profile for profile in profile_scores 
-            if profile.final_score >= self.min_score_threshold or profile.best_chunk_score >= self.min_score_threshold
+            if profile.final_score >= effective_threshold or profile.best_chunk_score >= effective_threshold
         ]
         
-        logger.debug(f"Filtered {len(profile_scores) - len(filtered_profiles)} profiles below score threshold of {self.min_score_threshold}")
+        logger.debug(f"Filtered {len(profile_scores) - len(filtered_profiles)} profiles below score threshold of {effective_threshold}")
         
         if not filtered_profiles:
-            logger.warning(f"No profiles met the minimum score threshold of {self.min_score_threshold}")
+            logger.warning(f"No profiles met the minimum score threshold of {effective_threshold}")
         
         # Return top K profiles from filtered list
         return filtered_profiles[:top_k]

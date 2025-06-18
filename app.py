@@ -9,8 +9,7 @@ import time
 import warnings
 import sys
 
-# Import authentication
-from auth_config import setup_authentication, create_login_page, show_user_info
+# Authentication removed - direct access to application
 
 from utils import load_environment, get_vector_store
 from embedders.openai_embedder import OpenAIEmbedder
@@ -43,27 +42,8 @@ st.set_page_config(
 # Ignore specific warning from langchain
 warnings.filterwarnings("ignore", message="You are trying to use a chat model")
 
-# ===== AUTHENTICATION SECTION =====
-# Set up authentication
-authenticator = setup_authentication()
-
-# Show header before login form if not authenticated
-if not st.session_state.get("authentication_status"):
-    create_login_page()
-
-# Create login form - streamlit-authenticator v0.4.2 format
-authenticator.login()
-
-# Check authentication status from session state 
-if st.session_state.get("authentication_status") == False:
-    st.error('Username/password is incorrect')
-    st.stop()
-elif st.session_state.get("authentication_status") == None:
-    st.stop()
-elif st.session_state.get("authentication_status"):
-    # User is authenticated - show logout button and user info
-    authenticator.logout(location='sidebar')
-    show_user_info(st.session_state["name"], st.session_state["username"])
+# ===== AUTHENTICATION REMOVED =====
+# Direct access to application - no login required
 # ===== END AUTHENTICATION SECTION =====
 
 # Set up the Streamlit app and display custom title with logo

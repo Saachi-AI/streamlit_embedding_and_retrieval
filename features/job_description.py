@@ -171,7 +171,7 @@ def handle_document_upload(uploaded_file, document_parser, prompt_generator):
             set_tab_state("tab0", "parsed_text", parsed_text)
             
             # Generate prompt from parsed text
-            with st.spinner("Generating search prompt with DeepSeek LLM..."):
+            with st.spinner("Generating search prompt with LLM..."):
                 prompt_data = prompt_generator.generate_search_prompt(parsed_text)
                 set_tab_state("tab0", "prompt_data", prompt_data)
                 generated_prompt = prompt_data.get("prompt", "")

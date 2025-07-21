@@ -1,24 +1,109 @@
 import json
 from typing import Dict, Any, Optional, List, Union
 import streamlit as st
+import logging
+import os
 
 # For Groq integration
 from langchain_groq import ChatGroq
+# For Google Gemini integration
+from google import genai
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class PromptGenerator:
     """
-    Generates semantic search prompts from job descriptions using DeepSeek R1 Distill Llama 70B via Groq.
+    Generates semantic search prompts from job descriptions using either DeepSeek R1 Distill Llama 70B via Groq or Google Gemini.
     """
     
-    def __init__(self, api_key: str):
-        """Initialize with Groq API key"""
-        self.llm = ChatGroq(
-            model_name="deepseek-r1-distill-llama-70b",  # DeepSeek R1 Distill Llama 70B
-            api_key=api_key,
-            temperature=0.2,  # Low temperature for consistent extraction but with some creativity
-            max_tokens=1024
-        )
+    def __init__(self, api_key: str = None, llm_choice: str = "gemini"):
+        """Initialize with API key and LLM choice"""
+        self.llm_choice = llm_choice.lower()
         
+        if self.llm_choice == "groq":
+            # Initialize Groq/DeepSeek
+            self.api_key = api_key or os.environ.get("GROQ_API_KEY")
+            if not self.api_key:
+                logger.warning("GROQ_API_KEY not found in environment. Groq LLM will not work.")
+            
+            self.llm = ChatGroq(
+                model_name="deepseek-r1-distill-llama-70b",  # DeepSeek R1 Distill Llama 70B
+                api_key=self.api_key,
+                temperature=0.2,  # Low temperature for consistent extraction but with some creativity
+                max_tokens=1024
+            )
+            logger.info("Groq/DeepSeek client initialized successfully")
+            
+        elif self.llm_choice == "gemini":
+            # Initialize Gemini
+            self.api_key = api_key or os.environ.get("GOOGLE_API_KEY")
+            if not self.api_key:
+                logger.warning("GOOGLE_API_KEY not found in environment. Gemini LLM will not work.")
+            else:
+                logger.info(f"Using Google API key (starting with: {self.api_key[:4]}{'*' * 10})")
+            
+            # Initialize the Gemini client
+            self.client = genai.Client(api_key=self.api_key)
+            logger.info("Gemini client initialized successfully")
+            
+        else:
+            logger.warning(f"Unknown LLM choice: {llm_choice}. Defaulting to Gemini.")
+            self.llm_choice = "gemini"
+            self.api_key = api_key or os.environ.get("GOOGLE_API_KEY")
+            if not self.api_key:
+                logger.warning("GOOGLE_API_KEY not found in environment. Gemini LLM will not work.")
+            
+            self.client = genai.Client(api_key=self.api_key)
+            logger.info("Gemini client initialized successfully (fallback)")
+        
+    def _call_groq_llm(self, prompt: str) -> str:
+        """
+        Call Groq LLM API.
+        
+        Args:
+            prompt: The complete prompt to send
+            
+        Returns:
+            LLM response text
+        """
+        try:
+            if not self.api_key:
+                raise ValueError("GROQ_API_KEY not found. Cannot call Groq API.")
+            
+            response = self.llm.invoke(prompt)
+            return response.content
+            
+        except Exception as e:
+            logger.error(f"Error calling Groq API: {str(e)}")
+            return ""
+    
+    def _call_gemini_llm(self, prompt: str) -> str:
+        """
+        Call Gemini LLM API.
+        
+        Args:
+            prompt: The complete prompt to send
+            
+        Returns:
+            LLM response text
+        """
+        try:
+            if not self.api_key:
+                raise ValueError("GOOGLE_API_KEY not found. Cannot call Gemini API.")
+            
+            response = self.client.models.generate_content(
+                model="models/gemini-2.5-pro-preview-03-25",
+                contents=prompt,
+            )
+            
+            return response.text
+            
+        except Exception as e:
+            logger.error(f"Error calling Gemini API: {str(e)}")
+            return ""
+
     def _normalize_response_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Normalize and validate the response data to ensure it has consistent structure
@@ -34,9 +119,6 @@ class PromptGenerator:
         if "prompt" in data:
             normalized["prompt"] = data["prompt"]
         
-        if "metadata" in data:
-            normalized["metadata"] = data["metadata"]
-        
         return normalized
 
     def generate_search_prompt(self, job_description: str) -> Dict[str, Any]:
@@ -47,36 +129,10 @@ class PromptGenerator:
             job_description: The parsed job description text
             
         Returns:
-            Dict containing the generated prompt and extracted metadata
+            Dict containing the generated prompt
         """
         # Define the prompt template using content from prompt_to_extract_from_JD.md
-        prompt = f"""You are an advanced language model acting as a veteran recruiter. Your goal is to analyze a given job description and produce two key outputs: essential metadata for filtering candidates in a vector database and a concise semantic search prompt (200–250 words) for searching in the vector database.
-
-## Essential Metadata Extraction
-
-We only need the following two metadata fields from the job description:
-
-- **min_years_experience**: A numeric value if the job description explicitly mentions years of experience. Leave it empty if not stated.  
-- **languages**: An array containing any natural/human language requirements (e.g., English, Japanese, Spanish), along with mapped proficiency levels.
-
-### Metadata Rules
-
-1. Leave a field empty if not explicitly mentioned in the job description.  
-2. **Do not** make assumptions about fields that are not mentioned.  
-3. For language proficiency levels, map to these standard values:  
-   - "native-level," "mother tongue," or "native speaker" → "Native or Bilingual proficiency"  
-   - "business-level," "professional," or "fluent" → "Professional working proficiency"  
-   - "conversational," "intermediate" → "Limited working proficiency"  
-   - "basic," "elementary," or "beginner" → "Elementary Proficiency"  
-4. For Japanese specifically, map JLPT certification levels as follows:  
-   - "N1" → "Native or Bilingual proficiency"  
-   - "N2" → "Full professional proficiency"  
-   - "N3" → "Professional working proficiency"  
-   - "N4" → "Limited working proficiency"  
-   - "N5" → "Elementary Proficiency"  
-5. Return the languages as an array of objects, each having one language name and its proficiency level.  
-6. If no proficiency level is specified, assume **"Professional working proficiency."**  
-7. Only include human/natural languages and exclude programming languages.
+        prompt = f"""You are an advanced language model acting as a veteran recruiter. Your goal is to analyze a given job description and produce a concise semantic search prompt (200–250 words) for searching candidates in a vector database.
 
 ## Concise Semantic Search Prompt
 
@@ -91,6 +147,7 @@ We only need the following two metadata fields from the job description:
 
 1. It must be **200–250 words** in length.  
 2. Exclude irrelevant details (e.g., office address, work hours, salary) unless they directly impact skill or experience requirements.
+3. Focus on creating a semantic search prompt that will effectively match relevant candidate profiles.
 
 ---
 
@@ -102,50 +159,44 @@ We only need the following two metadata fields from the job description:
 Return a valid JSON object in the following format:
 
 {{
-  "prompt": "Your semantic search prompt...",
-  "metadata": {{
-    "min_years_experience": ...,
-    "languages": [
-      {{
-        "Language": "Proficiency Level"
-      }}
-    ]
-  }}
+  "prompt": "Your semantic search prompt..."
 }}
 """
         
         # Get response from LLM
         try:
-            response = self.llm.invoke(prompt).content
+            logger.info(f"Using {self.llm_choice.upper()} LLM for job description summarization")
             
+            if self.llm_choice == "groq":
+                response_text = self._call_groq_llm(prompt)
+            elif self.llm_choice == "gemini":
+                response_text = self._call_gemini_llm(prompt)
+            else:
+                response_text = "" # Fallback if llm_choice is unexpected
+
             # Extract JSON from response
             try:
                 # Find JSON in the response
-                start_idx = response.find('{')
-                end_idx = response.rfind('}') + 1
+                start_idx = response_text.find('{')
+                end_idx = response_text.rfind('}') + 1
                 
                 if start_idx >= 0 and end_idx > start_idx:
-                    json_str = response[start_idx:end_idx]
+                    json_str = response_text[start_idx:end_idx]
                     prompt_data = json.loads(json_str)
                     
-                    # Instead of passing the entire response_data to _normalize_response_data
-                    # or returning it directly, create a clean version with only desired fields
+                    # Create a clean response with only the prompt field
                     clean_response = {
                         "prompt": prompt_data.get("prompt", ""),
-                        "metadata": prompt_data.get("metadata", {})
                     }
                     
+                    logger.info(f"Job description summarization completed successfully using {self.llm_choice.upper()}")
                     return clean_response
                 else:
                     st.warning("LLM response did not contain valid JSON data.")
                     # Return a basic structure with just the raw text if parsing failed
                     fallback_data = {
                         "prompt": job_description[:500] + "...",  # Truncated job description as fallback
-                        "metadata": {},
-                        "extracted_skills": [],
-                        "extracted_experience": "",
-                        "extracted_languages": {},
-                        "raw_llm_response": response
+                        "raw_llm_response": response_text
                     }
                     return self._normalize_response_data(fallback_data)
             except json.JSONDecodeError as e:
@@ -153,11 +204,7 @@ Return a valid JSON object in the following format:
                 # Return a basic structure with just the raw text if parsing failed
                 fallback_data = {
                     "prompt": job_description[:500] + "...",  # Truncated job description as fallback
-                    "metadata": {},
-                    "extracted_skills": [],
-                    "extracted_experience": "",
-                    "extracted_languages": {},
-                    "raw_llm_response": response
+                    "raw_llm_response": response_text
                 }
                 return self._normalize_response_data(fallback_data)
         except Exception as e:
@@ -165,10 +212,6 @@ Return a valid JSON object in the following format:
             # Return minimal data on error
             fallback_data = {
                 "prompt": "Error generating prompt",
-                "metadata": {},
-                "extracted_skills": [],
-                "extracted_experience": "",
-                "extracted_languages": {},
-                "error": str(e)
+                "raw_llm_response": str(e)
             }
             return self._normalize_response_data(fallback_data) 

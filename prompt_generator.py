@@ -94,7 +94,7 @@ class PromptGenerator:
                 raise ValueError("GOOGLE_API_KEY not found. Cannot call Gemini API.")
             
             response = self.client.models.generate_content(
-                model="models/gemini-2.5-pro-preview-03-25",
+                model="models/gemini-2.5-pro",
                 contents=prompt,
             )
             

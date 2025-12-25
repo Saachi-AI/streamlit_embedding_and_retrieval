@@ -28,11 +28,13 @@ class ProfileAggregator:
         # Load parameters from environment variables with defaults
         self.alpha = float(os.getenv("PROFILE_BONUS_ALPHA", "0.05"))
         self.threshold = float(os.getenv("PROFILE_SCORE_THRESHOLD", "0.70"))
-        self.top_k_profiles = int(os.getenv("TOP_K_PROFILES", "5"))
+        self.top_k_profiles = int(os.getenv("TOP_K_PROFILES", "20"))
+        self.min_score_threshold = float(os.getenv("MIN_PROFILE_SCORE", "0.80"))
         
         logger.debug(
             f"ProfileAggregator initialized with: "
-            f"alpha={self.alpha}, threshold={self.threshold}, top_k_profiles={self.top_k_profiles}"
+            f"alpha={self.alpha}, threshold={self.threshold}, top_k_profiles={self.top_k_profiles}, "
+            f"min_score_threshold={self.min_score_threshold}"
         )
     
     def aggregate_profiles(
@@ -54,6 +56,7 @@ class ProfileAggregator:
             
         Returns:
             List of ProfileScore objects for the top profiles, sorted by final_score descending
+            Only profiles with final_score or best_chunk_score above min_score_threshold are included
         """
         if not reranked_results:
             logger.warning("No reranked results provided for profile aggregation")
@@ -112,8 +115,71 @@ class ProfileAggregator:
         # Sort profiles by final score in descending order
         profile_scores.sort(key=lambda x: x.final_score, reverse=True)
         
-        # Return top K profiles
-        return profile_scores[:top_k]
+        # Filter profiles by minimum score threshold
+        filtered_profiles = [
+            profile for profile in profile_scores 
+            if profile.final_score >= self.min_score_threshold or profile.best_chunk_score >= self.min_score_threshold
+        ]
+        
+        logger.debug(f"Filtered {len(profile_scores) - len(filtered_profiles)} profiles below score threshold of {self.min_score_threshold}")
+        
+        if not filtered_profiles:
+            logger.warning(f"No profiles met the minimum score threshold of {self.min_score_threshold}")
+        
+        # Return top K profiles from filtered list
+        return filtered_profiles[:top_k]
+    
+    def prepare_for_profile_retrieval(self, profile_scores):
+        """
+        Transform ProfileScore objects into the format expected by ProfileRetriever.
+        
+        Args:
+            profile_scores: List of ProfileScore objects from aggregate_profiles
+            
+        Returns:
+            List of profile entry dictionaries in the format expected by ProfileRetriever
+        """
+        profile_entries = []
+        
+        for profile_score in profile_scores:
+            try:
+                # Get profile_id
+                profile_id = profile_score.profile_id
+                if not profile_id:
+                    logger.warning(f"Skipping profile with missing profile_id")
+                    continue
+                    
+                # Get metadata from the best chunk (highest score)
+                if not profile_score.chunks:
+                    logger.warning(f"No chunks found for profile {profile_id}")
+                    continue
+                    
+                best_chunk = max(profile_score.chunks, key=lambda x: x[1])
+                document, _ = best_chunk
+                
+                # Extract metadata from document
+                if not hasattr(document, 'metadata'):
+                    logger.warning(f"Document missing metadata for profile {profile_id}")
+                    continue
+                    
+                metadata = document.metadata.copy()
+                
+                # Create profile entry
+                profile_entry = {
+                    "profile_id": profile_id,
+                    "metadata": metadata
+                }
+                
+                profile_entries.append(profile_entry)
+                
+            except Exception as e:
+                logger.error(f"Error processing profile {profile_id if 'profile_id' in locals() else 'unknown'}: {str(e)}")
+                continue
+        
+        if not profile_entries:
+            logger.warning("No valid profile entries were prepared for retrieval")
+        
+        return profile_entries
     
     def get_explanation(self, profile_score: ProfileScore) -> str:
         """

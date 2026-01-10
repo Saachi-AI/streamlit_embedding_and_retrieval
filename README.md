@@ -188,4 +188,7 @@ You'll need to add these API keys to your .env file:
 - `UPSTAGE_API_KEY`: For document parsing via Upstage AI
 - `GROQ_API_KEY`: For LLM processing using DeepSeek R1 Distill Llama 70B
 
-## Retrieval Framework Documentation 
+## Get All Profile Chunks
+```bash
+python get_all_chunks.py <profile_id>
+```
